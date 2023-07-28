@@ -1,0 +1,2 @@
+# Todoist
+todoist-api-python==2.0.0
