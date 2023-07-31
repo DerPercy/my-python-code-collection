@@ -1,6 +1,7 @@
 from mattermostdriver import Driver
 import os
 import requests
+import json
 
 
 print(os.getenv('MATTERMOST_URL'))
@@ -30,4 +31,11 @@ for workspace in workspaces:
     if workspace.get("boardCount",0) > 0:
         wsID = workspace.get("id")
         r = requests.get("https://"+os.getenv('MATTERMOST_URL')+"/plugins/focalboard/api/v1/workspaces/"+wsID+"/blocks?all=true", headers=headers)
-        print(r.content)
+        blocks = r.json()
+        #print("==========")
+        #print(json.dumps(blocks,indent=2))
+        for block in blocks:
+            if block.get("type",None) == "card":
+                print(json.dumps(block,indent=2))
+            else:
+                print(block.get("type",None)+" not handled at the moment")
