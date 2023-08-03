@@ -38,23 +38,26 @@ class Client:
                 #print(json.dumps(blocks,indent=2))
                 for block in blocks:
                     if block.get("type",None) == "card":
-                        self.tasks.append(mmTaskToClientTask(block))
+                        self.tasks.append(mm_task_to_client_task(block))
                     elif block.get("type",None) == "text": # Comments
                         #print(json.dumps(block,indent=2))
                         pass
                     elif block.get("type",None) == "board": # Board (with Property names)
-                        print(json.dumps(block,indent=2))
+                        #print(json.dumps(block,indent=2))
                         pass
                     else:
-                        print(block.get("type",None)+" not handled at the moment")
+                        #print(block.get("type",None)+" not handled at the moment")
+                        pass
     
     def getTasks(self):
         return self.tasks
 
 
-def mmTaskToClientTask(mmTask):
-    #print(mmTask)
+def mm_task_to_client_task(mmTask):
+    """ Convert Mattermost task structure to an internal task structure """
+    print(json.dumps(mmTask,indent=2))
     task = {
-        "title": mmTask.get("title",None)
+        "title": mmTask.get("title",None),
+        "id": mmTask.get("id",None)
     }
     return task
