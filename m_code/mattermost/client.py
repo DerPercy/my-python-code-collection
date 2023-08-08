@@ -2,12 +2,13 @@ from mattermostdriver import Driver
 import os
 import requests
 import json
+import logging
 
 class Client:
 
     def __init__(self, options=None):
         self.tasks = []
-        print(os.getenv('MATTERMOST_URL'))
+        logging.debug(os.getenv('MATTERMOST_URL'))
         foo = Driver({ 
             'url': options.get("url"),
             'token': options.get("token"),
@@ -16,17 +17,18 @@ class Client:
         })
 
         foo.login()
-        print(foo.client._token)
+        logging.debug(foo.client._token)
 
         userID = foo.client.userid
-        print("My userID"+userID)
+        logging.debug("My userID"+userID)
 
         headers = foo.client.auth_header()
 
         headers["X-Requested-With"] = "XMLHttpRequest"
 
         r = requests.get("https://"+os.getenv('MATTERMOST_URL')+"/plugins/focalboard/api/v1/workspaces", headers=headers)
-        print(r.json())
+        logging.debug("Workspaces")
+        logging.debug(r.json())
         workspaces = r.json()
 
         for workspace in workspaces:
@@ -38,7 +40,7 @@ class Client:
                 #print(json.dumps(blocks,indent=2))
                 for block in blocks:
                     if block.get("type",None) == "card":
-                        self.tasks.append(mm_task_to_client_task(block))
+                        self.tasks.append(mm_task_to_client_task(workspace, block))
                     elif block.get("type",None) == "text": # Comments
                         #print(json.dumps(block,indent=2))
                         pass
@@ -53,11 +55,15 @@ class Client:
         return self.tasks
 
 
-def mm_task_to_client_task(mmTask):
+def mm_task_to_client_task(workspace,mmTask):
     """ Convert Mattermost task structure to an internal task structure """
-    print(json.dumps(mmTask,indent=2))
+    logging.debug(json.dumps(mmTask,indent=2))
     task = {
         "title": mmTask.get("title",None),
-        "id": mmTask.get("id",None)
+        "workspace": workspace.get("title",None),
+        "id": mmTask.get("id",None),
+        "createAt":  mmTask.get("createAt",None),
+        "updateAt": mmTask.get("updateAt",None),
+        "deleteAt": mmTask.get("deleteAt",None),
     }
     return task

@@ -16,30 +16,57 @@ from todoist_api_python.endpoints import (
 )
 from .task import ClientTask
 from .exception import ClientException
-from .comment import create_comment_from_todoist
+from .comment import create_comment_from_todoist, create_todoist_comment_from_meta_data
+import logging
 
 class ClientProject():
+    api: TodoistAPI
     def __init__(self, api: TodoistAPI, project: Project):
         self.api = api
         self.project = project
+    
+    def create_task(self) -> ClientTask:
+        return ClientTask(self.api,self.project) 
 
-    def get_task_by_external_id(self, id:str) -> ClientTask:
+    def get_task_by_meta_data(self, key:str, id:str) -> ClientTask:
+        logging.info("Looking for task with metadata:"+key+"="+id)
         tasks = self.api.get_tasks( project_id=self.project.id)
         
         for task in tasks:
-            print(task)
+            logging.debug(task)
             if task.comment_count > 0:
-                print('========== Comments ==========')
-                print(task.id)
+                logging.debug('========== Comments ==========')
+                logging.debug(task.id)
 
-                self.myGetComments(task_id = task.id)
+                comments = self.myGetComments(task_id = task.id)
+                for comment in comments:
+                    if comment.get_meta_data() is not None:
+                        if comment.get_meta_data().get(key,None) == id:
+                            logging.info("Task found")
+                            #return task
+                            return ClientTask(self.api, self.project, task, comment)
+        logging.info("No task found")
+        return None
+    
+    def add_task(self, title:str, meta_data: dict):
+        logging.info("Create task in todoist")
+        new_task = self.api.add_task(
+            content=title,
+            project_id=self.project.id
+        )
+        if new_task is not None:
+            self.myAddComment(new_task.id,create_todoist_comment_from_meta_data(meta_data))
 
-                #comments = self.api.get_comments( task_id = task.id )
-                #comments = self.api.get_comments( )
-                #print(comments)
-            
-        #raise ClientException('Task with id '+id+' not found')
-        raise ClientException('get_task_by_external_id  not implemented yet')
+        #raise ClientException('add_task not implemented yet')
+    
+    def myAddComment(self, task_id:str, content:str):
+        payload = {
+            "task_id": task_id,
+            "content": content
+        }
+        endpoint = get_rest_url(COMMENTS_ENDPOINT)
+        post(self.api._session, endpoint, self.api._token, payload)
+        pass
     def myGetComments(self, **kwargs):
         """As an error in default API, use a workaround"""
         endpoint = get_rest_url(COMMENTS_ENDPOINT)
@@ -47,4 +74,5 @@ class ClientProject():
         client_comments = []
         for comment in comments:
             client_comments.append(create_comment_from_todoist(comment))
-        print(client_comments)
+        logging.debug(client_comments)
+        return client_comments
