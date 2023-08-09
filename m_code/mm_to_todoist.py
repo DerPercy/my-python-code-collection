@@ -17,11 +17,11 @@ def update_todoist_task_from_mm(td_task: TDTask, mm_task: dict ):
     """
     
     meta_data = {
-        "mm_id": mm_task.get("id"),
-        "mm_updateAt": mm_task.get("updateAt")
+        "mm_id": mm_task.id,
+        "mm_updateAt": mm_task.updateAt
     }
     td_task.set_metadata( meta_data )
-    td_task.set_title("["+mm_task.get("workspace")+"] "+mm_task.get("icon")+ "" +mm_task.get("title"))
+    td_task.set_title("["+mm_task.project+"] "+mm_task.icon+ "" +mm_task.title)
     #t_project.add_task("["+mm_task.get("workspace")+"]"+mm_task.get("title"),meta_data)
     
     return True
@@ -34,7 +34,7 @@ mm_client = MMClient({
 })
 
 mm_tasks = mm_client.getTasks();
-logging.debug(json.dumps(mm_tasks,indent=2))
+logging.debug(mm_tasks)
 
 
 todoist_client = TDClient({
@@ -44,7 +44,7 @@ todoist_client = TDClient({
 try:
     t_project = todoist_client.get_project("Mattermost")
     for mm_task in mm_tasks:
-        t_task = t_project.get_task_by_meta_data("mm_id",mm_task.get("id"))
+        t_task = t_project.get_task_by_meta_data("mm_id",mm_task.id)
         if t_task is None:
             logging.info("No task at todoist found -> create one")
             t_task = t_project.create_task( )

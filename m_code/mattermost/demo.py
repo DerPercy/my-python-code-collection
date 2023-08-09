@@ -4,7 +4,7 @@ import client
 import json
 
 import logging
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
 cl = client.Client({
@@ -14,4 +14,5 @@ cl = client.Client({
     'assigneePropNames': ['Assignee']
 })
 tasks = cl.getTasks()
+print(tasks)
 #print(json.dumps(tasks,indent=2))
