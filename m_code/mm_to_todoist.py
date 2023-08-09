@@ -21,7 +21,7 @@ def update_todoist_task_from_mm(td_task: TDTask, mm_task: dict ):
         "mm_updateAt": mm_task.get("updateAt")
     }
     td_task.set_metadata( meta_data )
-    td_task.set_title("["+mm_task.get("workspace")+"] "+mm_task.get("title"))
+    td_task.set_title("["+mm_task.get("workspace")+"] "+mm_task.get("icon")+ "" +mm_task.get("title"))
     #t_project.add_task("["+mm_task.get("workspace")+"]"+mm_task.get("title"),meta_data)
     
     return True

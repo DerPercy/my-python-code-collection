@@ -34,17 +34,12 @@ class ClientProject():
         
         for task in tasks:
             logging.debug(task)
-            if task.comment_count > 0:
-                logging.debug('========== Comments ==========')
-                logging.debug(task.id)
-
-                comments = self.myGetComments(task_id = task.id)
-                for comment in comments:
-                    if comment.get_meta_data() is not None:
-                        if comment.get_meta_data().get(key,None) == id:
-                            logging.info("Task found")
-                            #return task
-                            return ClientTask(self.api, self.project, task, comment)
+            c_task = ClientTask(self.api, self.project, task)
+            meta_data_comment = c_task.get_meta_data_comment()
+            if meta_data_comment is not None:
+                if meta_data_comment.get_meta_data_value(key) == id:
+                    logging.info("Task found")
+                    return c_task
         logging.info("No task found")
         return None
     

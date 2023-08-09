@@ -26,41 +26,53 @@ class Client:
 
         headers["X-Requested-With"] = "XMLHttpRequest"
 
-        r = requests.get("https://"+os.getenv('MATTERMOST_URL')+"/plugins/focalboard/api/v1/workspaces", headers=headers)
-        logging.debug("Workspaces")
-        logging.debug(r.json())
-        workspaces = r.json()
+        r = requests.get("https://"+os.getenv('MATTERMOST_URL')+"/plugins/focalboard/api/v2/teams", headers=headers)
+        logging.debug("Teams")
+        logging.debug(r.content)
+        teams = r.json()
 
-        for workspace in workspaces:
-            if workspace.get("boardCount",0) > 0:
-                wsID = workspace.get("id")
-                r = requests.get("https://"+os.getenv('MATTERMOST_URL')+"/plugins/focalboard/api/v1/workspaces/"+wsID+"/blocks?all=true", headers=headers)
-                blocks = r.json()
-                #print("==========")
-                #print(json.dumps(blocks,indent=2))
-                for block in blocks:
-                    if block.get("type",None) == "card":
-                        self.tasks.append(mm_task_to_client_task(workspace, block))
-                    elif block.get("type",None) == "text": # Comments
-                        #print(json.dumps(block,indent=2))
-                        pass
-                    elif block.get("type",None) == "board": # Board (with Property names)
-                        #print(json.dumps(block,indent=2))
-                        pass
-                    else:
-                        #print(block.get("type",None)+" not handled at the moment")
-                        pass
+        for team in teams:
+            logging.debug(" ========== Team "+team.get("title","")+" ==========")
+            r = requests.get("https://"+os.getenv('MATTERMOST_URL')+"/plugins/focalboard/api/v2/teams/"+team.get("id",None)+"/boards", headers=headers)
+            logging.debug("Boards:")
+            logging.debug(json.dumps(r.json(),indent=2))
+            
+            r = requests.get("https://"+os.getenv('MATTERMOST_URL')+"/plugins/focalboard/api/v2/teams/"+team.get("id",None)+"/categories", headers=headers)
+            logging.debug("Categories of Team "+team.get("title",None))
+            logging.debug(json.dumps(r.json(),indent=2))
+
+            for category in r.json():
+                for board_metadata in category.get("boardMetadata",[]):
+                    r = requests.get("https://"+os.getenv('MATTERMOST_URL')+"/plugins/focalboard/api/v2/boards/"+board_metadata.get("boardID",None)+"/blocks?all=true", headers=headers)
+                    logging.debug("Blocks")
+                    #logging.debug(r.content)      
+                    blocks = r.json()
+                    #print("==========")
+                    #print(json.dumps(blocks,indent=2))
+                    for block in blocks:
+                        if block.get("type",None) == "card":
+                            self.tasks.append(mm_task_to_client_task(category.get("name",""), block))
+                        elif block.get("type",None) == "text": # Comments
+                            #print(json.dumps(block,indent=2))
+                            pass
+                        elif block.get("type",None) == "board": # Board (with Property names)
+                            #print(json.dumps(block,indent=2))
+                            pass
+                        else:
+                            #print(block.get("type",None)+" not handled at the moment")
+                            pass
     
     def getTasks(self):
         return self.tasks
 
 
-def mm_task_to_client_task(workspace,mmTask):
+def mm_task_to_client_task(workspaceName,mmTask):
     """ Convert Mattermost task structure to an internal task structure """
     logging.debug(json.dumps(mmTask,indent=2))
     task = {
         "title": mmTask.get("title",None),
-        "workspace": workspace.get("title",None),
+        "icon": mmTask.get("fields",{}).get("icon",""),
+        "workspace": workspaceName,
         "id": mmTask.get("id",None),
         "createAt":  mmTask.get("createAt",None),
         "updateAt": mmTask.get("updateAt",None),
