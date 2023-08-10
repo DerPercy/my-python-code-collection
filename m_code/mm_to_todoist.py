@@ -33,7 +33,7 @@ mm_client = MMClient({
     'assigneePropNames': ['Assignee']
 })
 
-mm_tasks = mm_client.getTasks();
+mm_tasks = mm_client.getTasks()
 logging.debug(mm_tasks)
 
 

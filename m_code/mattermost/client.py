@@ -1,5 +1,8 @@
 from mattermostdriver import Driver
 from .task import Task
+from .models.team import Team 
+
+from .api import read as api_read
 import os
 import requests
 import json
@@ -9,6 +12,8 @@ class Client:
 
     def __init__(self, options=None):
         self.tasks = []
+        self.api_url = options.get("url")
+        
         logging.debug(os.getenv('MATTERMOST_URL'))
         foo = Driver({ 
             'url': options.get("url"),
@@ -27,67 +32,15 @@ class Client:
 
         headers["X-Requested-With"] = "XMLHttpRequest"
 
-        r = requests.get("https://"+os.getenv('MATTERMOST_URL')+"/plugins/focalboard/api/v2/teams", headers=headers)
-        logging.debug("Teams")
-        logging.debug(r.content)
-        teams = r.json()
+        self.api_headers = headers
 
-        for team in teams:
-            logging.debug(" ========== Team "+team.get("title","")+" ==========")
-            
-            r = requests.get("https://"+os.getenv('MATTERMOST_URL')+"/plugins/focalboard/api/v2/teams/"+team.get("id",None)+"/categories", headers=headers)
-            logging.debug("Categories of Team "+team.get("title",None))
-            logging.debug(json.dumps(r.json(),indent=2))
+    def get_teams(self):
+        return api_read.fill_teams(self.api_url,self.api_headers)
 
-            for category in r.json():
-                for board_metadata in category.get("boardMetadata",[]):
-                    #r = requests.get("https://"+os.getenv('MATTERMOST_URL')+"/plugins/focalboard/api/v2/boards/"+board_metadata.get("boardID",None), headers=headers)
-                    #logging.critical(json.dumps(r.json(),indent=2))
-                    
-                    r = requests.get("https://"+os.getenv('MATTERMOST_URL')+"/plugins/focalboard/api/v2/boards/"+board_metadata.get("boardID",None)+"/blocks?all=true", headers=headers)
-                    logging.debug("Blocks")
-                    #logging.debug(r.content)      
-                    blocks = r.json()
-                    #print("==========")
-                    #print(json.dumps(blocks,indent=2))
-                    for block in blocks:
-                        if block.get("type",None) == "card":
-                            self.tasks.append(mm_task_to_client_task(category.get("name",""), block))
-                        elif block.get("type",None) == "text": # Comments
-                            #print(json.dumps(block,indent=2))
-                            pass
-                        elif block.get("type",None) == "board": # Board (with Property names)
-                            #print(json.dumps(block,indent=2))
-                            pass
-                        else:
-                            #print(block.get("type",None)+" not handled at the moment")
-                            pass
-    
     def getTasks(self):
-        return self.tasks
-
-
-def mm_task_to_client_task(workspaceName,mmTask):
-    """ Convert Mattermost task structure to an internal task structure """
-    logging.debug(json.dumps(mmTask,indent=2))
-   
-    #task = {
-    #    "title": mmTask.get("title",None),
-    #    "icon": mmTask.get("fields",{}).get("icon",""),
-    #    "workspace": workspaceName,
-    #    "id": mmTask.get("id",None),
-    #    "createAt":  mmTask.get("createAt",None),
-    #    "updateAt": mmTask.get("updateAt",None),
-    #    "deleteAt": mmTask.get("deleteAt",None),
-    #}
-    t = Task(
-        project     = workspaceName, 
-        title       = mmTask.get("title",None),
-        id          = mmTask.get("id",None),
-        createAt    = mmTask.get("createAt",None),
-        updateAt    = mmTask.get("updateAt",None),
-        deleteAt    = mmTask.get("deleteAt",None),
-        icon        = mmTask.get("fields",{}).get("icon","")
-    )
-    #logging.info(t)
-    return t
+        tasks = []
+        for team in self.get_teams():
+            for category in api_read.get_categories_from_team(self.api_url,self.api_headers,team):
+                for board in category.boards:
+                    tasks.extend(api_read.get_tasks_from_board(self.api_url,self.api_headers,board))
+        return tasks
