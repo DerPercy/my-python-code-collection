@@ -3,3 +3,6 @@ todoist-api-python==2.0.0
 
 #Mattermost
 mattermostdriver==7.3.2
+
+#Django
+Django==4.2.2

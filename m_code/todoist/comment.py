@@ -71,6 +71,7 @@ def get_comment_meta_data(content):
     """
     logging.debug("Check if comment is metadata:"+content)
     x = re.search(r"^[\s]*`(.*)`[\s]*$", content,re.DOTALL) #re.DOTALL to allow line breaks in JSON
+    #^.*`({.*})`[\s]*$
     if x is not None:
         data = x.groups()[0]
         logging.debug("comment matches pattern. Result:"+data)

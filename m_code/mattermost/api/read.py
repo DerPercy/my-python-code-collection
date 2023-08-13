@@ -42,8 +42,12 @@ def get_tasks_from_board(base_url: str, headers: dict, board:Board) -> list[Task
     r = requests.get("https://"+base_url+"/plugins/focalboard/api/v2/boards/"+board.id+"/blocks?all=true", headers=headers)
     for block in r.json():
         if block.get("type",None) == "card":
+            logging.info("Task")
+            logging.info(block)
             tasks.append(mm_task_to_client_task(board.category_dict.get("name",""), block))
         elif block.get("type",None) == "text": # Comments
+            logging.info("Comment")
+            logging.info(block)
             pass
         elif block.get("type",None) == "board": # Board (with Property names)
             pass
