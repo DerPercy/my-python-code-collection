@@ -49,7 +49,7 @@ class Client:
         print(self.jwt)
         pass
 
-    def request(self,body:str):
+    def request(self,body:str, variables = {}):
         headers = {
             'content-type': 'application/json', 
             'Accept-Charset': 'UTF-8',
@@ -58,8 +58,9 @@ class Client:
         }
         payloadJSON = {
 			"query": body,
-			"variables": {}
+			"variables": variables
 		}
         r = requests.post("https://api.sorare.com/graphql", json=payloadJSON, headers=headers)
-        print(json.dumps(r.json(),indent=2))
-        pass
+        print(r.status_code)
+        #print(json.dumps(r.json(),indent=2))
+        return r.json()
