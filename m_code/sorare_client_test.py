@@ -28,4 +28,5 @@ for game_week in game_weeks:
     leader_boards = get_leader_boards_of_fixture_slug(client,fixture_slug)
     for leader_board in leader_boards:
         top100  = get_rankings_of_leader_board_slug(client,leader_board.slug,100)
+        
         print(leader_board.rarity)
