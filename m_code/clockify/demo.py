@@ -83,8 +83,8 @@ headers = {
     'X-Api-Key': api_key
 }
 payloadJSON = {
-	"dateRangeStart":   "2023-09-01T00:00:00.000",
-	"dateRangeEnd":     "2023-09-30T23:59:59.000",
+	"dateRangeStart":   "2023-08-01T00:00:00.000",
+	"dateRangeEnd":     "2023-08-31T23:59:59.000",
 	"sortOrder":        "ASCENDING",
 	"detailedFilter":   {
 		"page": 1,
@@ -127,6 +127,7 @@ with open('demo.csv', 'w', newline='') as csvfile:
         csv_writer.writerow([
 			entry.get("date"),
 			entry.get("location"),
+			entry.get("description"),
 			entry.get("from"),
 			entry.get("till"),
 			entry.get("pause"),
