@@ -1,0 +1,10 @@
+{% extends "_base.html" %}
+
+{% block content%}
+This is the index of demo page
+{{ content }}
+
+{% for message in messages %}
+{{message.content}}
+{% endfor %}
+{% endblock %}

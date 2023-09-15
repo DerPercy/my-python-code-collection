@@ -1,0 +1,10 @@
+Hello base site
+
+{% block content %}
+{% endblock %}
+
+<p>
+    {% for message in messages %}
+        {{message.content}}
+    {% endfor %}
+</p>
