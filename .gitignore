@@ -1,3 +1,6 @@
 .pytest_cache
 __pycache__
+
 m_code/djangosite/db.sqlite3
+.env
+demo.csv
