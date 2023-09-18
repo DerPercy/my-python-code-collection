@@ -15,6 +15,7 @@ query RankingsQuery($leaderBoardSlug: String!, $afterCursor: String) {
           }
           nodes {
             ranking
+            id
             so5Lineup {
               user {
                 id
@@ -38,6 +39,14 @@ query RankingsQuery($leaderBoardSlug: String!, $afterCursor: String) {
             "cursorSelector": ["data","football","so5","so5Leaderboard","so5Rankings","pageInfo","endCursor"]
         }
     }
-    result= client.request(body,variables,options)
-    print(len(result))
-    pass
+    result_list = client.request(body,variables,options)
+    ranking_list = []
+    for result in result_list:
+        ranking_list.append(build_model_from_api_result(result))
+    
+    return ranking_list
+
+
+def build_model_from_api_result(api_result) -> Ranking:
+    #print(json.dumps(api_result,indent=2))   
+    return Ranking(api_result.get("id"),api_result.get("so5Lineup").get("user").get("id"),api_result.get("ranking"))
