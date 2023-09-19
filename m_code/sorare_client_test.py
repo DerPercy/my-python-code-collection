@@ -2,10 +2,12 @@ from sorare import Client as SorareClient
 from sorare.fixture import get_fixture_slug_of_gameweek
 from sorare.leader_board import get_leader_boards_of_fixture_slug
 from sorare.rankings import get_rankings_of_leader_board_slug
+from sorare.user import get_user_from_user_id
 
 import logging
 import os
 from dotenv import load_dotenv
+import json
 
 load_dotenv()
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -26,6 +28,7 @@ client = SorareClient({
     'password': os.getenv('SORARE_PASSWORD')
 })
 
+#print(get_user_from_user_id(client,"User:16ebc838-fee5-44de-b495-b56efd6d2ea4"))
 # Example UserID: User:16ebc838-fee5-44de-b495-b56efd6d2ea4
 
                
@@ -59,7 +62,19 @@ def sort_rankings(rankings_unsorted,sort_function:callable):
         if found == False:
             ranking_sorted.append(value)
     return ranking_sorted
+
+def add_username(rankings_sorted_array):
+    for ranking in rankings_sorted_array:
+        if ranking.get("user_nickname") == None:
+            #print(ranking)
+            ranking["user_nickname"] = get_user_from_user_id(client,ranking.get("user")).nickname
+    return rankings_sorted_array
+
+output = {
+
+}
 user_rankings = {}
+
 for game_week in game_weeks:
     print(game_week)
     fixture_slug = get_fixture_slug_of_gameweek(client,game_week)
@@ -81,4 +96,13 @@ for game_week in game_weeks:
         #print(top100)
         #print(leader_board.rarity)
 
-    print(sort_rankings(user_rankings,is_better_than)[:10])
+    #print(add_username(sort_rankings(user_rankings,is_better_than)[:10]))
+
+    output["rankings"] = add_username(sort_rankings(user_rankings,is_better_than)[:10])
+
+    with open("sample_rankings.json", "w") as outfile:
+        outfile.write(json.dumps(output, indent=4))
+
+output["rankings"] = add_username(sort_rankings(user_rankings,is_better_than)[:100])
+with open("sample_rankings.json", "w") as outfile:
+    outfile.write(json.dumps(output, indent=4))

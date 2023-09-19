@@ -6,3 +6,4 @@ class Ranking:
     id: str
     user_id: str
     position: int
+    user_nickname: str = ""

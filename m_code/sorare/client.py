@@ -81,7 +81,8 @@ class Client:
 			"variables": variables
 		}
         r = requests.post("https://api.sorare.com/graphql", json=payloadJSON, headers=headers)
-        print(r.status_code)
+        if r.status_code != 200:
+            print(r.status_code)
 
         result = r.json()
         

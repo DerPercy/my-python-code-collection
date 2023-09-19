@@ -4,3 +4,6 @@ __pycache__
 m_code/djangosite/db.sqlite3
 .env
 demo.csv
+
+# Sorare
+sample_rankings.json
