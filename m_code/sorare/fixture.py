@@ -1,4 +1,5 @@
 from .client import Client
+from .models.fixture import Fixture
 
 gw_cache = {}
 after_cursor = ""
@@ -39,17 +40,23 @@ query FixturesQuery($afterCursor: String) {
     
     return get_fixture_slug_of_gameweek(client,gw)
 
+def get_latest_fixtures(client:Client) -> list[Fixture]:
+    options = {
+        "resultSelector": ["data","football","so5","so5Fixtures","nodes"],    
+    }
+    body = """
+query FixturesQuery { 
+    football { so5 { so5Fixtures(first:3) {  nodes { 
+        slug aasmState
+    } } } }
+}
+"""
+    fixture_list = []
+    result = client.request(body,{},options)
+    for entry in result:
+        fixture_list.append(build_model_from_api_result(entry))
+    return fixture_list
 
-# after: endCursor
-#client.request("""
-#query FixturesQuery($afterCursor: String) {
-#    football { so5 { so5Fixtures(first:50 after: $afterCursor) {  
-#        nodes {
-#		    slug aasmState canCompose eventType gameWeek
-#	    }
-#        pageInfo {
-#            endCursor hasNextPage hasPreviousPage startCursor  
-#        } 
-#    } } }
-#}
-#""")
+def build_model_from_api_result(api_result) -> Fixture:
+    #print(json.dumps(api_result,indent=2))   
+    return Fixture(api_result.get("slug"),api_result.get("aasmState"))

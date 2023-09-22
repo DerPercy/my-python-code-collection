@@ -5,5 +5,8 @@ m_code/djangosite/db.sqlite3
 .env
 demo.csv
 
+temp/
+
 # Sorare
 sample_rankings.json
+sorarefiles/

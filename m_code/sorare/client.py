@@ -1,7 +1,7 @@
 import requests
 import json
 import bcrypt
-
+import time
 
 class Client:
 
@@ -61,7 +61,11 @@ class Client:
                 #print(cursor)
                 variables[p_options.get("paginationVariable")] = cursor
                 int_result = self.__request(body,variables,options)
-                result.extend(int_result.get("result"))
+                sub_result = int_result.get("result")
+                if len( sub_result) == 0:
+                    print("No furter results")
+                    break
+                result.extend(sub_result)
         #print(json.dumps(r.json(),indent=2))
         return result
 
@@ -81,7 +85,13 @@ class Client:
 			"variables": variables
 		}
         r = requests.post("https://api.sorare.com/graphql", json=payloadJSON, headers=headers)
-        if r.status_code != 200:
+        if r.status_code == 429:
+            print("Rate limit")
+            to_wait = int(r.headers.get("Retry-After",30))
+            time.sleep(to_wait)
+            return self.__request(body,variables,options)
+        
+        elif r.status_code != 200:
             print(r.status_code)
 
         result = r.json()
