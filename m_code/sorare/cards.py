@@ -1,8 +1,8 @@
 from .client import Client
-
+from ..common.file_func import write_json_to_file
 
 def get_cards_of_player(client:Client,player_slug:str,rarity:str):
-
+    cache = {}
     body="""
 query getCardsOfPlayer($slug: String!, $rarities: [Rarity!], $endCursor: String ) { 
 	player (slug:$slug) { 

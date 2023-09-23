@@ -1,4 +1,6 @@
 from .client import Client
+from .cards import get_cards_of_player
+from..common.file_func import write_json_to_file, read_json_from_file
 import logging
 import json
 import os
@@ -233,4 +235,39 @@ def download_file(url:str, filename: str):
     urllib.request.urlretrieve(url,filename)
     print("done")
     pass
-    
+
+
+def get_price_of_player(client:Client, player_slug:str,rarity:str, price_date: str):
+    cachefile = os.path.dirname(os.path.abspath(__file__))+"/../../temp/sorare/price_cache.json"
+    price_cache = read_json_from_file(cachefile)
+    logging.info(price_cache)
+    if price_cache.get(player_slug,{}).get(rarity,{}).get(price_date,{}).get("avg",None) != None:
+        return price_cache.get(player_slug,{}).get(rarity,{}).get(price_date,{}).get("avg",None)
+    price_list = get_cards_of_player(client,player_slug,rarity)
+    logging.info(len(price_list))
+    price_list_dt = []
+    for price in price_list:
+        if price["datetime"] < price_date:
+            price_list_dt.append(price) 
+    logging.info(len(price_list_dt))
+    last_five = price_list_dt[-5:]
+    logging.info(last_five)
+    if len(last_five) == 0:
+        return None
+    else:
+        sum = 0
+        for price in last_five:
+            sum = sum + price["usd"]
+    avg = sum / len(last_five)
+    #logging.info(avg)
+    if price_cache.get(player_slug,None) == None:
+        price_cache[player_slug] = {}
+        if price_cache[player_slug].get(rarity,None) == None:
+            price_cache[player_slug][rarity] = {}        
+    price_cache[player_slug][rarity][price_date] = {
+        "last_five": last_five,
+        "avg": avg
+    } 
+    write_json_to_file(price_cache,cachefile)
+
+    return avg

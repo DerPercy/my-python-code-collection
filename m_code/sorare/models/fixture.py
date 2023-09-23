@@ -5,3 +5,4 @@ class Fixture:
     """A representation of a sorare fixture"""
     slug: str
     aasmState: str 
+    startDate: str

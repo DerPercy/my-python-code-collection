@@ -1,8 +1,8 @@
 from sorare import Client as SorareClient
 from sorare.fixture import get_latest_fixtures
 from sorare.leader_board import get_leader_boards_of_fixture_slug
-from sorare.func_sorare_heroes import create_leaderboard_image
-from sorare.cards import get_cards_of_player
+from sorare.func_sorare_heroes import create_leaderboard_image, get_price_of_player
+from sorare.cards import get_cards_of_player 
 
 import logging
 import os
@@ -22,10 +22,13 @@ client = SorareClient({
 
 fixture_list = get_latest_fixtures(client)
 options = []
+
 for fixture in fixture_list:
+    print(fixture.aasmState)
     if fixture.aasmState == "closed":
         fixture_slug = fixture.slug
         #fixture_slug = "1-5-sep-2023" # Example data for movie
+        fixture_date = fixture.startDate
         leader_board_list = get_leader_boards_of_fixture_slug(client,fixture_slug)
         for leader_board in leader_board_list:
             try:
@@ -41,7 +44,7 @@ for fixture in fixture_list:
 for option in options:
     for player in option.get("player"):
         if player.get("rarity",None) in ["limited","rare"]:
-            player["price_usd"] = get_cards_of_player(client,player.get("playerSlug"),player.get("rarity"))[-1].get("usd")
+            player["price_usd"] = get_price_of_player(client,player.get("playerSlug"),player.get("rarity"),fixture_date)
     
     # Writing to sample.json
     json_object = json.dumps(options, indent=4)
