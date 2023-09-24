@@ -2,6 +2,7 @@ import requests
 import json
 import bcrypt
 import time
+import logging
 
 class Client:
 
@@ -70,10 +71,13 @@ class Client:
                     sub_result = list(filter(p_options.get("resultFilter"), sub_result))
 
                 if len( sub_result) == 0:
-                    print("No furter results")
+                    #print("No furter results")
                     break
                 result.extend(sub_result)
-                print(len(result))
+                print(str(len(result)),end='\r')
+                if cursor == "" or cursor == None:
+                    logging.info("No end Cursor: exit")
+                    break
         #print(json.dumps(r.json(),indent=2))
         return result
 
@@ -94,8 +98,8 @@ class Client:
 		}
         r = requests.post("https://api.sorare.com/graphql", json=payloadJSON, headers=headers)
         if r.status_code == 429:
-            print("Rate limit")
             to_wait = int(r.headers.get("Retry-After",30))
+            logging.info("Rate limit ("+str(to_wait)+")" )
             time.sleep(to_wait)
             return self.__request(body,variables,options)
         

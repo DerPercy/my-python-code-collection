@@ -54,7 +54,7 @@ def calc_captain_bonus(options):
     
        
 
-def create_leaderboard_image(client:Client,leader_board_slug:str, ranking_filter:callable = None):
+def create_leaderboard_image(client:Client,leader_board_slug:str, ranking_filter:callable = None, ranking_sorter:callable = None):
     print(leader_board_slug)
     # leaderboardSlug: 11-15-aug-2023-champion-asia-division-5
     param = {
@@ -69,10 +69,21 @@ query getRankingForLeaderboard($leaderboardSlug: String!, $endCursor: String) {
 					captain
 				} 
 				displayName svgLogoUrl mainRarityType
-				so5Rankings(first:20,after:$endCursor,){ 
+				so5Rankings(first:100,after:$endCursor,){ 
 					nodes { 
                         ranking
                         eligibleForReward
+                        eligibleRewards {
+              usdAmount
+              cards {
+                player {
+                  slug
+                }
+                quantity
+                quality
+                rarity
+              }
+                        }
 						score 
 						so5Lineup { 
 							user { 
@@ -171,22 +182,32 @@ query getRankingForLeaderboard($leaderboardSlug: String!, $endCursor: String) {
     lineup_list = client.request(body,param,{ 
         "resultSelector": ["data","football","so5","so5Leaderboard","so5Rankings","nodes"],
         "pagination": {
-            "targetNumber": 100,
+            "targetNumber": 1,
             "paginationVariable": "endCursor",
             "cursorSelector": ["data","football","so5","so5Leaderboard","so5Rankings","pageInfo","endCursor"],
             "resultFilter": ranking_filter
         }
          
     })
-    print("Lineup length")
-    print(len(lineup_list))
-    time.sleep(60)
+    #print("Lineup length")
+    #print(len(lineup_list))
    
-    lineup = leaderBoard.get("so5Rankings",{}).get("nodes",{})[0]
+    #lineup = leaderBoard.get("so5Rankings",{}).get("nodes",{})[0]
+    logging.info(str(len(lineup_list))+" relevant lineups found")
+    if ranking_sorter != None:
+        #print("Sort")
+        logging.info("Sort lineups")
+        lineup_list.sort(key=ranking_sorter)
+        logging.info("Sorting finished")
+        
+    lineup = lineup_list[0]
+    #print(lineup)
+    #time.sleep(60)
     options["score"] = lineup.get("score","???")
     lineup = lineup.get("so5Lineup",{})
     options["userName"] = lineup.get("user",{}).get("nickname","???")
-    options["place"] = "1st"
+    options["place"] = "#"+str(lineup.get("ranking"))
+    #options["place"] = "1st"
     #print(json.dumps(lineup,indent=2))
 
     count = 0
@@ -244,7 +265,7 @@ query getRankingForLeaderboard($leaderboardSlug: String!, $endCursor: String) {
 
 def download_file(url:str, filename: str):
     if os.path.isfile(filename):
-        print("File already exists. Skip")
+        logging.info("File already exists. Skip")
         return
     opener = urllib.request.build_opener()
     opener.addheaders = [('User-agent','Mozilla/5.0')]
@@ -253,27 +274,28 @@ def download_file(url:str, filename: str):
         os.makedirs(os.path.dirname(filename))
     except:
         error = 1
-    print("Load image...")
+    logging.info("Load image...")
     urllib.request.urlretrieve(url,filename)
-    print("done")
+    logging.info("done")
     pass
 
 
 def get_price_of_player(client:Client, player_slug:str,rarity:str, price_date: str):
+    print("Get price of "+player_slug,end='\r')
     cachefile = os.path.dirname(os.path.abspath(__file__))+"/../../temp/sorare/price_cache.json"
-    price_cache = read_json_from_file(cachefile)
-    logging.info(price_cache)
+    price_cache = file_func.read_json_from_file(cachefile)
+    #logging.info(price_cache)
     if price_cache.get(player_slug,{}).get(rarity,{}).get(price_date,{}).get("avg",None) != None:
         return price_cache.get(player_slug,{}).get(rarity,{}).get(price_date,{}).get("avg",None)
     price_list = get_cards_of_player(client,player_slug,rarity)
-    logging.info(len(price_list))
+    #logging.info(len(price_list))
     price_list_dt = []
     for price in price_list:
         if price["datetime"] < price_date:
             price_list_dt.append(price) 
-    logging.info(len(price_list_dt))
+    #logging.info(len(price_list_dt))
     last_five = price_list_dt[-5:]
-    logging.info(last_five)
+    #logging.info(last_five)
     if len(last_five) == 0:
         return None
     else:
@@ -284,12 +306,12 @@ def get_price_of_player(client:Client, player_slug:str,rarity:str, price_date: s
     #logging.info(avg)
     if price_cache.get(player_slug,None) == None:
         price_cache[player_slug] = {}
-        if price_cache[player_slug].get(rarity,None) == None:
-            price_cache[player_slug][rarity] = {}        
+    if price_cache[player_slug].get(rarity,None) == None:
+        price_cache[player_slug][rarity] = {}        
     price_cache[player_slug][rarity][price_date] = {
         "last_five": last_five,
         "avg": avg
     } 
-    write_json_to_file(price_cache,cachefile)
+    file_func.write_json_to_file(price_cache,cachefile)
 
     return avg
