@@ -18,6 +18,13 @@ client = SorareClient({
 })
 
 
+def ranking_filter(ranking:dict):
+    print(ranking.get("ranking"))
+    print(ranking)
+    if ranking.get("ranking") > 5:
+        return False
+    return True
+
 #get_cards_of_player(client,"walter-daniel-benitez","limited")
 
 fixture_list = get_latest_fixtures(client)
@@ -31,8 +38,11 @@ for fixture in fixture_list:
         fixture_date = fixture.startDate
         leader_board_list = get_leader_boards_of_fixture_slug(client,fixture_slug)
         for leader_board in leader_board_list:
+            #def ranking_sorter(ranking):
+            #    print(fixture_date)
+            #    return ranking.get("ranking")
             try:
-                option = create_leaderboard_image(client,leader_board.slug)
+                option = create_leaderboard_image(client,leader_board.slug,ranking_filter)
                 options.append(option)
             except Exception as exc:
                 logging.error(exc)

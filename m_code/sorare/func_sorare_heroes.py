@@ -1,10 +1,12 @@
 from .client import Client
 from .cards import get_cards_of_player
-from..common.file_func import write_json_to_file, read_json_from_file
+from .context import file_func
+#from..common.file_func import write_json_to_file, read_json_from_file
 import logging
 import json
 import os
 import urllib
+import time
 
 def get_player_pos_value(player):
     #logging.error(player)
@@ -52,14 +54,14 @@ def calc_captain_bonus(options):
     
        
 
-def create_leaderboard_image(client:Client,leader_board_slug:str):
-
+def create_leaderboard_image(client:Client,leader_board_slug:str, ranking_filter:callable = None):
+    print(leader_board_slug)
     # leaderboardSlug: 11-15-aug-2023-champion-asia-division-5
     param = {
 		"leaderboardSlug": leader_board_slug
 	}
     body = """
-query getRankingForLeaderboard($leaderboardSlug: String!) { 
+query getRankingForLeaderboard($leaderboardSlug: String!, $endCursor: String) { 
 	football { 
 		so5 { 	
 			so5Leaderboard(slug:$leaderboardSlug){ 
@@ -67,8 +69,10 @@ query getRankingForLeaderboard($leaderboardSlug: String!) {
 					captain
 				} 
 				displayName svgLogoUrl mainRarityType
-				so5Rankings(first:1){ 
+				so5Rankings(first:20,after:$endCursor,){ 
 					nodes { 
+                        ranking
+                        eligibleForReward
 						score 
 						so5Lineup { 
 							user { 
@@ -116,6 +120,9 @@ query getRankingForLeaderboard($leaderboardSlug: String!) {
 							} 
 						} 
 					} 
+                    pageInfo {
+                        endCursor hasNextPage hasPreviousPage startCursor  
+                    } 
 				} 
 			} 
 		} 
@@ -160,6 +167,21 @@ query getRankingForLeaderboard($leaderboardSlug: String!) {
     download_file(leaderBoard.get("svgLogoUrl"),folder+"league_logo.svg")
     options["leagueLogo"] = folder+"league_logo.svg"
     # get 1st place
+    # Get Lineups 
+    lineup_list = client.request(body,param,{ 
+        "resultSelector": ["data","football","so5","so5Leaderboard","so5Rankings","nodes"],
+        "pagination": {
+            "targetNumber": 100,
+            "paginationVariable": "endCursor",
+            "cursorSelector": ["data","football","so5","so5Leaderboard","so5Rankings","pageInfo","endCursor"],
+            "resultFilter": ranking_filter
+        }
+         
+    })
+    print("Lineup length")
+    print(len(lineup_list))
+    time.sleep(60)
+   
     lineup = leaderBoard.get("so5Rankings",{}).get("nodes",{})[0]
     options["score"] = lineup.get("score","???")
     lineup = lineup.get("so5Lineup",{})

@@ -56,16 +56,24 @@ class Client:
         # pagination
         if options.get("pagination") != None:
             p_options = options.get("pagination")
-            while len(result) < p_options.get("targetNumber"):
+            if p_options.get("resultFilter",None) != None:
+                result = list(filter(p_options.get("resultFilter"), result))
+
+            while len(result) < p_options.get("targetNumber",0) or p_options.get("resultFilter",None) != None:
                 cursor = json_selector(int_result.get("full_result"),p_options.get("cursorSelector"))
                 #print(cursor)
                 variables[p_options.get("paginationVariable")] = cursor
                 int_result = self.__request(body,variables,options)
                 sub_result = int_result.get("result")
+
+                if p_options.get("resultFilter",None) != None:
+                    sub_result = list(filter(p_options.get("resultFilter"), sub_result))
+
                 if len( sub_result) == 0:
                     print("No furter results")
                     break
                 result.extend(sub_result)
+                print(len(result))
         #print(json.dumps(r.json(),indent=2))
         return result
 
