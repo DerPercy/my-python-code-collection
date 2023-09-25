@@ -24,15 +24,17 @@ def get_player_pos_value(player):
     if player.get("position") == "Goalkeeper":
         return 1
     else:
-        logging.error("Position "+player.get("position")+" unknown")
+        logging.error("Position "+player.get("position","")+" unknown")
+        return 5
     return ret_value     
 
 def calc_captain_bonus(options):
     score = options.get("score")
     player_score_sum = 0
     for player in options.get("player",[]):
-        player_score = player.get("score")
-        player_score_sum = player_score_sum + player_score
+        player_score = player.get("score",0)
+        if player_score != None:
+            player_score_sum = player_score_sum + player_score
     score_diff = score - player_score_sum
     if score_diff < 0:
         logging.error("player have more points than the total")
@@ -46,7 +48,9 @@ def calc_captain_bonus(options):
             if player.get("isCaptain",False) == True:
                 captain_found = True
                 player["originalScore"] = player.get("score")
-                player["score"] = player.get("score") + score_diff
+                if player.get("score") != None:
+                    player["score"] = player.get("score") + score_diff
+                
         if captain_found == False:
             logging.error("Score diff, but no captain in lineup")
             logging.error(score_diff)
@@ -74,15 +78,15 @@ query getRankingForLeaderboard($leaderboardSlug: String!, $endCursor: String) {
                         ranking
                         eligibleForReward
                         eligibleRewards {
-              usdAmount
-              cards {
-                player {
-                  slug
-                }
-                quantity
-                quality
-                rarity
-              }
+                            usdAmount
+                            cards {
+                                player {
+                                    slug
+                                }
+                                quantity
+                                quality
+                                rarity
+                            }
                         }
 						score 
 						so5Lineup { 
@@ -204,9 +208,9 @@ query getRankingForLeaderboard($leaderboardSlug: String!, $endCursor: String) {
     #print(lineup)
     #time.sleep(60)
     options["score"] = lineup.get("score","???")
+    options["place"] = "#"+str(lineup.get("ranking"))
     lineup = lineup.get("so5Lineup",{})
     options["userName"] = lineup.get("user",{}).get("nickname","???")
-    options["place"] = "#"+str(lineup.get("ranking"))
     #options["place"] = "1st"
     #print(json.dumps(lineup,indent=2))
 
@@ -224,29 +228,47 @@ query getRankingForLeaderboard($leaderboardSlug: String!, $endCursor: String) {
         player["rarity"] = card.get("card",{}).get("rarity")
         
         player["score"] = card.get("cleanScore",0)
+        if player["score"] == None:
+            player["score"] = 0
         # Game info 
-        if card.get("game",{}).get("homeTeam",{}).get("pictureUrl") == "":
+        game_exists = True
+        try:
+            if card.get("game",{}).get("homeTeam",{}).get("pictureUrl","") == "":
+                home_team_filename = ""
+            else:
+                home_team_filename = folder+"home_team_"+str(count)+".png"   
+                download_file(card.get("game",{}).get("homeTeam",{}).get("pictureUrl"),home_team_filename)
+        except:
             home_team_filename = ""
-        else:
-            home_team_filename = folder+"home_team_"+str(count)+".png"   
-            download_file(card.get("game",{}).get("homeTeam",{}).get("pictureUrl"),home_team_filename)
-         
-        if card.get("game",{}).get("awayTeam",{}).get("pictureUrl") == "":
-            away_team_filename = ""
-        else:
-            away_team_filename = folder+"away_team_"+str(count)+".png"
-            download_file(card.get("game",{}).get("awayTeam",{}).get("pictureUrl"),away_team_filename)
-        
-        player["game"] = {
-            "homeTeamLogo": home_team_filename,
-            "awayTeamLogo": away_team_filename,
-            "homeGoals": card.get("game",{}).get("homeGoals",{}),
-            "awayGoals": card.get("game",{}).get("awayGoals",{}),
-            
-        }
+            game_exists = False
 
-        player["position"] = card.get("so5Score",{}).get("position")
-        
+        try:
+            if card.get("game",{}).get("awayTeam",{}).get("pictureUrl") == "":
+                away_team_filename = ""
+            else:
+                away_team_filename = folder+"away_team_"+str(count)+".png"
+                download_file(card.get("game",{}).get("awayTeam",{}).get("pictureUrl"),away_team_filename)
+        except:
+            away_team_filename = ""
+            game_exists = False
+
+        if game_exists == True:
+            player["game"] = {
+                "homeTeamLogo": home_team_filename,
+                "awayTeamLogo": away_team_filename,
+            }
+            try:
+                player["game"]["homeGoals"] = card.get("game",{}).get("homeGoals",{})
+                player["game"]["awayGoals"] = card.get("game",{}).get("awayGoals",{})
+            except:
+                pass
+
+
+        try:
+            player["position"] = card.get("so5Score",{}).get("position")
+        except:
+            pass
+
         count += 1
         player_array.append(player)
 
@@ -265,7 +287,7 @@ query getRankingForLeaderboard($leaderboardSlug: String!, $endCursor: String) {
 
 def download_file(url:str, filename: str):
     if os.path.isfile(filename):
-        logging.info("File already exists. Skip")
+        logging.info("File already exists. Skip\r")
         return
     opener = urllib.request.build_opener()
     opener.addheaders = [('User-agent','Mozilla/5.0')]
@@ -282,11 +304,11 @@ def download_file(url:str, filename: str):
 
 def get_price_of_player(client:Client, player_slug:str,rarity:str, price_date: str):
     print("Get price of "+player_slug,end='\r')
-    cachefile = os.path.dirname(os.path.abspath(__file__))+"/../../temp/sorare/price_cache.json"
+    cachefile = os.path.dirname(os.path.abspath(__file__))+"/../../temp/sorare/cache/price/"+player_slug+".json"
     price_cache = file_func.read_json_from_file(cachefile)
     #logging.info(price_cache)
-    if price_cache.get(player_slug,{}).get(rarity,{}).get(price_date,{}).get("avg",None) != None:
-        return price_cache.get(player_slug,{}).get(rarity,{}).get(price_date,{}).get("avg",None)
+    if price_cache.get(rarity,{}).get(price_date,{}).get("avg",None) != None:
+        return price_cache.get(rarity,{}).get(price_date,{}).get("avg",None)
     price_list = get_cards_of_player(client,player_slug,rarity)
     #logging.info(len(price_list))
     price_list_dt = []
@@ -304,11 +326,11 @@ def get_price_of_player(client:Client, player_slug:str,rarity:str, price_date: s
             sum = sum + price["usd"]
     avg = sum / len(last_five)
     #logging.info(avg)
-    if price_cache.get(player_slug,None) == None:
-        price_cache[player_slug] = {}
-    if price_cache[player_slug].get(rarity,None) == None:
-        price_cache[player_slug][rarity] = {}        
-    price_cache[player_slug][rarity][price_date] = {
+    #if price_cache.get(player_slug,None) == None:
+    #    price_cache[player_slug] = {}
+    if price_cache.get(rarity,None) == None:
+        price_cache[rarity] = {}        
+    price_cache[rarity][price_date] = {
         "last_five": last_five,
         "avg": avg
     } 

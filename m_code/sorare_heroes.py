@@ -75,8 +75,7 @@ for fixture in fixture_list:
 # add prices
 for option in options:
     for player in option.get("player"):
-        if player.get("rarity",None) in ["limited","rare"]:
-            player["price_usd"] = get_price_of_player(client,player.get("playerSlug"),player.get("rarity"),fixture_date)
+        player["price_usd"] = get_price_of_player(client,player.get("playerSlug"),player.get("rarity"),fixture_date)
     
     # Writing to sample.json
     json_object = json.dumps(options, indent=4)

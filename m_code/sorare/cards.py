@@ -1,8 +1,15 @@
+import os
 from .client import Client
+from .context import file_func
+
+
 #from ..common.file_func import write_json_to_file
 
 def get_cards_of_player(client:Client,player_slug:str,rarity:str):
-    cache = {}
+    if rarity in ["common"]:
+        return []
+    cachefile = os.path.dirname(os.path.abspath(__file__))+"/../../temp/sorare/cache/cards/"+player_slug+"/"+rarity+".json"
+    
     body="""
 query getCardsOfPlayer($slug: String!, $rarities: [Rarity!], $endCursor: String ) { 
 	player (slug:$slug) { 
@@ -40,4 +47,9 @@ query getCardsOfPlayer($slug: String!, $rarities: [Rarity!], $endCursor: String 
     transaction_list.sort(key=get_datetime)
     #print(result_list)
     #print(transaction_list)
+    cache = {
+        "cards": result_list,
+        "transactions": transaction_list
+    }
+    file_func.write_json_to_file(cache,cachefile)
     return transaction_list

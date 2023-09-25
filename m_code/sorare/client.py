@@ -106,8 +106,12 @@ class Client:
         elif r.status_code != 200:
             print(r.status_code)
 
-        result = r.json()
-        
+        try:
+            result = r.json()
+        except Exception as error:
+            logging.error("Could not render response to json")
+            logging.error(r.content)
+            raise error
 
         # preselect result
         if options.get("resultSelector") != None:
