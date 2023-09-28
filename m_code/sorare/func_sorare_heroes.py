@@ -97,7 +97,8 @@ query getRankingForLeaderboard($leaderboardSlug: String!, $endCursor: String) {
 							so5Appearances { 
 								captain 
 								card { 
-									pictureUrl 
+									pictureUrl
+                                    positionTyped 
                                     rarity
                                     player {
                                         slug
@@ -146,10 +147,13 @@ query getRankingForLeaderboard($leaderboardSlug: String!, $endCursor: String) {
 """
     #leaderBoardResult = json.loads(context["rootHandler"].external().getRequestHandler().request("sorareHeroesGetRankings",param))
     leaderBoard = client.request(body,param,{ "resultSelector": ["data","football","so5","so5Leaderboard"]   })
+    #if leader_board_slug == "22-26-sep-2023-global-cap-division-11":
+    cachefile = os.path.dirname(os.path.abspath(__file__))+"/../../temp/sorare/cache/leaderBoards/"+leader_board_slug+".json"    
+    file_func.write_json_to_file(leaderBoard,cachefile)
     #leaderBoardResult.get("data",{}).get("football",{}).get("so5",{}).get("so5Leaderboard",{})
     
     #print("Captain:")
-    #print(json.dumps(leaderBoard,indent=2))
+        
     #print("=========")
     rarity = leaderBoard.get("mainRarityType","unknown")
     if rarity == "limited":
@@ -221,8 +225,8 @@ query getRankingForLeaderboard($leaderboardSlug: String!, $endCursor: String) {
         player = {}
         card_filename = "player_"+str(count)+".png"
 
-        download_file(card.get("card",{}).get("pictureUrl"),folder+card_filename)
-        player["cardFilename"] = folder+card_filename
+        if download_file(card.get("card",{}).get("pictureUrl"),folder+card_filename):
+            player["cardFilename"] = folder+card_filename
         player["isCaptain"] = card.get("captain")
         player["playerSlug"] = card.get("card",{}).get("player",{}).get("slug")
         player["rarity"] = card.get("card",{}).get("rarity")
@@ -236,8 +240,10 @@ query getRankingForLeaderboard($leaderboardSlug: String!, $endCursor: String) {
             if card.get("game",{}).get("homeTeam",{}).get("pictureUrl","") == "":
                 home_team_filename = ""
             else:
-                home_team_filename = folder+"home_team_"+str(count)+".png"   
-                download_file(card.get("game",{}).get("homeTeam",{}).get("pictureUrl"),home_team_filename)
+                home_team_filename = folder+"home_team_"+str(count)+".png"
+                   
+                if not download_file(card.get("game",{}).get("homeTeam",{}).get("pictureUrl"),home_team_filename):
+                    home_team_filename = ""        
         except:
             home_team_filename = ""
             game_exists = False
@@ -247,7 +253,8 @@ query getRankingForLeaderboard($leaderboardSlug: String!, $endCursor: String) {
                 away_team_filename = ""
             else:
                 away_team_filename = folder+"away_team_"+str(count)+".png"
-                download_file(card.get("game",{}).get("awayTeam",{}).get("pictureUrl"),away_team_filename)
+                if not download_file(card.get("game",{}).get("awayTeam",{}).get("pictureUrl"),away_team_filename):
+                    away_team_filename = ""        
         except:
             away_team_filename = ""
             game_exists = False
@@ -267,6 +274,7 @@ query getRankingForLeaderboard($leaderboardSlug: String!, $endCursor: String) {
         try:
             player["position"] = card.get("so5Score",{}).get("position")
         except:
+            player["position"] = card.get("card",{}).get("positionTyped")
             pass
 
         count += 1
@@ -288,18 +296,21 @@ query getRankingForLeaderboard($leaderboardSlug: String!, $endCursor: String) {
 def download_file(url:str, filename: str):
     if os.path.isfile(filename):
         logging.info("File already exists. Skip\r")
-        return
+        return True
     opener = urllib.request.build_opener()
     opener.addheaders = [('User-agent','Mozilla/5.0')]
     urllib.request.install_opener(opener)
     try:
         os.makedirs(os.path.dirname(filename))
     except:
-        error = 1
-    logging.info("Load image...")
-    urllib.request.urlretrieve(url,filename)
-    logging.info("done")
-    pass
+        pass
+    try:
+        logging.info("Load image...")
+        urllib.request.urlretrieve(url,filename)
+        logging.info("done")
+        return True
+    except:
+        return False
 
 
 def get_price_of_player(client:Client, player_slug:str,rarity:str, price_date: str):
