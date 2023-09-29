@@ -55,12 +55,10 @@ def calc_captain_bonus(options):
             logging.error("Score diff, but no captain in lineup")
             logging.error(score_diff)
     
-    
-       
 
-def create_leaderboard_image(client:Client,leader_board_slug:str, ranking_filter:callable = None, ranking_sorter:callable = None):
-    print(leader_board_slug)
-    # leaderboardSlug: 11-15-aug-2023-champion-asia-division-5
+
+def get_leaderboard_data(client:Client,leader_board_slug:str, ranking_filter:callable = None, ranking_sorter:callable = None):
+    # Get leaderboard data
     param = {
 		"leaderboardSlug": leader_board_slug
 	}
@@ -150,8 +148,42 @@ query getRankingForLeaderboard($leaderboardSlug: String!, $endCursor: String) {
     #if leader_board_slug == "22-26-sep-2023-global-cap-division-11":
     cachefile = os.path.dirname(os.path.abspath(__file__))+"/../../temp/sorare/cache/leaderBoards/"+leader_board_slug+".json"    
     file_func.write_json_to_file(leaderBoard,cachefile)
-    #leaderBoardResult.get("data",{}).get("football",{}).get("so5",{}).get("so5Leaderboard",{})
     
+    # Get rankings
+    lineup_list = client.request(body,param,{ 
+        "resultSelector": ["data","football","so5","so5Leaderboard","so5Rankings","nodes"],
+        "pagination": {
+            "targetNumber": 1,
+            "paginationVariable": "endCursor",
+            "cursorSelector": ["data","football","so5","so5Leaderboard","so5Rankings","pageInfo","endCursor"],
+            "resultFilter": ranking_filter
+        }
+         
+    })
+    #print("Lineup length")
+    #print(len(lineup_list))
+   
+    #lineup = leaderBoard.get("so5Rankings",{}).get("nodes",{})[0]
+    logging.info(str(len(lineup_list))+" relevant lineups found")
+    if ranking_sorter != None:
+        #print("Sort")
+        logging.info("Sort lineups")
+        lineup_list.sort(key=ranking_sorter)
+        logging.info("Sorting finished")
+
+    return {
+        "leaderBoard": leaderBoard,
+        "rankings": lineup_list
+    }
+
+def create_leaderboard_image(client:Client,leader_board_slug:str, ranking_filter:callable = None, ranking_sorter:callable = None):
+    print(leader_board_slug)
+    # leaderboardSlug: 11-15-aug-2023-champion-asia-division-5
+    leader_board_data = get_leaderboard_data(client,leader_board_slug,ranking_filter,ranking_sorter)
+    leaderBoard = leader_board_data.get("leaderBoard")
+    lineup_list = leader_board_data.get("rankings")
+    
+
     #print("Captain:")
         
     #print("=========")
@@ -186,27 +218,6 @@ query getRankingForLeaderboard($leaderboardSlug: String!, $endCursor: String) {
     download_file(leaderBoard.get("svgLogoUrl"),folder+"league_logo.svg")
     options["leagueLogo"] = folder+"league_logo.svg"
     # get 1st place
-    # Get Lineups 
-    lineup_list = client.request(body,param,{ 
-        "resultSelector": ["data","football","so5","so5Leaderboard","so5Rankings","nodes"],
-        "pagination": {
-            "targetNumber": 1,
-            "paginationVariable": "endCursor",
-            "cursorSelector": ["data","football","so5","so5Leaderboard","so5Rankings","pageInfo","endCursor"],
-            "resultFilter": ranking_filter
-        }
-         
-    })
-    #print("Lineup length")
-    #print(len(lineup_list))
-   
-    #lineup = leaderBoard.get("so5Rankings",{}).get("nodes",{})[0]
-    logging.info(str(len(lineup_list))+" relevant lineups found")
-    if ranking_sorter != None:
-        #print("Sort")
-        logging.info("Sort lineups")
-        lineup_list.sort(key=ranking_sorter)
-        logging.info("Sorting finished")
         
     lineup = lineup_list[0]
     #print(lineup)
