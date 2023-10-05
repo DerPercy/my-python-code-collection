@@ -6,3 +6,4 @@ class Fixture:
     slug: str
     aasmState: str 
     startDate: str
+    gameWeek: int

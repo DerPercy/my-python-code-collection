@@ -108,6 +108,7 @@ class Client:
 
         try:
             result = r.json()
+            #print(result)
         except Exception as error:
             logging.error("Could not render response to json")
             logging.error(r.content)

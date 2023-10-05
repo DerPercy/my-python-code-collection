@@ -3,6 +3,10 @@ from sorare.fixture import get_latest_fixtures
 from sorare.leader_board import get_leader_boards_of_fixture_slug
 from sorare.func_sorare_heroes import create_leaderboard_image, get_price_of_player, get_leaderboard_data
 from sorare.cards import get_cards_of_player 
+from sorare.player import get_player_scoreboard
+from sorare.user import get_player_slugs_of_current_user
+from sorare.context import file_func
+
 
 import logging
 import os
@@ -18,6 +22,21 @@ client = SorareClient({
     'email': os.getenv('SORARE_EMAIL'),
     'password': os.getenv('SORARE_PASSWORD')
 })
+
+def sort_score(entry):
+    return entry.get("scoreboard_total")
+score_list = []
+player_slug_list = get_player_slugs_of_current_user(client)
+for player_slug in player_slug_list:
+    print(player_slug)
+    score_list.append(get_player_scoreboard(client,player_slug))
+score_list.sort(key=sort_score,reverse=True)
+print(score_list)
+cachefile = os.path.dirname(os.path.abspath(__file__))+"/../temp/sorare/scoreboard.json"
+    
+file_func.write_json_to_file(score_list,cachefile)
+
+quit()
 
 scenario = "winner"
 if len(sys.argv) < 2:

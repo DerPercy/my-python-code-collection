@@ -48,7 +48,7 @@ def get_latest_fixtures(client:Client) -> list[Fixture]:
     body = """
 query FixturesQuery { 
     football { so5 { so5Fixtures(first:3) {  nodes { 
-        slug aasmState startDate
+        slug aasmState startDate gameWeek
     } } } }
 }
 """
@@ -60,4 +60,4 @@ query FixturesQuery {
 
 def build_model_from_api_result(api_result) -> Fixture:
     #print(json.dumps(api_result,indent=2))   
-    return Fixture(api_result.get("slug"),api_result.get("aasmState"),api_result.get("startDate"))
+    return Fixture(api_result.get("slug"),api_result.get("aasmState"),api_result.get("startDate"),api_result.get("gameWeek"))
