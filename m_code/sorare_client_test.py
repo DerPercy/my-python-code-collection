@@ -33,7 +33,7 @@ client = SorareClient({
 
                
 game_weeks = list(range(301,401))
-rarity = "limited"
+rarity = "rare"
 #game_weeks = list(range(301,302))
 
 def is_better_than(a,b):

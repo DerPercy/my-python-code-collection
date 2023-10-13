@@ -6,7 +6,7 @@ from sorare.cards import get_cards_of_player
 from sorare.player import get_player_scoreboard
 from sorare.user import get_player_slugs_of_current_user
 from sorare.context import file_func
-
+from sorare.club import get_club_slugs_playing_next_gw
 
 import logging
 import os
@@ -22,21 +22,22 @@ client = SorareClient({
     'email': os.getenv('SORARE_EMAIL'),
     'password': os.getenv('SORARE_PASSWORD')
 })
+#print(get_club_slugs_playing_next_gw(client))
 
-def sort_score(entry):
-    return entry.get("scoreboard_total")
-score_list = []
-player_slug_list = get_player_slugs_of_current_user(client)
-for player_slug in player_slug_list:
-    print(player_slug)
-    score_list.append(get_player_scoreboard(client,player_slug))
-score_list.sort(key=sort_score,reverse=True)
-print(score_list)
-cachefile = os.path.dirname(os.path.abspath(__file__))+"/../temp/sorare/scoreboard.json"
+#def sort_score(entry):
+#    return entry.get("scoreboard_total")
+#score_list = []
+#player_slug_list = get_player_slugs_of_current_user(client)
+#for player_slug in player_slug_list:
+#    print(player_slug)
+#    score_list.append(get_player_scoreboard(client,player_slug))
+#score_list.sort(key=sort_score,reverse=True)
+#print(score_list)
+#cachefile = os.path.dirname(os.path.abspath(__file__))+"/../temp/sorare/scoreboard.json"
     
-file_func.write_json_to_file(score_list,cachefile)
+#file_func.write_json_to_file(score_list,cachefile)
 
-quit()
+#quit()
 
 scenario = "winner"
 if len(sys.argv) < 2:

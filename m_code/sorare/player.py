@@ -69,13 +69,17 @@ def data_reader_nextopponent(raw_data,score):
 
 def get_player_scoreboard(client:Client,player_slug:str):
     fixture = get_latest_fixtures(client)[0]
+    cachefile_scores_plus = os.path.dirname(os.path.abspath(__file__))+"/../../temp/sorare/cache/player/"+player_slug+"/scores_plus.json"
     cachefile = os.path.dirname(os.path.abspath(__file__))+"/../../temp/sorare/cache/player/"+player_slug+"/scoreboard.json"
     
     raw_data = get_scores_of_player(client,player_slug)
     scores = raw_data.get("scores")
-
+    next_opponent = None
+      
     # Next games of team
-    if raw_data.get("head").get("activeClub",None) != None:
+    if raw_data.get("head").get("activeClub",None) == None:
+      my_club_slug = None
+    else:
       my_club_slug = raw_data.get("head").get("activeClub").get("slug")
       clubDetails = get_club_details(client,my_club_slug)
       next_opponent = None
@@ -99,11 +103,11 @@ def get_player_scoreboard(client:Client,player_slug:str):
           if opp == next_opponent:
             last_3_scores.append(score.get("score"))
             #print(">>>>>>>>"+str(score.get("score")))
-        print(last_3_scores)
+        #print(last_3_scores)
         raw_data["nextTeamScores"] = last_3_scores
         raw_data["nextOpponentSlug"] = opponent.get("opponent")
         raw_data["nextOpponentGW"] = next_opp_gw
-        
+    file_func.write_json_to_file(raw_data,cachefile_scores_plus)  
     #print(scoreboard_get_percentageplayed(scores,5))
     #print(scoreboard_get_percentageplayed(scores,15))
     #print(scoreboard_get_averageScore(scores,5))
@@ -143,10 +147,19 @@ def get_player_scoreboard(client:Client,player_slug:str):
         sum = sum +  ( score["evaluated"] * ( score["weight"]  / weight_sum ) )
     
     
-    print(scoreboard)
-    print(sum)
+    #print(scoreboard)
+    #print(sum)
     cache = {
-        "player": player_slug,
+        "player": {
+           "slug": player_slug,
+           "name": raw_data.get("head").get("displayName"),
+           "position": raw_data.get("head").get("position"),
+           "age": raw_data.get("head").get("age"),           
+        },
+        "team": {
+           "slug": my_club_slug
+        },
+        "nextGame": next_opponent,
         "scoreboard": scoreboard,
         "scoreboard_total": sum
     }
@@ -158,8 +171,9 @@ def scoreboard_get_percentageplayed(score_list,number):
     scores = score_list[:number]
     count = 0
     for score in scores:
-        if score.get("playerGameStats").get("minsPlayed") != None:
-            count =count + 1
+        if score.get("playerGameStats").get("minsPlayed") != None :
+            if score.get("playerGameStats").get("minsPlayed") != 0:
+              count =count + 1
     return (count * 100) / number
 
 def scoreboard_get_averageScore(score_list,number):
@@ -181,9 +195,13 @@ def get_scores_of_player(client:Client,player_slug:str):
 query Player($endCursor: String $slug: String! $first: Int!) {
   football {
     player(slug: $slug) {
+      displayName
       age
+      averageScore(type: LAST_FIFTEEN_SO5_AVERAGE_SCORE)
+      position
       activeClub {
         slug
+        name
       }
       activeNationalTeam {
         slug

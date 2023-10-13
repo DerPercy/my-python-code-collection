@@ -6,6 +6,10 @@ after_cursor = ""
 
 fixture_content = ""
 
+def get_current_open_gameweek(client:Client) -> int:
+    return 416
+
+
 def get_fixture_slug_of_gameweek(client:Client,gw:int) -> str:
     global after_cursor
     print("Get gameweek"+str(gw))
@@ -57,6 +61,23 @@ query FixturesQuery {
     for entry in result:
         fixture_list.append(build_model_from_api_result(entry))
     return fixture_list
+
+def get_fixture_from_slug(client:Client,fixture_slug:str) -> Fixture:
+    options = {
+        "resultSelector": ["data","football","so5","so5Fixture"],    
+    }
+    variables = {
+        "slug": fixture_slug
+    }
+    body = """
+query FixturesQuery($slug:String) { 
+    football { so5 { so5Fixture(slug:$slug) {  
+        slug aasmState startDate gameWeek
+    } } } 
+}
+"""
+    result = client.request(body,variables,options)
+    return build_model_from_api_result(result)
 
 def build_model_from_api_result(api_result) -> Fixture:
     #print(json.dumps(api_result,indent=2))   
