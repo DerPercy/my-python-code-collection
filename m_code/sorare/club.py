@@ -4,7 +4,7 @@ from .context import file_func
 from .fixture import get_current_open_gameweek
 
 
-def get_club_slugs_playing_next_gw(client:Client) -> list[str]:
+def get_club_slugs_playing_next_gw(client:Client,opts:dict = {}) -> list[str]:
     """
     List of club slugs which have a game in the next gameweek
     """
@@ -32,7 +32,14 @@ query Clubs {
     result = client.request(body,{},options)
     club_slug_list = []
     for club in result:
+        if opts.get("filter",{}).get("includeLeagues",None) != None:
+            if club.get("domesticLeague") == None:
+                continue
+            if club.get("domesticLeague",{}).get("slug","") not in opts.get("filter",{}).get("includeLeagues",[]):
+                continue
         if len(club.get("upcomingGames")) == 0:
+            continue
+        if club.get("upcomingGames")[0].get("so5Fixture") == None:
             continue
         if club.get("upcomingGames")[0].get("so5Fixture").get("gameWeek") == gw:
             #print(club.get("domesticLeague").get("slug"))

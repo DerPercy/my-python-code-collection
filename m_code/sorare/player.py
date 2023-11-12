@@ -42,9 +42,9 @@ def calc_nextopponent(raw_data):
     
     oppAverage = 0 
     if raw_data.get("nextTeamScores",None) == None:
-        return None
+        return 0
     if len(raw_data.get("nextTeamScores")) == 0:
-        return None
+        return 0
     for oppScore in raw_data.get("nextTeamScores"):
         oppAverage = oppAverage + oppScore
     oppAverage = oppAverage / len(raw_data.get("nextTeamScores"))
@@ -66,8 +66,28 @@ def data_reader_nextopponent(raw_data,score):
    score["gw"] = raw_data.get("nextOpponentGW")
    return
 
+# ========== Age ==========
+def calc_age(raw_data):
+   return raw_data.get("head").get("age")
+def eval_age(age):
+  if age < 23:
+     return 10
+  if age < 27:
+     return 9
+  if age < 30:
+     return 8
+  value = 37-age
+  if value < 0:
+     value = 0
+  return value
+  
+def is_player_slug_in_scoreboard_list(player_slug:str,scoreboard_list:list[dict])->bool:
+  for scoreboard in scoreboard_list:
+      if player_slug == scoreboard.get("player").get("slug"):
+         return True
+  return False
 
-def get_player_scoreboard(client:Client,player_slug:str):
+def get_player_scoreboard(client:Client,player_slug:str, options:dict = {}):
     fixture = get_latest_fixtures(client)[0]
     cachefile_scores_plus = os.path.dirname(os.path.abspath(__file__))+"/../../temp/sorare/cache/player/"+player_slug+"/scores_plus.json"
     cachefile = os.path.dirname(os.path.abspath(__file__))+"/../../temp/sorare/cache/player/"+player_slug+"/scoreboard.json"
@@ -129,6 +149,13 @@ def get_player_scoreboard(client:Client,player_slug:str):
         "evaluator": eval_nextopponent,
         "weight": 0.5
     }]
+    if options.get("includeAge",False) == True:
+      scoreboard.append({
+        "description": "Age",
+        "calculator": calc_age,
+        "evaluator": eval_age,
+        "weight": 0.2
+      })
     sum = 0
     weight_sum = 0
     for score in scoreboard:

@@ -10,3 +10,7 @@ temp/
 # Sorare
 sample_rankings.json
 sorarefiles/
+
+# Coinbase
+
+m_code/coinbase/example/

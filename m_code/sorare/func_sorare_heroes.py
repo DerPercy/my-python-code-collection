@@ -219,7 +219,9 @@ def create_leaderboard_image(client:Client,leader_board_slug:str, ranking_filter
     options["leagueLogo"] = folder+"league_logo.svg"
     # get 1st place
         
+    # Todo: Check if list has at least 1 item
     lineup = lineup_list[0]
+
     #print(lineup)
     #time.sleep(60)
     options["score"] = lineup.get("score","???")

@@ -3,6 +3,8 @@ import json
 import bcrypt
 import time
 import logging
+from socket import error as SocketError
+import errno
 
 class Client:
 
@@ -96,7 +98,16 @@ class Client:
 			"query": body,
 			"variables": variables
 		}
-        r = requests.post("https://api.sorare.com/graphql", json=payloadJSON, headers=headers)
+        try:
+            r = requests.post("https://api.sorare.com/graphql", json=payloadJSON, headers=headers)
+        except SocketError as e:
+            logging.error("SocketError occured "+str(e.errno))
+            logging.info(e)
+            time.sleep(300)
+            return self.__request(body,variables,options)
+            #if e.errno != errno.ECONNRESET:
+            #    raise # Not error we are looking for
+
         if r.status_code == 429:
             to_wait = int(r.headers.get("Retry-After",30))
             logging.info("Rate limit ("+str(to_wait)+")" )
