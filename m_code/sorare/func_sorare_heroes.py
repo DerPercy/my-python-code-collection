@@ -176,7 +176,7 @@ query getRankingForLeaderboard($leaderboardSlug: String!, $endCursor: String) {
         "rankings": lineup_list
     }
 
-def create_leaderboard_image(client:Client,leader_board_slug:str, ranking_filter:callable = None, ranking_sorter:callable = None):
+def create_leaderboard_image(client:Client,leader_board_slug:str, ranking_filter:callable = None, ranking_sorter:callable = None, rankingIndex:int = 0):
     print(leader_board_slug)
     # leaderboardSlug: 11-15-aug-2023-champion-asia-division-5
     leader_board_data = get_leaderboard_data(client,leader_board_slug,ranking_filter,ranking_sorter)
@@ -208,7 +208,7 @@ def create_leaderboard_image(client:Client,leader_board_slug:str, ranking_filter
         "bgColor": color,
         "textColor": textColor
     }
-    folder = "sorarefiles/"+leaderBoard.get("mainRarityType","unknown")+"/"+leader_board_slug
+    folder = "sorarefiles/"+leaderBoard.get("mainRarityType","unknown")+"/"+leader_board_slug+"_"+str(rankingIndex)
     options["resultFilename"] = "results/"+folder+".png"
     #os.makedirs(folder)
     folder = folder + "/"
@@ -220,7 +220,7 @@ def create_leaderboard_image(client:Client,leader_board_slug:str, ranking_filter
     # get 1st place
         
     # Todo: Check if list has at least 1 item
-    lineup = lineup_list[0]
+    lineup = lineup_list[rankingIndex]
 
     #print(lineup)
     #time.sleep(60)

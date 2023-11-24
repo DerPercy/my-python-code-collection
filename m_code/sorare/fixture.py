@@ -7,7 +7,10 @@ after_cursor = ""
 fixture_content = ""
 
 def get_current_open_gameweek(client:Client) -> int:
-    return 421
+    f_list = get_latest_fixtures(client)
+    print(f_list[0].gameWeek)
+    return f_list[0].gameWeek
+
 
 
 def get_fixture_slug_of_gameweek(client:Client,gw:int) -> str:

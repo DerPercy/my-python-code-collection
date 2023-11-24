@@ -141,7 +141,11 @@ for fixture in fixture_list:
             #    return lineup_price
             try:
                 if scenario == "budget":
-                    option = create_leaderboard_image(client,leader_board.slug,ranking_filter,create_ranking_sorter(fixture.startDate))
+                    option = create_leaderboard_image(client,leader_board.slug,ranking_filter,create_ranking_sorter(fixture.startDate),0)
+                    #options.append(option)
+                    #option = create_leaderboard_image(client,leader_board.slug,ranking_filter,create_ranking_sorter(fixture.startDate),1)
+                    #options.append(option)
+                    #option = create_leaderboard_image(client,leader_board.slug,ranking_filter,create_ranking_sorter(fixture.startDate),2)
                 else:
                     option = create_leaderboard_image(client,leader_board.slug)
                 

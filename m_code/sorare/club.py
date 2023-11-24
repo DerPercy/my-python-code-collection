@@ -16,6 +16,7 @@ query Clubs {
       slug
       domesticLeague {
         slug
+        name
       }
       upcomingGames(first:1) {
         so5Fixture {
@@ -30,8 +31,17 @@ query Clubs {
         "resultSelector": ["data","football","clubsReady"]
     }
     result = client.request(body,{},options)
+    all_leagues = []
+    all_leagues_details = []
     club_slug_list = []
     for club in result:
+        if club.get("domesticLeague") != None and club.get("domesticLeague",{}).get("slug","") not in all_leagues:
+          all_leagues.append(club.get("domesticLeague",{}).get("slug",""))
+          all_leagues_details.append({ 
+            "slug": club.get("domesticLeague",{}).get("slug",""),
+            "name": club.get("domesticLeague",{}).get("name","")
+          })
+          
         if opts.get("filter",{}).get("includeLeagues",None) != None:
             if club.get("domesticLeague") == None:
                 continue
@@ -45,6 +55,7 @@ query Clubs {
             #print(club.get("domesticLeague").get("slug"))
         
             club_slug_list.append(club.get("slug"))
+    print(all_leagues_details)
     return club_slug_list
 
 

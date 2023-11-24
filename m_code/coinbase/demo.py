@@ -102,8 +102,9 @@ with open('example/transactions.csv', newline='') as csvfile:
         processCSVRow(row)
 
 for cs in coinstacks:
-    #print(cs)
-    #print(coinstacks.get(cs).getContent())
+    
+    print("========== "+cs+" ==========")
+    print(coinstacks.get(cs).getContent())
     pass
 
 

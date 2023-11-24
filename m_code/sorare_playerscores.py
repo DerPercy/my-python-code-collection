@@ -33,7 +33,7 @@ elif sys.argv[1] == 'own':
 
 clubs_options = {
     "filter": {
-        "includeLeagues" : ["bundesliga-de"]
+        "includeLeagues" : ["bundesliga-de","mlspa"]
     }
 }
 playing_clubs = get_club_slugs_playing_next_gw(client,clubs_options)
