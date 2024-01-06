@@ -14,3 +14,7 @@ sorarefiles/
 # Coinbase
 
 m_code/coinbase/example/
+
+# Youtube
+m_code/youtube/client_secrets.json
+m_code/youtube/*.py-oauth2.json
