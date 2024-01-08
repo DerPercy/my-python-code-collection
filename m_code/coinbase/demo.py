@@ -5,6 +5,9 @@ import re
 from datetime import datetime, timedelta
 from handler.Coinstack import CoinStackHandler
 from models.transaction import Transaction
+from jinja2 import Environment, FileSystemLoader
+
+from context import myjinja2 
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -55,10 +58,11 @@ def processCSVRow(row):
             #print(result)
             transaction.gain = result.get("gainInEur")
         elif action == "Convert": # Convert one Coin to another
-            result = re.search(r"Converted ([\d.]*) ([^\s]*) to ([\d.]*) ([^\s]*)", transactionDescription)
+            print("Convert")
+            result = re.search(r"Converted ([\d.,]*) ([^\s]*) to ([\d.,]*) ([^\s]*)", transactionDescription)
             # Add second coin
             sec_symbol = result.group(4)
-            sec_quantity = float(result.group(3))
+            sec_quantity = float(result.group(3).replace(",", "."))
             sec_rate = eurWoFees / sec_quantity
             csh = getCoinStack(sec_symbol)
             csh.addQuantity(getDatetime(timestamp),sec_quantity,sec_rate)
@@ -117,13 +121,24 @@ transactions = filter(inFiscalYear, transactions)
 totalFees = 0
 totalGain = 0
 
+report_transactions = []
 for transaction in transactions:
     #print(transaction)
     totalFees = totalFees + transaction.fees
     totalGain = totalGain + transaction.gain
+    report_transactions.append(transaction)
 print(totalFees)
 print(totalGain)
 
+environment = myjinja2.get_environment()
+template = environment.get_template("tax.jinja2")
+
+print(transactions)
+content = template.render(
+    transactions=report_transactions
+)
+with open("example/tax-report.html", mode="w", encoding="utf-8") as file:
+    file.write(content)
 #print(transactions)
 
 

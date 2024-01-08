@@ -1,0 +1,14 @@
+
+{% extends "base.jinja2" %}
+
+{% block content %}
+Hello reports2
+
+{% for transaction in transactions %}
+    <p>
+        {{ transaction }}
+    </p>
+    <hr/>
+{% endfor %}
+
+{% endblock %}
