@@ -40,6 +40,8 @@ class CoinStackHandler:
 
         sellAmount = quantity * exchangeRate
         gainInEur = sellAmount
+        buyAmount = 0
+
         for soldPoss in possessionsToSell:
             soldPoss["rateSell"] = exchangeRate
             #soldPoss["rateSellUI"] = toExchangeRateUI(exchangeRate)
@@ -47,7 +49,7 @@ class CoinStackHandler:
             #soldPoss["eurSellUI"] = toEURAmountUI(soldPoss["eurSell"])
             soldPoss["eurGain"] = soldPoss["eurSell"] - soldPoss["amountEur"]
             #soldPoss["eurGainUI"] = toEURAmountUI(soldPoss["eurGain"])
-
+            buyAmount = buyAmount + soldPoss["amountEur"]
             gainInEur = gainInEur - soldPoss["amountEur"]
         return {
             "soldPossessions": possessionsToSell,
@@ -58,6 +60,8 @@ class CoinStackHandler:
                # "amountEurUI": toEURAmountUI(sellAmount)
             },
             "gainInEur": gainInEur,
+            "buyAmount": buyAmount,
+            "sellAmount": sellAmount
             #"gainInEurUI": toEURAmountUI(gainInEur)
         }
     

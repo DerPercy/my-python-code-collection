@@ -1,14 +1,47 @@
 
+{% macro render_coinstack(coinstack) %}
+
+{% for coinname in coinstack if coinstack[coinname].getContent().totalQuantity > 0 %}
+    <p>Test</p>
+    {{ coinname }}
+    {{ coinstack[coinname].getContent() }}
+    {% for poss in coinstack[coinname].getContent().possession %} 
+        
+    {% endfor %}    
+    {{ coinstack[coinname].getContent().totalQuantity }}
+    {{ coinstack[coinname].getContent().totalEurAmount }}
+{% endfor %}
+
+{% endmacro %}
+
+{% macro render_eur(value) %}
+    {{ value }} EUR
+{% endmacro %}
+
+
 {% extends "base.jinja2" %}
 
 {% block content %}
 Hello reports2
 
+{{ render_coinstack(coinstack_start) }}
+
 {% for transaction in transactions %}
     <p>
+        <h3>{{loop.index}}. {{ datetime_to_ddmmyyy(transaction.time) }} - {{ transaction.description }} ({{ transaction.budget_info }})</h3>
         {{ transaction }}
     </p>
     <hr/>
 {% endfor %}
+{{ render_coinstack(coinstack_end) }}
+
+
+<h1>Gesamt</h1>
+<table>
+    <tr>
+        <td>Staking Erlöse - sonstige Einkünfte gemäß §22 Nr. 3 EStG</td>
+        <td>{{ render_eur(income_total)}}</td>
+    </tr>
+</table>
 
 {% endblock %}
