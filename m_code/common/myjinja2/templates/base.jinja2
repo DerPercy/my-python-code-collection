@@ -1,7 +1,14 @@
 Hello base template
 
 {% macro datetime_to_ddmmyyy(datetime) %}
-    Datetime {{ datetime }}
+{{ datetime.strftime('%d.%m.%Y') }}
+{% endmacro %}
+
+
+{% macro relative_percentage(value) %}
+{% if value != None %}
+{{ ((value - 1) * 100)|round }}%
+{% endif %}
 {% endmacro %}
 
 

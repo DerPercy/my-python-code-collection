@@ -13,9 +13,16 @@ def fetch_stock_prices_yahoo(source:StockPriceSourceYahoo) -> list[StockPrice]:
         }
     )
     #print(response.status_code)
+    #print(response.content)
     data = response.json()
     timestamps = data.get("chart",{}).get("result",[{}])[0].get("timestamp",[])
     values = data.get("chart",{}).get("result",[{}])[0].get("indicators",{}).get("quote",[{}])[0].get("open",[])
+    
+    # TRET.AS changed rate => need to normalize
+    if source.symbol == "TRET.AS":
+        for i in range(len(values)):
+            if values[i] > 1000:
+                values[i] = values[i] / 100
     #print(timestamps)
     stock_price_list = []
     for i in range(len(timestamps)):

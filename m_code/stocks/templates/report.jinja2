@@ -1,0 +1,39 @@
+{% extends "base.jinja2" %}
+
+{% block content %}
+
+
+<table>
+<tr>
+    <td>Datum</td>
+    {% for pool in pools %}
+    <td colspan="2">{{ pool.stock.slug }}</td>
+    {% endfor %}
+    
+</tr>
+{% for price_info in price_info_list %}
+    <tr>
+        <td>{{ datetime_to_ddmmyyy(price_info.dt) }}</td>
+        {% for price in price_info.prices %}
+            <td>{{ price.value }}</td>
+            <td>{% if price != None %}{{ relative_percentage(price.indicators.get("perf_1y",None) ) }}{% endif %}</td>
+        {% endfor %} 
+        <!--<td>{{ price_info }}</td>-->
+    </tr>
+{% endfor %}
+</table>
+
+{% for pool in pools %}
+    <h2>{{ pool.stock.slug }}</h2>
+    <table>
+        {% for item in pool.items %}
+        <tr>
+            <td>{{ datetime_to_ddmmyyy(item.price.datetime) }}</td>
+            <td>{{ item }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    <!--{{ pool }}-->
+{% endfor %}
+
+{% endblock %}
