@@ -5,6 +5,7 @@ import requests
 from datetime import datetime
 import json
 import csv
+from clockify import parse_description
 
 load_dotenv()
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -83,8 +84,8 @@ headers = {
     'X-Api-Key': api_key
 }
 payloadJSON = {
-	"dateRangeStart":   "2023-08-01T00:00:00.000",
-	"dateRangeEnd":     "2023-08-31T23:59:59.000",
+	"dateRangeStart":   "2024-01-01T00:00:00.000",
+	"dateRangeEnd":     "2024-01-31T23:59:59.000",
 	"sortOrder":        "ASCENDING",
 	"detailedFilter":   {
 		"page": 1,
@@ -112,16 +113,30 @@ for timeentry in value["timeentries"]:
 		#print(minutesFromHHMM(entry["till"]))
 		entry["pause"] = "00:00"
 
-		entry["description"] = timeentry["description"]
+		entry["description"] = parse_description(timeentry["description"]).get("description")
 		entry["clientName"] = timeentry.get("clientName","")
 		entry["projectName"] = timeentry.get("projectName","")
 		entry["location"] = "Wildberg"
+		psp = ""
+		if entry["clientName"] == "CLAAS":
+			if entry["projectName"] == "CCO":
+				psp = "I/P75310"
+			elif entry["projectName"] == "CCO I/P75320":
+				psp = "I/P75320"
+				entry["projectName"] = "CCO"
+			elif entry["projectName"] == "PartsShop":
+				psp = "I/C03071"
+			else:
+				psp = "???"
+
+		entry["psp"] = psp
+		entry["ticket"] = parse_description(timeentry["description"]).get("ticket")
 		setTotalTime(entry)
 		retValue["entries"].append(entry)
 
 retValue["entries"] = mergeEntries(retValue["entries"])
 print(json.dumps(retValue,indent=2))
-with open('demo.csv', 'w', newline='') as csvfile:
+with open('temp/demo.csv', 'w', newline='') as csvfile:
     csv_writer = csv.writer(csvfile)
     for entry in retValue["entries"]:
         csv_writer.writerow([
@@ -133,6 +148,8 @@ with open('demo.csv', 'w', newline='') as csvfile:
 			entry.get("pause"),
 			entry.get("total"),
 			entry.get("clientName"),
-			entry.get("projectName"),			
+			entry.get("projectName"),
+			entry.get("psp"),
+			entry.get("ticket"),			
 		])
 
