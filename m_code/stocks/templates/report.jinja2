@@ -33,6 +33,8 @@
         </tr>
         {% endfor %}
     </table>
+    <p>Invested: {{ pool.get_invested_amount( ) }}</p>
+    <p>Value: {{ f_get_pool_value(pool.items, pool.stock.get_latest_price( )) }}</p>
     <!--{{ pool }}-->
 {% endfor %}
 

@@ -1,0 +1,7 @@
+{
+    "python.analysis.extraPaths": [
+        "./m_code/common/myjinja2",
+        "./m_code/common",
+        "./m_code/stocks/models"
+    ]
+}

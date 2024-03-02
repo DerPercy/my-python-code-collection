@@ -23,6 +23,25 @@ def get_stock_with_lowest_indicator_value_at_datetime(stock_pools:list[StockPool
             selected_price = dt_price    
     return (selected_pool,selected_price)
 
+def get_stock_with_highest_indicator_value_at_datetime(stock_pools:list[StockPool], dt:datetime, indicator_key: str)-> tuple[StockPool, StockPrice]:
+    global_min = None
+    selected_pool= None
+    selected_price = None
+    for stock_pool in stock_pools:
+        dt_price = get_stock_price_at_datetime(stock_pool.stock.prices,dt)
+        if dt_price == None:
+            continue
+        checkValue = dt_price.indicators.get(indicator_key,None)
+        if checkValue != None and global_min == None:
+            global_min = checkValue
+            selected_pool = stock_pool
+            selected_price = dt_price
+        elif checkValue != None and checkValue > global_min: # and global_min != None
+            global_min = checkValue
+            selected_pool = stock_pool
+            selected_price = dt_price    
+    return (selected_pool,selected_price)
+
 def buy_stocks(items:list[StockPoolItem],price:StockPrice,amount:float) -> list[StockPoolItem]:
     pool_item = StockPoolItem(
         price=price,
@@ -30,6 +49,20 @@ def buy_stocks(items:list[StockPoolItem],price:StockPrice,amount:float) -> list[
     )
     items.append(pool_item)
     return items
+
+def sell_stocks(items:list[StockPoolItem],price:StockPrice,amount:float) -> list[StockPoolItem]:
+    quantity = amount / price.value
+
+    while quantity > 0:
+        if items[0].quantity > quantity:
+            items[0].quantity = items[0].quantity - quantity
+            quantity = 0
+        else:
+            quantity = quantity - items[0].quantity
+            del items[0]
+    #print("Implement me")
+    return items
+
 
 def get_pool_value(items:list[StockPoolItem],current_price:StockPrice) -> float:
     value = 0

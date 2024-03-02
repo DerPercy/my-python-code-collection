@@ -1,0 +1,210 @@
+{% from '_macros.jinja2' import ethPossession, nftPossession %}
+{% extends "base.jinja2" %}
+
+{% block content %}
+
+<style>
+    .amount-area {
+        text-align: right;
+    }
+</style>
+<h1>Steuer Report für {{data.taxEntries.fiscalYear}}</h1>
+
+<p>diese Zusammenfassung enthält alle steuerlich relevanten Transaktionen auf der Plattform https://www.sorare.com für den Zeitraum
+01.01.{{data.taxEntries.fiscalYear}} bis 31.12.{{data.taxEntries.fiscalYear}} und enthält folgende Informationen:</p>
+<ul style="list-style:none">
+    <li>I. Übersicht</li>
+    <li>1. Einkünfte aus privaten Veräußerungsgeschäften nach § 23 EStG</li>
+    <li>II. Details</li>
+    <li>1. ETH und NFT Bestand 01.01.{{data.taxEntries.fiscalYear}}</li>
+    <li>2. Transaktionen {{data.taxEntries.fiscalYear}}</li>
+    <li>3. ETH und NTF Bestand 31.12.{{data.taxEntries.fiscalYear}}</li>
+</ul>
+<h2>I. Übersicht</h2>
+<h4>1. Einkünfte aus privaten Veräußerungsgeschäften nach § 23 EStG</h4>
+    <table class="table">
+        <tr>
+            <td>Veräußerungspreis:</td>
+            <td class="amount-area">{{ data.taxEntries.sellGainInEurUI }}</td>
+        </tr>
+        <tr>
+            <td>Anschaffungskosten:</td>
+            <td class="amount-area">{{ data.taxEntries.costInEurUI }}</td>
+        </tr>
+        <tr style="font-weight: bold;">
+            <td>Veräußerungsgewinn /-verlust innerhalb der 1-jährigen Haltefrist:</td>
+            <td class="amount-area">{{ data.taxEntries.profitWithinYearUI }}</td>
+        </tr>
+        <tr>
+            <td>Veräußerungsgewinn / -verlust außerhalb der 1-jährigen Haltefrist:</td>
+            <td class="amount-area">{{ data.taxEntries.profitGTYearUI }}</td>
+        </tr>
+        <tr style="font-weight: bold;">
+            <td>Steuerrelevanter Veräußerungsgewinn /-verlust:</td>
+            <td class="amount-area">{{ data.taxEntries.profitWithinYearUI }}</td>
+        </tr>
+     </table>
+<h2>II. Details </h2>
+
+<p>
+    Auf https://www.sorare.com werden Sorare-NFTs gehandelt. Die Bezahlung erfolgt mit der Kryptowährung Etherum (ETH).
+    Im Folgenden sind alle Transaktionen des Jahres {{data.taxEntries.fiscalYear}} aufgelistet.
+    Dabei ist jeweils die Wertänderung des NFTs, der ETHs und der daraus resultierende Gewinn/Verlust ausgewiesen.
+</p>
+
+<h4>1. ETH und NTF Bestand zum 01.01.{{data.taxEntries.fiscalYear}}</h4>
+
+    <b>ETH-Kaufpool</b>
+    <div>
+        {{ ethPossession(data.taxEntries.ethPossessionStart) }}
+    </div>
+    <b>NFT-Bestand</b>
+    <div>
+        {{ nftPossession(data.taxEntries.nftPossessionStart) }}
+    </div>
+
+<h4>2. Transaktionen</h4>
+
+<table class="table">
+    <tr>
+        <th style="text-align:center">#</th>
+        <th>Transaktionsdatum und Beschreibung</th>
+        <th>Gewinn/Verlust</th>
+    </tr>
+    {% for trans in data.taxEntries.details %}
+        <tr>
+            <td rowspan="2" style="vertical-align:top;text-align:center">{{loop.index}}.</td>
+            <td colspan="1"><b>{{ trans.entryDate }}: {{ trans.description }}</b></td>
+            <td rowspan="2"  class="amount-area">
+                <div><b>{{ trans.entryEurGainUI }}</b></div>
+                <div><i style="opacity:0.5">Aufsummiert {{ trans.entryEurGainSubTotalUI }}</i></div>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="1">
+            {% if trans.nftTaxInfo %}
+                {% if trans.nftTaxInfo.receivedNFTs %}
+                    <div><u>Erhaltene NFTs:</u></div>
+                    <table class="table table-bordered">
+                        <tr>
+                            <th>Sorare NFT ID</th>
+                            <th>Kaufbetrag</th>
+                        </tr>
+                        {% for nft in trans.nftTaxInfo.receivedNFTs %}
+                            <tr>
+                                <td>{{ nft.cardSlug}}</td>
+                                <td>{{ nft.eurAmount | round(2) }} Eur</td>
+                            </tr>
+                        {% endfor %}        
+                    </table>
+                {% endif %}    
+                {% if trans.nftTaxInfo.soldNFTs %}
+                    <div><u>Veräußerte NFTs:</u></div>
+                    <table class="table table-bordered">
+                        <tr>
+                            <th>Sorare NFT ID</th>
+                            <th>Kaufbetrag</th>
+                            <th>Kaufdatum</th>
+                            <th>Haltedauer</th>
+                            <th>Verkaufsbetrag</th>
+                            <th>Veräußerungsgewinn</th>
+                        </tr>
+                    {% for nft in trans.nftTaxInfo.soldNFTs %}
+                        <tr>
+                            <td>{{ nft.cardSlug }}</td>
+                            <td>{{ nft.eurAmountBought | round(2) }} Eur</td>
+                            <td>{{ nft.dateBoughtUI }}</td>
+                            <td>
+                                {% if not nft.taxRelevant %}
+                                    <u>{{ nft.daysHold }} Tage</u>
+                                {% else %}
+                                    {{ nft.daysHold }} Tage
+                                {% endif %}
+                            </td>
+                            <td>{{ nft.eurAmountSold | round(2) }} Eur</td>
+                            <td>
+                                {% if not nft.taxRelevant %}
+                                    <i>{{ (nft.eurAmountSold - nft.eurAmountBought) | round(2) }} Eur</i><br>
+                                    <i>Haltedauer > 1 Jahr</i>
+                                {% else %}
+                                    <b>{{ (nft.eurAmountSold - nft.eurAmountBought) | round(2) }} Eur</b>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </table>
+                {% endif %}
+                {% if trans.nftTaxInfo.nftSellGain %}
+                    <div style="display:none">Veräußerungsgewinn NFTs: {{ trans.nftTaxInfo.nftSellGain | round(2) }} Eur</div>
+                {% endif %}
+            {% endif %}   
+
+
+            {% if trans.ethTaxInfo %} 
+                {% if trans.ethTaxInfo.soldPossessions %}
+                    <div><u>Veräußerte ETH aus Kaufpool:</u></div>
+                    <table class="table table-bordered">
+                        <tr>
+                            <th>Kaufdatum</th>
+                            <th>Anzahl</th>
+                            <th>Kurs bei Kauf</th>
+                            <th>Kaufwert</th>
+                            <th>Kurs bei Verkauf</th>
+                            <th>Verkaufswert</th>
+                            <th>Gewinn/Verlust</th>
+                        </tr>
+                    {% for eth in trans.ethTaxInfo.soldPossessions %}
+                        <tr>
+                            <td>{{eth.dateUI}}</td>
+                            <td>{{eth.quantityUI}}</td>
+                            <td>{{eth.rateUI}}</td>
+                            <td>{{eth.amountEurUI}}</td>
+                            <td>{{eth.rateSellUI}}</td>
+                            <td>{{eth.eurSellUI}}</td>
+                            <td>{{eth.eurGainUI}}</td>
+                        </tr>
+                    {% endfor %}
+                        <tr>
+                            <td colspan="6">Summe Gewinn/Verlust</td>
+                            <td><b>{{ trans.ethTaxInfo.gainInEurUI}}</b></td>
+                        </tr>
+                    </table>
+                {% endif %}
+                {% if trans.ethTaxInfo.receivedETH %}
+                    <div><u>Erhaltene ETH:</u></div>
+                    <table class="table table-bordered">
+                        <tr>
+                            <th>Anzahl</th>
+                            <th>Kurs</th>
+                            <th>Kaufwert</th>
+                        </tr>
+                        <tr>
+                            <td>{{ trans.ethTaxInfo.receivedETH.ethAmountUI }}</td>
+                            <td>{{ trans.ethTaxInfo.receivedETH.exchangeRateUI }}</td>
+                            <td>{{ trans.ethTaxInfo.receivedETH.eurAmountUI}}</td>
+                        </tr>
+                    </table>
+                {% endif %}    
+            {% endif %}   
+
+            </td>
+        </tr>
+    {% endfor %}
+    <tr>
+        <td colspan="2">Gesamt:</td>
+        <td class="amount-area" style="text-decoration: underline; font-weight: bold;">{{ data.taxEntries.details | sum(attribute='entryEurGain') | round(2) }} EUR</td>
+    </tr>
+</table>
+
+ 
+
+<h4>3. ETH und NTF Bestand zum 31.12.{{data.taxEntries.fiscalYear}}</h4>
+<b>ETH-Kaufpool</b>
+    <div>
+        {{ ethPossession(data.taxEntries.ethPossessionEnd) }}
+    </div>
+<b>NFT-Bestand</b>
+    <div>
+        {{ nftPossession(data.taxEntries.nftPossessionEnd) }}
+    </div>
+{% endblock %}

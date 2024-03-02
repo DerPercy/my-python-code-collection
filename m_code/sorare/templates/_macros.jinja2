@@ -1,0 +1,72 @@
+{% macro mySorareLXScoreStats(scores,number) %}
+    {#
+        sadfsdf
+    #} 
+    L{{number}}
+    {% set avgScore = scores.fCalcLastXAverageScore(number) | round(0) | int %}
+    {% set scoreClass = scores.fGetBackgroundColorCSSClassForScore(avgScore) %}
+    <div style="width: 2rem; height: 1.75rem; color: white; font-size: 95%; font-weigth: bold;">
+        <div class="{{scoreClass}}" style="display:flex; border-radius: .375rem;">
+            <div style="display:flex; margin-left:auto; margin-right: auto;" >{{ avgScore }}</div>
+        </div>
+    </div>
+    <div class="progress" title="{{ scores.fCalcLastXPlayedPercentage(number) }}% games played">
+        {% for entry in scores.fGetScoreTrendData(number) %}
+            <div class="progress-bar {{ entry.cssBG }}" role="progressbar" style="width: {{ entry.width }}%;" aria-valuenow="{{ entry.width }}" aria-valuemin="0" aria-valuemax="100"></div>
+        {% endfor %}
+    </div>
+
+{% endmacro %}
+
+{% macro ethPossession(possessionData) %}
+    <table class="table">
+        <tr>
+            <th>Kaufdatum</th>
+            <th>Menge</th>
+            <th>Kaufpreis</th>
+        </tr>
+        {% for entry in possessionData.possession %}
+        <tr>
+            <td>{{entry.dateUI}}</td>
+            <td>{{entry.quantityUI}}</td>
+            <td>{{entry.eurAmountUI}}</td>
+        </tr>
+        {% endfor %}
+        <tr>
+            <th>Gesamt</th>
+            <td>{{ possessionData.totalQuantityUI }}</td>
+            <td>{{ possessionData.totalEurAmountUI }}</td>
+        </tr>
+    </table>
+    <pre style="display:none">
+            {{ possessionData | tojson}}
+    </pre>
+{% endmacro %}
+
+
+{% macro nftPossession(possessionData) %}
+    <table class="table">
+        <tr>
+            <th>#</th>
+            <th>Kaufdatum</th>
+            <th>Sorare NFT-ID</th>
+            <th>Kaufpreis</th>
+        </tr>
+    
+        {% for entry in possessionData.assets %}
+        <tr>
+            <td>{{loop.index}}</td>
+            <td>{{entry.dateUI}}</td>
+            <td>{{entry.slug}}</td>
+            <td>{{entry.eurAmountUI}}</td>
+        </tr>
+        {% endfor %}
+        <tr>
+            <th colspan="3">Gesamt</th>
+            <th>{{ possessionData.totalAmountUI }}</th>
+        </tr>
+    </table>
+    <pre style="display:none">
+            {{ possessionData | tojson}}
+    </pre>
+{% endmacro %}
