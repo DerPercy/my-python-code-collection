@@ -1,6 +1,6 @@
 from client import Client as SorareClient
 from account_entry import get_account_entries
-from context import myjinja2, CoinStackHandler
+from context import myjinja2, CoinStackHandler,AssetHandler
 from models.tax_entry import TaxEntry
 import logging
 import os
@@ -20,6 +20,7 @@ fiscal_year = 2023
 transactions = get_account_entries(client)
 fy_tax_entries = []
 eth_coinstack = CoinStackHandler()
+nft_assets = AssetHandler()
 eth_possession_start = None
 eth_possession_end = None
 for transaction in transactions:
@@ -29,6 +30,7 @@ for transaction in transactions:
             eth_possession_start = eth_coinstack.getContent()
     # Handle Coinstack gains
     coinstack_result = transaction.fill_coinstackhandler( eth_coinstack )
+    transaction.fill_assethandler( nft_assets )
     if coinstack_result != None:
         tax_entry.eth_result = coinstack_result
 

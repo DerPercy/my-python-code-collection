@@ -4,3 +4,4 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../.
 
 
 from handler.Coinstack import CoinStackHandler
+from handler.AssetHandler import AssetHandler
