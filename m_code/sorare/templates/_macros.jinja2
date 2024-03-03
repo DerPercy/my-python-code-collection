@@ -27,20 +27,17 @@
         </tr>
         {% for entry in possessionData.possession %}
         <tr>
-            <td>{{entry.dateUI}}</td>
-            <td>{{entry.quantityUI}}</td>
-            <td>{{entry.eurAmountUI}}</td>
+            <td>{{entry.date}}</td>
+            <td>{{entry.quantity}}</td>
+            <td>{{entry.eurAmount}}</td>
         </tr>
         {% endfor %}
         <tr>
             <th>Gesamt</th>
-            <td>{{ possessionData.totalQuantityUI }}</td>
-            <td>{{ possessionData.totalEurAmountUI }}</td>
+            <td>{{ possessionData.possession | sum(attribute='quantity') }}</td>
+            <td>{{ possessionData.possession | sum(attribute='eurAmount') }}</td>
         </tr>
     </table>
-    <pre style="display:none">
-            {{ possessionData | tojson}}
-    </pre>
 {% endmacro %}
 
 

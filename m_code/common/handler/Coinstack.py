@@ -1,10 +1,6 @@
 from datetime import datetime
 import copy
 
-'''
-Attention!!!!
-see common/handler/Coinstack.py
-'''
 class CoinStackHandler:
     content = None
 

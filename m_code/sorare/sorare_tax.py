@@ -1,6 +1,7 @@
 from client import Client as SorareClient
 from account_entry import get_account_entries
-from context import myjinja2
+from context import myjinja2, CoinStackHandler
+from models.tax_entry import TaxEntry
 import logging
 import os
 from dotenv import load_dotenv
@@ -13,18 +14,37 @@ client = SorareClient({
     'password': os.getenv('SORARE_PASSWORD')
 })
 
+fiscal_year = 2023
 
-get_account_entries(client)
+
+transactions = get_account_entries(client)
+fy_tax_entries = []
+eth_coinstack = CoinStackHandler()
+eth_possession_start = None
+eth_possession_end = None
+for transaction in transactions:
+    tax_entry = TaxEntry("???")
+    if transaction.in_fiscal_year(fiscal_year):
+        if eth_possession_start == None:
+            eth_possession_start = eth_coinstack.getContent()
+    # Handle Coinstack gains
+    coinstack_result = transaction.fill_coinstackhandler( eth_coinstack )
+    if coinstack_result != None:
+        tax_entry.eth_result = coinstack_result
+
+    if transaction.in_fiscal_year(fiscal_year):
+        fy_tax_entries.append(tax_entry.calculate())
+        eth_possession_end = eth_coinstack.getContent()
 
 environment = myjinja2.get_environment()
 template = environment.get_template("taxReport.jinja2")
 
 
 taxEntries = {
-        "fiscalYear": "2023",
-        "ethPossessionStart": [],
+        "fiscalYear": fiscal_year,
+        "ethPossessionStart": eth_possession_start,
         "nftPossessionStart": [],
-        "ethPossessionEnd": [],
+        "ethPossessionEnd": eth_possession_end,
         "nftPossessionEnd": [],
         "costInEur": 1.23,
         "costInEurUI": "1,23 EUR",
@@ -34,7 +54,7 @@ taxEntries = {
         "profitWithinYearUI": "1 EUR",
         "profitGTYear": 2,
         "profitGTYearUI": "2.00 EUR",
-        "details": []
+        "details": fy_tax_entries
 
     }
 content = template.render(

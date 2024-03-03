@@ -15,11 +15,11 @@ query CurrentUserQuery {
     #print(result)
     return result.get("data").get("currentUser").get("slug")
 
-def get_account_entries(client:Client) -> None:
+def get_account_entries(client:Client) -> list[Transaction]:
     options = {
        "resultSelector": ["data","currentUser","accountEntries","nodes"],  
        "pagination": {
-            "targetNumber": 10,
+            "targetNumber": 1000000,
             "paginationVariable": "endCursor",
             "cursorSelector": ["data","currentUser","accountEntries","pageInfo","endCursor"]
         }  
@@ -70,4 +70,4 @@ query CurrentUserQuery($endCursor: String ) {
         
     
     #print(transaction_list)
-    return result
+    return transaction_list
