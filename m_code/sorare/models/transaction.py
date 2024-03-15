@@ -1,6 +1,8 @@
 from attrs import define
 from context import CoinStackHandler,AssetHandler
 from datetime import datetime, timedelta
+from icecream import ic
+import logging
 
 @define
 class Transaction:
@@ -9,9 +11,9 @@ class Transaction:
     current_user_slug: str
 
     def process_payload(self):
-        print(self.payload.get("entryType"))
+        #print(self.payload.get("entryType"))
         #if self.payload.get("entryType") == "PAYMENT":
-        print(self.payload)
+        #print(self.payload)
         return self
     
     def in_fiscal_year(self, fy:int) -> bool:
@@ -22,17 +24,60 @@ class Transaction:
         Fill the assethandler
         Handle sold and received cards
         """
-        sender_cards = get_card_slugs(self.payload.get("senderSide"))
-        receiver_cards = get_card_slugs(self.payload.get("receiverSide"))
+        if self.payload.get("entryType") == "PAYMENT_FEE":
+            # Payment Fee needs not be handled
+            return True
+        if self.payload.get("entryType") == "DEPOSIT":
+            # Deposits needs not be handled
+            return True
 
-        pass
+        if self.payload.get("tokenOperation") == None:
+            logging.error("No tokenOperation Found")
+            ic(self.payload)
+            return False
 
-    def i_am_the_receiver(self) -> bool:
+        price = 0
+        if self.payload.get("tokenOperation").get("__typename") == "TokenBid":
+            received_cards = get_card_slugs(self.payload.get("tokenOperation",{}).get("auction"))
+            sent_cards = []
+            price = self.payload.get("amountInFiat").get("eur")
+
+        else:
+            if self.i_am_the_receiver():
+                received_cards = get_card_slugs(self.payload.get("tokenOperation",{}).get("senderSide"))
+                sent_cards = get_card_slugs(self.payload.get("tokenOperation",{}).get("receiverSide"))
+            else:
+                received_cards = get_card_slugs(self.payload.get("tokenOperation",{}).get("receiverSide"))
+                sent_cards = get_card_slugs(self.payload.get("tokenOperation",{}).get("senderSide"))
+        
+            for sent_card in sent_cards:
+                if not asset_handler.remove_asset(self.get_datetime(),sent_card):
+                    ic(self.payload)
+                    return False
+            price = 27.27
+        if len(received_cards) > 0:
+            price_per_unit = price / len(received_cards)
+            for received_card in received_cards:
+                if(received_card == "richie-laryea-2021-limited-93"):                    
+                    ic(self.i_am_the_receiver())
+                if not asset_handler.add_asset(self.get_datetime(),received_card,price_per_unit):
+                    ic(self.payload)
+                    return False
+        return True
+
+    def i_am_the_receiver(self,log:bool = False) -> bool:
         """
         Determines, if i am the receiver of the transaction
         """
-        if self.payload.get("receiver") == None:
+        if self.payload.get("tokenOperation").get("sender") != None:
+            if self.payload.get("tokenOperation").get("sender").get("slug") == self.current_user_slug:
+                return False
+
+        if self.payload.get("tokenOperation").get("receiver") == None:
             return True
+        else:
+            if self.payload.get("tokenOperation").get("receiver").get("slug") == self.current_user_slug:
+                return True
         return False
     
     def fill_coinstackhandler(self, csh:CoinStackHandler) -> None:
@@ -59,6 +104,8 @@ Internal functions
 
 def get_card_slugs(side:dict) -> list[str]:
     cards = []
+    if side == None:
+        return cards
     for card in side.get("cards"):
         cards.append(card["slug"])
     return cards

@@ -1,5 +1,8 @@
 from client import Client
 from models.transaction import Transaction
+from context import file_func
+from icecream import ic
+
 
 def get_current_user_slug(client:Client) -> str:
     options = {
@@ -63,6 +66,8 @@ query CurrentUserQuery($endCursor: String ) {
 """
     result = client.request(body,variables,options)
     result.reverse()
+    file_func.write_json_to_file(result,"temp/sorare_transactions.json")
+
     current_user = get_current_user_slug(client)
     transaction_list = []
     for transaction in result:
