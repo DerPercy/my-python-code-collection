@@ -12,6 +12,11 @@ from context import myjinja2
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
+# Customizing part
+fiscalYear = 2023
+
+
+# Implementation part
 coinstacks = {
 
 }
@@ -27,6 +32,7 @@ def getCoinStack(symbol:str) -> CoinStackHandler:
 
 def processCSVRow(row):
     global coinstacks
+    global fiscalYear
     timestamp = row[0]
     action = row[1]
     symbol = row[2]
@@ -129,7 +135,7 @@ for cs in coinstacks:
 
 
 def inFiscalYear(item:Transaction):
-    if item.time.year == 2023:
+    if item.time.year == fiscalYear:
         return True
     return False
 
@@ -173,7 +179,10 @@ content = template.render(
     transactions=report_transactions,
     coinstack_start=coinstack_start,
     coinstack_end=coinstack_end,
-    income_total=income_total
+    income_total=income_total,
+    paid_total=paid_total,
+    received_total=received_total,
+    fiscalYear=fiscalYear
 )
 with open("example/tax-report.html", mode="w", encoding="utf-8") as file:
     file.write(content)

@@ -2,45 +2,90 @@
 {% macro render_coinstack(coinstack) %}
 
 {% for coinname in coinstack if coinstack[coinname].getContent().totalQuantity > 0 %}
-    <p>Test</p>
-    {{ coinname }}
-    {{ coinstack[coinname].getContent() }}
+    <p><b>Kaufpool für Coin {{ coinname }}</b></p>
+    
+    <table>
+        <tr>
+            <th>Kaufdatum</th>
+            <th>Menge</th>
+            <th>Kaufpreis (EUR)</th>
+        </tr>
     {% for poss in coinstack[coinname].getContent().possession %} 
-        
-    {% endfor %}    
-    {{ coinstack[coinname].getContent().totalQuantity }}
-    {{ coinstack[coinname].getContent().totalEurAmount }}
+        <tr>
+            <td>{{ datetime_to_ddmmyyy(poss.date) }}</td>
+            <td>{{ render_quantity(poss.quantity) }}</td>
+            <td style="text-align:right;">{{ render_eur(poss.eurAmount) }}</td>
+        </tr>
+    {% endfor %}
+        <tr>
+            <td>Gesamt:</td>
+            <td>{{ render_quantity(coinstack[coinname].getContent().totalQuantity) }}</td>
+            <td style="text-align:right;">{{ render_eur(coinstack[coinname].getContent().totalEurAmount) }}</td>
+        </tr>
+    </table>    
+    
 {% endfor %}
 
 {% endmacro %}
 
 {% macro render_eur(value) %}
-    {{ value }} EUR
+    {% if value < 0.01 %}
+        > 0.01 EUR
+    {% else %}
+        {{ value|round(2) }} EUR
+    {% endif %}
+{% endmacro %}
+
+{% macro render_quantity(value) %}
+    {% if value < 0.0001 %}
+        > 0.0001
+    {% else %}
+        {{ value|round(4) }}
+    {% endif %}
 {% endmacro %}
 
 
 {% extends "base.jinja2" %}
 
 {% block content %}
-Hello reports2
 
+<h1>Coinbase Steuerbericht {{ fiscalYear }}</h1>
+
+
+<h2>Kaufpool Coins Stand 01.01.{{ fiscalYear}}</h2>
 {{ render_coinstack(coinstack_start) }}
 
+<h2>Transaktionen {{ fiscalYear }}</h2>
 {% for transaction in transactions %}
     <p>
-        <h3>{{loop.index}}. {{ datetime_to_ddmmyyy(transaction.time) }} - {{ transaction.description }} ({{ transaction.budget_info }})</h3>
-        {{ transaction }}
+        <h3>{{loop.index}}. {{ datetime_to_ddmmyyy(transaction.time) }} - {{ transaction.description }} 
+            {% if transaction.budget_info %}({{ transaction.budget_info }}){% endif %}</h3>
+        <div style="display: none;">{{ transaction }}</div>
     </p>
     <hr/>
 {% endfor %}
+
+<h2>Kaufpool Coins Stand 31.12.{{ fiscalYear}}</h2>
 {{ render_coinstack(coinstack_end) }}
 
 
-<h1>Gesamt</h1>
+<h2>Zusammenfassung</h2>
 <table>
     <tr>
         <td>Staking Erlöse - sonstige Einkünfte gemäß §22 Nr. 3 EStG</td>
         <td>{{ render_eur(income_total)}}</td>
+    </tr>
+    <tr>
+        <td>Anschaffungskosten</td>
+        <td>{{ render_eur(paid_total)}}</td>
+    </tr>
+    <tr>
+        <td>Veräußerungspreis</td>
+        <td>{{ render_eur(received_total)}}</td>
+    </tr>
+    <tr>
+        <td><b>Steuerrelevanter Veräußerungsgewinn / -verlust</b></td>
+        <td><b>{{ render_eur(received_total - paid_total)}}</b></td>
     </tr>
 </table>
 
