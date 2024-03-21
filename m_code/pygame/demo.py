@@ -1,6 +1,9 @@
 # Importieren der Pygame-Bibliothek
 import pygame, sys, time, random
 from pygame.locals import *
+from common import collision
+from icecream import ic
+import copy
 
 # unser Multiplikator 
 MULTIPLIKATOR = 20
@@ -107,6 +110,13 @@ def ball_initialisieren():
     ball_x_alt = 0
     ball_y_alt = 0
 
+def create_ball_collisionmap():
+    # Hier noch Spielerfigur einbauen
+    retmap = copy.deepcopy(karte)
+    for i in range(spielfigur_1_width - 1):
+        retmap[spielfigur_1_y][spielfigur_1_x + i] = 2
+    return retmap
+
 # Ausgabe Mauersteine im Spielfenster
 for x in range(0,20):
     for y in range(0,27):
@@ -148,17 +158,30 @@ while spielaktiv:
         spielfigur_1_bewegung = 0
 
     # Ballbewegung
-    if ball_x <= 0:
-        ball_x_richtung = 1
-    if ball_x >= 19:
-        ball_x_richtung = -1
-    if ball_y <= 0:
-        ball_y_richtung = 1
-    if ball_y > 29:
-        # ball_y_richtung = -1
-        ball_y_richtung = 0
-        ball_x_richtung = 0
-        print("Verloren :(")
+    col_map = create_ball_collisionmap()
+    ball_surroundings = collision.create_surroundings(col_map,(ball_x,ball_y))
+
+    col_result = collision.calc_collision(ball_surroundings,(ball_x_richtung,ball_y_richtung))
+    ball_x_richtung = col_result[0][0]
+    ball_y_richtung = col_result[0][1]
+    # handle collisions => remove bricks
+    for col in col_result[1]:
+        if collision.is_out_of_bounds(karte,(ball_x,ball_y),col) == False:
+            karte[ball_y + col[1]][ball_x + col [0]] = 0
+            element_loeschen(ball_x + col [0] , ball_y + col [1])
+            break
+
+    #if ball_x <= 0:
+    #    ball_x_richtung = 1
+    #if ball_x >= 19:
+    #    ball_x_richtung = -1
+    #if ball_y <= 0:
+    #    ball_y_richtung = 1
+    #if ball_y > 29:
+    #    # ball_y_richtung = -1
+    #    ball_y_richtung = 0
+    #    ball_x_richtung = 0
+    #    print("Verloren :(")
         #ball_initialisieren()
 
     # Spielfigurbewegung
@@ -167,58 +190,58 @@ while spielaktiv:
 
     # Ball trifft Mauerstein
     # Kontrolle auf möglich Kollision
-    if ball_y_richtung == -1:
-        # Ball ist in Aufwärtsbewegung
-        # genau darüber ein Mauerstein?
-        if karte[ball_y-1][ball_x] != 0:
-            print("trifft Mauerstein oberhalb")
-            # Mauerstein wird gelöscht vom Bildschirm
-            element_loeschen(ball_x, ball_y-1)
-            # Mauerstein wird gelöscht aus der Liste karte
-            karte[ball_y-1][ball_x] = 0
-            ball_y_richtung = 1
-        else:
-            if ball_x_richtung == 1:
-                # Ball bewegt sich nach rechts
-                if karte[ball_y-1][ball_x+1] != 0:
-                    print("trifft Mauerstein rechts oberhalb")
-                    # Mauerstein wird gelöscht vom Bildschirm
-                    element_loeschen(ball_x+1, ball_y-1)
-                    # Mauerstein wird gelöscht aus der Liste karte
-                    karte[ball_y-1][ball_x+1] = 0
-                    ball_y_richtung = 1
-                    # trifft auf Ecke, also gleich Richtung zurück
-                    ball_x_richtung = -1
-            else:
-                # Ball bewegt sich nach links
-                if karte[ball_y-1][ball_x-1] != 0:
-                    print("trifft Mauerstein links oberhalb")
-                    # Mauerstein wird gelöscht vom Bildschirm
-                    element_loeschen(ball_x-1, ball_y-1)
-                    # Mauerstein wird gelöscht aus der Liste karte
-                    karte[ball_y-1][ball_x-1] = 0
-                    ball_y_richtung = 1
-                    # trifft auf Ecke, also gleich Richtung zurück
-                    ball_x_richtung = +1
+    #if ball_y_richtung == -1:
+    #    # Ball ist in Aufwärtsbewegung
+    #    # genau darüber ein Mauerstein?
+    #    if karte[ball_y-1][ball_x] != 0:
+    #        print("trifft Mauerstein oberhalb")
+    #        # Mauerstein wird gelöscht vom Bildschirm
+    #        element_loeschen(ball_x, ball_y-1)
+    #        # Mauerstein wird gelöscht aus der Liste karte
+    #        karte[ball_y-1][ball_x] = 0
+    #        ball_y_richtung = 1
+    #    else:
+    #        if ball_x_richtung == 1:
+    #            # Ball bewegt sich nach rechts
+    #            if karte[ball_y-1][ball_x+1] != 0:
+    #                print("trifft Mauerstein rechts oberhalb")
+    #                # Mauerstein wird gelöscht vom Bildschirm
+    #               element_loeschen(ball_x+1, ball_y-1)
+    #                # Mauerstein wird gelöscht aus der Liste karte
+    #                karte[ball_y-1][ball_x+1] = 0
+    #                ball_y_richtung = 1
+    #                # trifft auf Ecke, also gleich Richtung zurück
+    #                ball_x_richtung = -1
+    #        else:
+    #            # Ball bewegt sich nach links
+    #            if karte[ball_y-1][ball_x-1] != 0:
+    #                print("trifft Mauerstein links oberhalb")
+    #                # Mauerstein wird gelöscht vom Bildschirm
+    #                element_loeschen(ball_x-1, ball_y-1)
+    #                # Mauerstein wird gelöscht aus der Liste karte
+    #                karte[ball_y-1][ball_x-1] = 0
+    #                ball_y_richtung = 1
+    #                # trifft auf Ecke, also gleich Richtung zurück
+    #                ball_x_richtung = +1
 
     # Ball trifft Schläger
     # Kontrolle auf möglich Kollision
-    if ball_y == 27 and ball_y_richtung == 1:
-        print("Kontrolle auf Kollision mit Schläger")
+    #if ball_y == 27 and ball_y_richtung == 1:
+    #    print("Kontrolle auf Kollision mit Schläger")
 
-        # Ball kommt von links:
-        if ball_x_richtung == 1:
-            print("Ball kommt von links")
-            if ball_x+1 >= spielfigur_1_x and ball_x+1 <= spielfigur_1_x+spielfigur_1_width:
-                print("Ball trifft Schläger")
-                ball_y_richtung = -1
+    #    # Ball kommt von links:
+    #    if ball_x_richtung == 1:
+    #        print("Ball kommt von links")
+    #        if ball_x+1 >= spielfigur_1_x and ball_x+1 <= spielfigur_1_x+spielfigur_1_width:
+    #            print("Ball trifft Schläger")
+    #            ball_y_richtung = -1
 
-        # Ball kommt von rechts:
-        if ball_x_richtung == -1:
-            print("Ball kommt von rechts")
-            if ball_x-1 >= spielfigur_1_x and ball_x-1 <= spielfigur_1_x+spielfigur_1_width:
-                print("Ball trifft Schläger")
-                ball_y_richtung = -1
+    #    # Ball kommt von rechts:
+    #    if ball_x_richtung == -1:
+    #        print("Ball kommt von rechts")
+    #        if ball_x-1 >= spielfigur_1_x and ball_x-1 <= spielfigur_1_x+spielfigur_1_width:
+    #            print("Ball trifft Schläger")
+    #            ball_y_richtung = -1
 
     # Siegbedingung erfüllt?
     mauersteine = 0
@@ -254,7 +277,7 @@ while spielaktiv:
     pygame.display.flip()
 
     # Refresh-Zeiten festlegen
-    clock.tick(5)
+    clock.tick(15)
 
 pygame.quit()
 
