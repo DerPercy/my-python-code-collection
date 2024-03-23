@@ -1,0 +1,39 @@
+{
+    "map": [
+        [2,2,2,0,0,0, 0, 0, 0, 0,2,0,0,0,0,2,2,0,0,0,0, 9, 6,6,6,6,6,14],
+        [4,0,0,0,0,1, 1, 1, 0, 0,2,0,2,2,0,0,0,0,0,2,2, 8, 7,7,7,7,7, 8],
+        [2,2,0,0,0,1, 1, 1, 1, 0,0,0,0,0,0,0,2,2,0,0,2, 8, 7,7,7,7,7, 8],
+        [2,0,0,0,1,1, 1, 1, 1, 0,2,2,0,0,0,0,0,2,0,0,0,11,14,6,7,6,6,15],
+        [2,0,0,0,1,1, 1, 1, 1, 1,2,2,0,2,2,2,0,0,0,4,0, 0, 8,7,7,7,7, 7],
+        [2,0,0,0,1,1, 1, 1,13,13,1,1,1,1,1,1,2,2,0,0,0, 0, 8,7,7,7,7, 8],
+        [2,0,0,0,0,1, 1, 1, 0, 0,0,0,0,0,0,1,1,1,0,0,0, 0, 7,7,7,7,7, 8],
+        [2,2,0,0,0,0,13,13, 0, 0,0,0,0,0,0,0,0,1,1,1,0, 2, 8,7,7,7,7, 8],
+        [2,0,0,0,0,0, 0, 0, 0, 0,0,0,0,0,0,0,0,0,0,0,0, 0,11,6,6,6,6,15],
+        [2,0,2,2,2,2, 0, 0, 0, 0,0,0,0,0,0,0,0,2,2,2,0, 0, 0,2,2,0,0, 8],
+        [2,0,2,0,5,2, 0, 0, 0, 2,2,0,2,0,0,0,0,2,2,0,0, 2, 0,2,2,2,0, 8],
+        [2,0,2,2,2,2, 0, 0, 2, 2,2,4,2,0,0,0,0,0,0,0,2, 2, 0,0,0,2,0, 8],
+        [2,0,0,0,0,0, 0, 2, 2, 2,2,2,2,0,0,0,0,2,2,2,2, 2, 0,2,0,0,0,11]
+    ],
+    "tileDefinition": [
+        ["GRUEN",0,"rpg/images/map/terrain/boden_gruen.png"], 
+        ["BLAU",1,"rpg/images/map/terrain/wasser.png"],
+        ["GRUEN",1,["rpg/images/map/terrain/boden_gruen.png","rpg/images/map/terrain/tree.png"]],
+        ["GRUEN",1,"rpg/images/map/terrain/cow.png"],
+        ["GRUEN",1,["rpg/images/map/terrain/boden_gruen.png","rpg/images/map/terrain/brunnen.png"]],
+        ["GRUEN",1,["rpg/images/map/terrain/boden_gruen.png","rpg/images/map/terrain/feuer.png"]],
+        ["GRUEN",1,"rpg/images/map/terrain/wand_eis_horizontal.png"],
+        ["GRUEN",0,"rpg/images/map/terrain/fliese_dunkel.png"],
+        ["GRUEN",1,"rpg/images/map/terrain/wand_eis_vertikal.png"],
+        ["GRUEN",1,"rpg/images/map/terrain/wand_eis_ecke_ob_li.png"],
+        ["GRUEN",1,"rpg/images/map/terrain/wand_eis_ecke_ob_re.png"],
+        ["GRUEN",1,"rpg/images/map/terrain/wand_eis_ecke_un_li.png"],
+        ["GRUEN",1,"rpg/images/map/terrain/wand_eis_ecke_un_re.png"],
+        ["BLAU",1,["rpg/images/map/terrain/wasser.png","rpg/images/map/terrain/boden_gruen_rand_unten.png"]],
+        ["GRUEN",1,"rpg/images/map/terrain/wand_eis_t_unten.png"],
+        ["GRUEN",1,"rpg/images/map/terrain/wand_eis_t_links.png"]
+    ],
+    "exits": [
+        [[27,4],"rpg/maps/eispalast.json",[1,4]]
+    ]
+
+}

@@ -1,0 +1,35 @@
+{
+    "map": [
+        [ 5, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 9],
+        [ 3, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3],
+        [ 3, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3],
+        [ 3, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3],
+        [ 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3],
+        [ 3, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3],
+        [ 3, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3],
+        [ 3, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3],
+        [ 6, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3],
+        [ 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3],
+        [ 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3],
+        [ 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3],
+        [ 4, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,10]
+    ],
+    "tileDefinition": [
+        ["GRUEN",0,"rpg/images/map/terrain/fliese_dunkel.png"],
+        ["GRUEN",1,["rpg/images/map/terrain/boden_gruen.png","rpg/images/map/terrain/tree.png"]],
+        ["GRUEN",0,"rpg/images/map/terrain/fliese_dunkel.png"],
+        ["GRUEN",1,"rpg/images/map/terrain/wand_eis_vertikal.png"],
+        ["GRUEN",1,"rpg/images/map/terrain/wand_eis_ecke_un_li.png"],
+        ["GRUEN",1,"rpg/images/map/terrain/wand_eis_t_unten.png"],
+        ["GRUEN",1,"rpg/images/map/terrain/wand_eis_t_links.png"],
+        ["GRUEN",1,"rpg/images/map/terrain/wand_eis_horizontal.png"],
+        ["GRUEN",1,"rpg/images/map/terrain/wand_eis_ecke_ob_li.png"],
+        ["GRUEN",1,"rpg/images/map/terrain/wand_eis_ecke_ob_re.png"],
+        ["GRUEN",1,"rpg/images/map/terrain/wand_eis_ecke_un_re.png"]
+    ],
+    "exits": [
+        [[0,4],"rpg/maps/entry.json",[26,4]]
+
+    ]
+
+}
