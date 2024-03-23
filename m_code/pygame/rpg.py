@@ -1,6 +1,7 @@
 from common.map import draw_map, build_collision_map,load_map_definition
 from common.collision import create_surroundings,calc_collision
 from common.map_bots import MapBotHandler
+from common.trigger_handler import TriggerHandler
 import pygame
 from icecream import ic
 
@@ -25,7 +26,7 @@ map_start_x = 0
 map_start_y = 0
 map_tile_size = 64
 
-(map,tile_def,exits) = load_map_definition("./rpg/maps/entry.json",color_map)
+(map,tile_def,exits,bots) = load_map_definition("./rpg/maps/entry.json",color_map)
 
 
 spieler_1_x = 26
@@ -37,7 +38,11 @@ spieler_2_y = 0
 spielfigur_2_bewegung_x = 0
 spielfigur_2_bewegung_y = 0
 
-bots = MapBotHandler()
+bot_handler = MapBotHandler()
+trigger_handler = TriggerHandler()
+bot_handler.init_bots(bots,trigger_handler)
+
+chars = []
 
 def check_exits(position:tuple[int,int]) -> dict: # returns exit or none
     for ext in exits:
@@ -75,9 +80,10 @@ while game_active:
                 pass
     
     # check player movement
-    coll_map = build_collision_map(map,tile_def)
+    coll_map = build_collision_map(map,tile_def,chars)
 
     # Player 1
+    bot_handler.handle_player_collision((spieler_1_x + spielfigur_1_bewegung_x,spieler_1_y + spielfigur_1_bewegung_y),trigger_handler)
     surroundings = create_surroundings(coll_map,(spieler_1_x,spieler_1_y))
     coll_movement = calc_collision(surroundings,(spielfigur_1_bewegung_x,spielfigur_1_bewegung_y),"STAY")
     spielfigur_1_bewegung_x = coll_movement[0][0]
@@ -97,13 +103,14 @@ while game_active:
     # Check exits
     act_exit = check_exits((spieler_1_x,spieler_1_y))
     if act_exit != None:
-        (map,tile_def,exits) = load_map_definition(act_exit[1],color_map)
+        (map,tile_def,exits,bots) = load_map_definition(act_exit[1],color_map)
+        bot_handler.init_bots(bots,trigger_handler)
         (spieler_1_x,spieler_1_y) = act_exit[2]
         (spieler_2_x,spieler_2_y) = act_exit[2]
     chars = []
-    chars.extend(bots.get_bots_for_map())
-    chars.append(((spieler_1_x,spieler_1_y),"rpg/images/map/terrain/girl.png"))
-    chars.append(((spieler_2_x,spieler_2_y),"rpg/images/map/terrain/cow.png"))
+    chars.extend(bot_handler.get_bots_for_map())
+    chars.append(((spieler_1_x,spieler_1_y),0,"rpg/images/map/terrain/girl.png"))
+    chars.append(((spieler_2_x,spieler_2_y),0,"rpg/images/map/terrain/cow.png"))
     draw_map(screen,(map_start_x,map_start_y,map_tile_size),map,tile_def,chars)
 
     pygame.display.flip()

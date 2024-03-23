@@ -1,17 +1,17 @@
 {
     "map": [
         [ 5, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 9],
-        [ 3, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3],
-        [ 3, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3],
-        [ 3, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3],
-        [ 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3],
-        [ 3, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3],
-        [ 3, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3],
-        [ 3, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3],
-        [ 6, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3],
-        [ 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3],
-        [ 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3],
-        [ 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3],
+        [ 3, 2, 2, 0, 0,22, 0,18,19,20, 0, 0, 0,11,15,12,14,15,15,14,12,14,14,14,15,12,12, 3],
+        [ 3, 2,21, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,11,14,14,14,14,12,14,15,13,14,15,12,15,12, 3],
+        [ 3, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,11,16,16,16,16,16,16,16,16,16,16,16,14,15, 3],
+        [ 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,11,16,16,16,16,16,16,16,16,16,16,16,14,14, 3],
+        [ 3, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,11,16,16,16,16,16,16,16,16,16,16,16,14,15, 3],
+        [ 3, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,16,16,16,16,16,16,16,16,16,16,16,14,14,14],
+        [ 3, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,11,16,16,16,16,16,16,16,16,16,16,16,15,13, 3],
+        [ 6, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,11,16,16,16,16,16,16,16,16,16,16,16,15,14, 3],
+        [ 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,11,16,16,16,16,16,16,16,16,16,16,16,13,12, 3],
+        [ 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,11,14,13,13,14,14,13,14,15,14,14,14,14,12, 3],
+        [ 3,23, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,11,15,14,12,14,15,14,14,13,13,13,14,12,12, 3],
         [ 4, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,10]
     ],
     "tileDefinition": [
@@ -25,10 +25,25 @@
         ["GRUEN",1,"rpg/images/map/terrain/wand_eis_horizontal.png"],
         ["GRUEN",1,"rpg/images/map/terrain/wand_eis_ecke_ob_li.png"],
         ["GRUEN",1,"rpg/images/map/terrain/wand_eis_ecke_ob_re.png"],
-        ["GRUEN",1,"rpg/images/map/terrain/wand_eis_ecke_un_re.png"]
+        ["GRUEN",1,"rpg/images/map/terrain/wand_eis_ecke_un_re.png"],
+        ["GRUEN",1,["rpg/images/map/terrain/fliese_dunkel.png","rpg/images/map/terrain/zaun_vertikal.png"]],
+        ["GRUEN",1,["rpg/images/map/terrain/grass.png","rpg/images/map/terrain/baum_orange.png"]],
+        ["GRUEN",1,["rpg/images/map/terrain/grass.png","rpg/images/map/terrain/baumstumpf_orange.png"]],
+        ["GRUEN",0,["rpg/images/map/terrain/grass.png"]],
+        ["GRUEN",1,["rpg/images/map/terrain/grass.png","rpg/images/map/terrain/baum_orange_ohne_blaetter.png"]],
+        ["GRUEN",0,["rpg/images/map/terrain/matsch_hell.png"]],
+        ["GRUEN",1,["rpg/images/map/terrain/matsch_hell.png","rpg/images/map/terrain/springbrunnen.png"]],
+        ["GRUEN",0,["rpg/images/map/terrain/fliese_dunkel.png","rpg/images/map/terrain/bank_links.png"]],
+        ["GRUEN",0,["rpg/images/map/terrain/fliese_dunkel.png","rpg/images/map/terrain/bank_mitte.png"]],
+        ["GRUEN",0,["rpg/images/map/terrain/fliese_dunkel.png","rpg/images/map/terrain/bank_rechts.png"]],
+        ["GRUEN",1,["rpg/images/map/terrain/fliese_dunkel.png","rpg/images/map/terrain/tisch_mit_zettel.png"]],
+        ["GRUEN",1,["rpg/images/map/terrain/fliese_dunkel.png","rpg/images/map/terrain/regal_mit_buecher.png"]],
+        ["GRUEN",1,["rpg/images/map/terrain/fliese_dunkel.png","rpg/images/map/terrain/truhe.png"]]
+        
     ],
     "exits": [
-        [[0,4],"rpg/maps/entry.json",[26,4]]
+        [[0,4],"rpg/maps/entry.json",[26,4]],
+        [[27,6],"rpg/maps/eispalast_rechts.json",[1,6]]
 
     ]
 

@@ -11,23 +11,29 @@ def load_map_definition(path:str,color_map:dict) -> tuple[dict,dict,dict]:
     tile_def = json_data.get("tileDefinition")
     for td in tile_def:
         td[0] = color_map.get(td[0])
-    return (json_data.get("map"),tile_def,json_data.get("exits"))
+    return (json_data.get("map"),tile_def,json_data.get("exits"),json_data.get("bots"))
 def build_collision_map(        
         map:list[list[int]],
         tile_definitions:list[tuple[any]],
+        chars: list
     ):
     collision_map = copy.deepcopy(map)
     for y in range(len(map)):
         for x in range(len(map[y])):
             tile_def = tile_definitions[map[y][x]]
             collision_map[y][x] = tile_def[1]
+    # characters
+    if chars != None:
+        for character in chars:
+            if collision_map[character[0][1]][character[0][0]] == 0:
+                collision_map[character[0][1]][character[0][0]] = character[1]
     return collision_map
 def draw_map(
         screen:Surface, 
         options:tuple[int,int,int],
         map:list[list[int]],
         tile_definitions:list[tuple[any]],
-        characters: list[tuple[tuple[int,int],str]]
+        characters: list[tuple[tuple[int,int],int,str]]
     ):
     """
     tile_definitions
@@ -62,7 +68,7 @@ def draw_map(
     for char in characters:
         start_x = map_start_x+char[0][0]*tile_size
         start_y = map_start_y+char[0][1]*tile_size
-        imp = pygame.image.load(char[1]).convert_alpha()
+        imp = pygame.image.load(char[2]).convert_alpha()
         #imp.fill((255,255,255,128), None, pygame.BLEND_RGBA_MULT)
         imp = pygame.transform.scale(imp, (tile_size, tile_size))
         screen.blit(imp, (start_x, start_y))

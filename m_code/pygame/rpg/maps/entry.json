@@ -34,6 +34,17 @@
     ],
     "exits": [
         [[27,4],"rpg/maps/eispalast.json",[1,4]]
+    ],
+    "bots": [
+        [[25,1],1,"rpg/images/map/items/schluessel_gelb.png",{
+            "ON_COLLISION": [
+                ["SET_TRIGGER","KEY_1_FOUND"]
+            ],
+            "ACTIONS": [
+                ["REMOVE_IF_TRIGGER", "KEY_1_FOUND"]
+            ]
+             
+        }]
     ]
 
 }
