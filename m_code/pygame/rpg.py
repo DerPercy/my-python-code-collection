@@ -42,7 +42,7 @@ spielfigur_2_bewegung_y = 0
 bot_handler = MapBotHandler()
 trigger_handler = TriggerHandler()
 countdown_handler = CountdownHandler()
-map_bot_env = MapBotHandlerEnvironment(th=trigger_handler, ch=CountdownHandler)
+map_bot_env = MapBotHandlerEnvironment(th=trigger_handler, ch=countdown_handler)
 bot_handler.init_bots(bots,map_bot_env)
 
 chars = []
