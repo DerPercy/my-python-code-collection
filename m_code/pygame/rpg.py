@@ -1,10 +1,11 @@
 from common.map import draw_map, build_collision_map,load_map_definition
 from common.collision import create_surroundings,calc_collision
-from common.map_bots import MapBotHandler
+from common.map_bots import MapBotHandler, MapBotHandlerEnvironment
 from common.trigger_handler import TriggerHandler
+from common.countdown_handler import CountdownHandler
+
 import pygame
 from icecream import ic
-
 
 
 screen = pygame.display.set_mode((1800, 840))
@@ -40,10 +41,14 @@ spielfigur_2_bewegung_y = 0
 
 bot_handler = MapBotHandler()
 trigger_handler = TriggerHandler()
-bot_handler.init_bots(bots,trigger_handler)
+countdown_handler = CountdownHandler()
+map_bot_env = MapBotHandlerEnvironment(th=trigger_handler, ch=CountdownHandler)
+bot_handler.init_bots(bots,map_bot_env)
 
 chars = []
 
+
+fps = 10
 def check_exits(position:tuple[int,int]) -> dict: # returns exit or none
     for ext in exits:
         if ext[0][0] == position[0] and ext[0][1] == position[1]:
@@ -52,7 +57,12 @@ def check_exits(position:tuple[int,int]) -> dict: # returns exit or none
     
 
 game_active = True
+counter = 0
 while game_active:
+    counter = counter + 1
+    if counter >= fps:
+        countdown_handler.on_tick()
+        counter = 0
     for event in pygame.event.get():
         if event.type == pygame.QUIT or event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
             game_active = False
@@ -83,7 +93,7 @@ while game_active:
     coll_map = build_collision_map(map,tile_def,chars)
 
     # Player 1
-    bot_handler.handle_player_collision((spieler_1_x + spielfigur_1_bewegung_x,spieler_1_y + spielfigur_1_bewegung_y),trigger_handler)
+    bot_handler.handle_player_collision((spieler_1_x + spielfigur_1_bewegung_x,spieler_1_y + spielfigur_1_bewegung_y),{ "ACTOR": "PLAYER1" }, map_bot_env)
     surroundings = create_surroundings(coll_map,(spieler_1_x,spieler_1_y))
     coll_movement = calc_collision(surroundings,(spielfigur_1_bewegung_x,spielfigur_1_bewegung_y),"STAY")
     spielfigur_1_bewegung_x = coll_movement[0][0]
@@ -93,6 +103,7 @@ while game_active:
     spieler_1_y = spieler_1_y + spielfigur_1_bewegung_y
 
     # Player 2
+    bot_handler.handle_player_collision((spieler_2_x + spielfigur_2_bewegung_x,spieler_2_y + spielfigur_2_bewegung_y),{ "ACTOR": "PLAYER2" }, map_bot_env)
     surroundings = create_surroundings(coll_map,(spieler_2_x,spieler_2_y))
     coll_movement = calc_collision(surroundings,(spielfigur_2_bewegung_x,spielfigur_2_bewegung_y),"STAY")
     spielfigur_2_bewegung_x = coll_movement[0][0]
@@ -104,7 +115,7 @@ while game_active:
     act_exit = check_exits((spieler_1_x,spieler_1_y))
     if act_exit != None:
         (map,tile_def,exits,bots) = load_map_definition(act_exit[1],color_map)
-        bot_handler.init_bots(bots,trigger_handler)
+        bot_handler.init_bots(bots,map_bot_env)
         (spieler_1_x,spieler_1_y) = act_exit[2]
         (spieler_2_x,spieler_2_y) = act_exit[2]
     chars = []
@@ -116,7 +127,7 @@ while game_active:
     pygame.display.flip()
 
     # Refresh-Zeiten festlegen
-    clock.tick(10)
+    clock.tick(fps)
     spielfigur_1_bewegung_x = 0
     spielfigur_1_bewegung_y = 0
     spielfigur_2_bewegung_x = 0

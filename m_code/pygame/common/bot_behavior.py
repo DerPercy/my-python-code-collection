@@ -13,3 +13,15 @@ def remove_if_trigger(params:list[any], bot, options:dict) -> None:
     if th.has_trigger(params[1]):
         bh = options.get("botHandler")
         bh.remove_bot(bot)
+
+def image_if_trigger(params:list[any], bot, options:dict) -> None:
+    """ ["IMAGE_IF_TRIGGER", "rpg/images/map/terrain/truhe_offen.png","CHEST_1_OPEN"] """
+    th:TriggerHandler = options.get("triggerHandler")
+    if th.has_trigger(params[2]):
+        bot[2] = params[1]
+
+def if_trigger_then_trigger(params:list[any], bot, options:dict) -> None:
+    """ ["IF_TRIGGER_THEN_TRIGGER","KEY_1_FOUND","CHEST_1_OPEN"] """
+    th:TriggerHandler = options.get("triggerHandler")
+    if th.has_trigger(params[1]):
+        th.add_trigger(params[2])
