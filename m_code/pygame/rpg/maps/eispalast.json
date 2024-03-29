@@ -50,13 +50,14 @@
         [[1,11],1,"rpg/images/map/terrain/truhe.png",{
             "ON_COLLISION": [
                 ["IF_TRIGGER_THEN_TRIGGER","KEY_1_FOUND","CHEST_1_OPEN"],
-                ["ADD_COUNTDOWN","CHEST_1_CLOSE",3]
+                ["ADD_COUNTDOWN",5,[["REMOVE_TRIGGER","CHEST_1_OPEN"]]]
+                
             ],
             "ACTIONS": [
-                ["IMAGE_IF_TRIGGER", "rpg/images/map/terrain/truhe_offen.png","CHEST_1_OPEN"]
+                ["IMAGE_IF_TRIGGER", "rpg/images/map/terrain/truhe_offen.png","CHEST_1_OPEN","rpg/images/map/terrain/truhe.png"]
             ],
-            "ON_COUNTDOWN_FINISHED": [
-                ["CHEST_1_CLOSE",[["REMOVE_TRIGGER","CHEST_1_OPEN"],["SET_IMAGE","rpg/images/map/terrain/truhe.png"]]]
+            "ON_TRIGGER_UPDATE": [
+                ["CHEST_1_OPEN",[["IMAGE_IF_TRIGGER", "rpg/images/map/terrain/truhe_offen.png","CHEST_1_OPEN","rpg/images/map/terrain/truhe.png"]]]
             ]
         }]
     ]

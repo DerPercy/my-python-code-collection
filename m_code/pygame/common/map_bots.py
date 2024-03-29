@@ -49,13 +49,20 @@ def build_options(env:MapBotHandlerEnvironment,bot_handler:MapBotHandler) -> dic
         "countdownHandler": env.ch,
         "botHandler": bot_handler
     }
-    def on_cd_finished(cd_id): 
-        for bot in g_bots:
-            for bot_cd_act in bot[3].get("ON_COUNTDOWN_FINISHED",[]):
-                if bot_cd_act[0] == cd_id:
-                    process_action_list(bot_cd_act[1],bot,g_options)
+    def on_cd_finished(payload): 
+        #for bot in g_bots:
+        #    for bot_cd_act in bot[3].get("ON_COUNTDOWN_FINISHED",[]):
+        #        if bot_cd_act[0] == cd_id:
+        # Attention: Countdown has no active bot
+        process_action_list(payload,None,g_options)
 
     env.ch.add_countdown_listener(on_countdown_finished=on_cd_finished)
+    def on_trigger_update(trigger_id,trigger_type):
+        for bot in g_bots:
+            for bot_cd_act in bot[3].get("ON_TRIGGER_UPDATE",[]):
+                if bot_cd_act[0] == trigger_id:
+                    process_action_list(bot_cd_act[1],bot,g_options)
+    env.th.set_trigger_listener(on_trigger_update)
     return g_options
 
 actions = {

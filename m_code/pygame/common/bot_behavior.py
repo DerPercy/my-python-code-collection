@@ -21,10 +21,12 @@ def remove_if_trigger(params:list[any], bot, options:dict) -> None:
         bh.remove_bot(bot)
 
 def image_if_trigger(params:list[any], bot, options:dict) -> None:
-    """ ["IMAGE_IF_TRIGGER", "rpg/images/map/terrain/truhe_offen.png","CHEST_1_OPEN"] """
+    """ ["IMAGE_IF_TRIGGER", "rpg/images/map/terrain/truhe_offen.png","CHEST_1_OPEN","rpg/images/map/terrain/truhe.png"] """
     th:TriggerHandler = options.get("triggerHandler")
     if th.has_trigger(params[2]):
         bot[2] = params[1]
+    else:
+        bot[2] = params[3]
 def set_image(params:list[any], bot, options:dict) -> None:
     """ ["SET_IMAGE", "rpg/images/map/terrain/truhe_offen.png"] """
     bot[2] = params[1]
@@ -36,6 +38,6 @@ def if_trigger_then_trigger(params:list[any], bot, options:dict) -> None:
         th.add_trigger(params[2])
 
 def add_countdown(params:list[any], bot, options:dict) -> None:
-    """ ["ADD_COUNTDOWN","CHEST_1_CLOSE",15] """
+    """ ["ADD_COUNTDOWN",5,[["REMOVE_TRIGGER","CHEST_1_OPEN"]]] """
     ch:CountdownHandler = options.get("countdownHandler")
     ch.add_countdown(params[1],params[2])

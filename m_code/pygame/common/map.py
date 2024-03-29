@@ -11,7 +11,7 @@ def load_map_definition(path:str,color_map:dict) -> tuple[dict,dict,dict]:
     tile_def = json_data.get("tileDefinition")
     for td in tile_def:
         td[0] = color_map.get(td[0])
-    return (json_data.get("map"),tile_def,json_data.get("exits"),json_data.get("bots"))
+    return (json_data.get("map"),tile_def,json_data.get("exits"),json_data.get("bots",[]))
 def build_collision_map(        
         map:list[list[int]],
         tile_definitions:list[tuple[any]],
