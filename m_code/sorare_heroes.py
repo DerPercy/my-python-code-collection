@@ -7,6 +7,8 @@ from sorare.player import get_player_scoreboard
 from sorare.user import get_player_slugs_of_current_user
 from sorare.context import file_func
 from sorare.club import get_club_slugs_playing_next_gw
+from sorare.models.fixture import Fixture
+
 
 import logging
 import os
@@ -14,6 +16,7 @@ from dotenv import load_dotenv
 import json
 import traceback
 import sys
+from icecream import ic
 
 load_dotenv()
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -85,18 +88,20 @@ def ranking_filter(ranking:dict):
         return reward_found    
     return False
 
-def create_ranking_sorter(fixture_date):
+def create_ranking_sorter(fixture_date, season:str):
     def ranking_sorter(ranking):
         """Attention: lowest value will be used"""
         lineup_price = 0
-        for lineup_player in ranking.get("so5Lineup").get("so5Appearances"):
+        #ic(ranking)
+        logging.info("Get price for players of #"+str(ranking.get("ranking"))+" of total "+str(ranking.get("rankingMax")))
+        for idx, lineup_player in enumerate(ranking.get("so5Lineup").get("so5Appearances")):
             # >> To prevent lineups without games (image renderer stuck on this)
             #if lineup_player.get("game") == None:
             #    logging.info("Player without game found. Ignore from lineups")
             #    lineup_price = lineup_price + 100000
             # ^^
             player_slug = lineup_player.get("card").get("player").get("slug")
-            player_price = get_price_of_player(client,player_slug,lineup_player.get("card").get("rarity"),fixture_date)
+            player_price = get_price_of_player(client,player_slug,lineup_player.get("card").get("rarity"),fixture_date,season)
             if player_price != None:
                 lineup_price = lineup_price + player_price
         return lineup_price
@@ -106,6 +111,16 @@ def create_ranking_sorter(fixture_date):
 
 fixture_list = get_latest_fixtures(client)
 options = []
+ic(fixture_list)
+#fixture_list = [
+#    Fixture(
+# #       slug= "22-26-oct",
+#        aasmState= "closed",
+#        startDate= "2021-10-22T10:00:00Z",
+#        gameWeek= 212
+#    )
+#]
+ic(fixture_list)
 
 for fixture in fixture_list:
     print(fixture.aasmState)
@@ -114,7 +129,12 @@ for fixture in fixture_list:
         for leader_board in leader_board_list:
             if leader_board.rarity not in leader_board_rarities:
                 continue
-            get_leaderboard_data(client,leader_board.slug,ranking_filter,create_ranking_sorter(fixture.startDate))
+            season = "ALL_SEASONS"
+            #ic(leader_board)
+            if leader_board.seasonality == True:
+                season = "IN_SEASON"
+            get_leaderboard_data(client,leader_board.slug,ranking_filter,create_ranking_sorter(fixture.startDate,season))
+            #get_leaderboard_data(client,leader_board.slug,ranking_filter,create_ranking_sorter(fixture.startDate,"IN_SEASON"))
         quit()
 
     if fixture.aasmState == "closed":
@@ -125,6 +145,10 @@ for fixture in fixture_list:
         for leader_board in leader_board_list:
             if leader_board.rarity not in leader_board_rarities:
                 continue
+            season = "ALL_SEASONS"
+            #ic(leader_board)
+            if leader_board.seasonality == True:
+                season = "IN_SEASON"
             #def ranking_sorter(ranking):
             #    """Attention: lowest value will be used"""
             #    lineup_price = 0
@@ -141,7 +165,7 @@ for fixture in fixture_list:
             #    return lineup_price
             try:
                 if scenario == "budget":
-                    option = create_leaderboard_image(client,leader_board.slug,ranking_filter,create_ranking_sorter(fixture.startDate),0)
+                    option = create_leaderboard_image(client,leader_board.slug,ranking_filter,create_ranking_sorter(fixture.startDate,season),0)
                     #options.append(option)
                     #option = create_leaderboard_image(client,leader_board.slug,ranking_filter,create_ranking_sorter(fixture.startDate),1)
                     #options.append(option)

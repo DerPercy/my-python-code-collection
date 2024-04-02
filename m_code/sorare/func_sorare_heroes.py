@@ -70,7 +70,7 @@ query getRankingForLeaderboard($leaderboardSlug: String!, $endCursor: String) {
 				rules {
 					captain
 				} 
-				displayName svgLogoUrl mainRarityType
+				displayName svgLogoUrl mainRarityType seasonality division
 				so5Rankings(first:100,after:$endCursor,){ 
 					nodes { 
                         ranking
@@ -145,6 +145,10 @@ query getRankingForLeaderboard($leaderboardSlug: String!, $endCursor: String) {
 """
     #leaderBoardResult = json.loads(context["rootHandler"].external().getRequestHandler().request("sorareHeroesGetRankings",param))
     leaderBoard = client.request(body,param,{ "resultSelector": ["data","football","so5","so5Leaderboard"]   })
+
+    # Add seasonality info
+    if leaderBoard.get("seasonality") != None:
+        leaderBoard.displayName = leaderBoard.displayName + " (Div. "+str( leaderBoard.division )+")"
     #if leader_board_slug == "22-26-sep-2023-global-cap-division-11":
     cachefile = os.path.dirname(os.path.abspath(__file__))+"/../../temp/sorare/cache/leaderBoards/"+leader_board_slug+".json"    
     file_func.write_json_to_file(leaderBoard,cachefile)
@@ -160,11 +164,18 @@ query getRankingForLeaderboard($leaderboardSlug: String!, $endCursor: String) {
         }
          
     })
+
+    cachefile = os.path.dirname(os.path.abspath(__file__))+"/../../temp/sorare/cache/leaderBoardsFull/"+leader_board_slug+".json"    
+    file_func.write_json_to_file(lineup_list,cachefile)
+    
     #print("Lineup length")
     #print(len(lineup_list))
    
     #lineup = leaderBoard.get("so5Rankings",{}).get("nodes",{})[0]
     logging.info(str(len(lineup_list))+" relevant lineups found")
+    for lineup in lineup_list:
+        lineup["rankingMax"] = len(lineup_list)
+        
     if ranking_sorter != None:
         #print("Sort")
         logging.info("Sort lineups")
@@ -326,14 +337,20 @@ def download_file(url:str, filename: str):
         return False
 
 
-def get_price_of_player(client:Client, player_slug:str,rarity:str, price_date: str):
+def get_price_of_player(client:Client, player_slug:str,rarity:str, price_date: str,season:str = "ALL_SEASONS"):
+    """
+    season: 
+    -   ALL_SEASONS or None     => all cards
+    -   IN_SEASON               => just current season
+    """
     print("Get price of "+player_slug,end='\r')
-    cachefile = os.path.dirname(os.path.abspath(__file__))+"/../../temp/sorare/cache/price/"+player_slug+".json"
+    cachefile = os.path.dirname(os.path.abspath(__file__))+"/../../temp/sorare/cache/price/"+player_slug+"_"+season+".json"
     price_cache = file_func.read_json_from_file(cachefile)
     #logging.info(price_cache)
     if price_cache.get(rarity,{}).get(price_date,{}).get("avg",None) != None:
+        logging.info("Price of "+player_slug+"("+season+") cached")
         return price_cache.get(rarity,{}).get(price_date,{}).get("avg",None)
-    price_list = get_cards_of_player(client,player_slug,rarity)
+    price_list = get_cards_of_player(client,player_slug,rarity,season)
     #logging.info(len(price_list))
     price_list_dt = []
     for price in price_list:

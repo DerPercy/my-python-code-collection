@@ -149,11 +149,11 @@ if __name__ == '__main__':
 
   argsWinner = ThumbnailUpload(
     file= "/home/christian/Dropbox/sorarefiles/winner/thumbnail.jpg",
-    videoId= "mfDNwXwqkWk",
+    videoId= "GZB8BWI1XDQ",
   )
   argsBudget = ThumbnailUpload(
     file= "/home/christian/Dropbox/sorarefiles/budget/thumbnail.jpg",
-    videoId= "ncC3TLH4Caw",
+    videoId= "5xGD0DTGIjQ",
   )
   
   #args["title"] = "Sorare - Winner Of Gameweek 431"

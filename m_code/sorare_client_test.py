@@ -28,6 +28,8 @@ client = SorareClient({
     'password': os.getenv('SORARE_PASSWORD')
 })
 
+print(get_fixture_slug_of_gameweek(client,212))
+
 #print(get_user_from_user_id(client,"User:16ebc838-fee5-44de-b495-b56efd6d2ea4"))
 # Example UserID: User:16ebc838-fee5-44de-b495-b56efd6d2ea4
 

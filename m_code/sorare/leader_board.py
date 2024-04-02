@@ -9,7 +9,7 @@ def get_leader_boards_of_fixture_slug(client:Client,fixture_slug:str) -> list[Le
 query LeaderBoardsQuery($slug: String!) {
     football { so5 { so5Fixture(slug: $slug) {  
         so5Leaderboards {
-		    slug rarityType
+		    slug rarityType seasonality 
 	    }
     } } }
 }
@@ -20,4 +20,4 @@ query LeaderBoardsQuery($slug: String!) {
 
 def build_model_from_api_result(api_result) -> LeaderBoard:
     #print(json.dumps(api_result,indent=2))   
-    return LeaderBoard(api_result.get("slug"),api_result.get("rarityType"))
+    return LeaderBoard(api_result.get("slug"),api_result.get("rarityType"),seasonality=api_result.get("seasonality"))

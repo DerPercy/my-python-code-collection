@@ -5,3 +5,4 @@ class LeaderBoard:
     """A representation of a sorare leaderBoard"""
     slug: str
     rarity:str
+    seasonality:bool

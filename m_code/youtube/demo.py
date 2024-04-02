@@ -172,10 +172,10 @@ if __name__ == '__main__':
   argsWinner = VideoUpload(
     file= "/home/christian/Dropbox/sorarefiles/winner/final.mp4",
     keywords= "sorare",
-    title= "Sorare - Winner Of Gameweek 434",
+    title= "Sorare - Winner Of Gameweek 459",
     privacyStatus= "private",
     category="17",
-    description="""Sorare Gameweek 434 is over
+    description="""Sorare Gameweek 459 is over
 
 Time to celebrate the best manager, check their winning lineup and player values
 Enjoy
@@ -183,15 +183,42 @@ Enjoy
 #sorare
 """
   )
+
+  argsWinner = VideoUpload(
+    file= "/home/christian/Dropbox/sorarefiles/winner/final.mp4",
+    keywords= "sorare",
+    title= "Sorare - Winner Of Gameweek 212",
+    privacyStatus= "private",
+    category="17",
+    description="""Going back in time and check out the champions and their team values at the start of limited cards
+Enjoy
+
+#sorare
+"""
+  )
+
   argsBudget = VideoUpload(
     file= "/home/christian/Dropbox/sorarefiles/budget/final.mp4",
     keywords= "sorare",
-    title= "Sorare - Cheapest Lineups in Rewards - Gameweek 434",
+    title= "Sorare - Cheapest Lineups in Rewards - Gameweek 459",
     privacyStatus= "private",
     category="17",
-    description="""Sorare Gameweek 434 is over
+    description="""Sorare Gameweek 459 is over
 
 Time to scout the cheapest lineups, which won rewards and check their player prices
+Enjoy
+
+#sorare
+"""
+  )
+
+  argsBudget = VideoUpload(
+    file= "/home/christian/Dropbox/sorarefiles/budget/final.mp4",
+    keywords= "sorare",
+    title= "Sorare - Cheapest Lineups in Rewards - Gameweek 212",
+    privacyStatus= "private",
+    category="17",
+    description="""Going back in time and check out the cheapest possible lineups at the start of limited cards
 Enjoy
 
 #sorare
