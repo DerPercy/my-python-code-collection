@@ -7,6 +7,7 @@ import json
 import os
 import urllib
 import time
+from icecream import ic
 
 def get_player_pos_value(player):
     #logging.error(player)
@@ -85,6 +86,20 @@ query getRankingForLeaderboard($leaderboardSlug: String!, $endCursor: String) {
                                 quality
                                 rarity
                             }
+                            probabilisticBundles {
+                                description
+                                design
+                                division
+                                iconUrl
+                                id
+                                name
+                                neonColor
+                                opened
+                                openingScnUrl
+                                pictureUrl
+                                quality
+                                rarity
+                            }
                         }
 						score 
 						so5Lineup { 
@@ -148,7 +163,8 @@ query getRankingForLeaderboard($leaderboardSlug: String!, $endCursor: String) {
 
     # Add seasonality info
     if leaderBoard.get("seasonality") != None:
-        leaderBoard.displayName = leaderBoard.displayName + " (Div. "+str( leaderBoard.division )+")"
+        #ic(leaderBoard)
+        leaderBoard["displayName"] = leaderBoard.get("displayName") + " (Div. "+str( leaderBoard.get("division") )+")"
     #if leader_board_slug == "22-26-sep-2023-global-cap-division-11":
     cachefile = os.path.dirname(os.path.abspath(__file__))+"/../../temp/sorare/cache/leaderBoards/"+leader_board_slug+".json"    
     file_func.write_json_to_file(leaderBoard,cachefile)

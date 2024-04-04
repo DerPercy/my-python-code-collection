@@ -146,8 +146,8 @@ for fixture in fixture_list:
             if leader_board.rarity not in leader_board_rarities:
                 continue
             season = "ALL_SEASONS"
-            #ic(leader_board)
-            if leader_board.seasonality == True:
+            #ic(leader_board.seasonality)
+            if leader_board.seasonality == "IN_SEASON":
                 season = "IN_SEASON"
             #def ranking_sorter(ranking):
             #    """Attention: lowest value will be used"""
@@ -165,6 +165,9 @@ for fixture in fixture_list:
             #    return lineup_price
             try:
                 if scenario == "budget":
+                    ic(leader_board.slug)
+                    ic(season)
+                    #continue
                     option = create_leaderboard_image(client,leader_board.slug,ranking_filter,create_ranking_sorter(fixture.startDate,season),0)
                     #options.append(option)
                     #option = create_leaderboard_image(client,leader_board.slug,ranking_filter,create_ranking_sorter(fixture.startDate),1)

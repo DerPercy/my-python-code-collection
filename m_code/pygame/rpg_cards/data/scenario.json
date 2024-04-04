@@ -1,0 +1,40 @@
+{
+    "init": {
+        "STARTLOCATION": "ENTRY",
+        "player": {
+            "actionPoints": 3
+        }
+    },
+    "locations": {
+        "ENTRY": {
+            "name": "Das Eingangstor der verlassenen Fabrik",
+            "description": "Das Eingangstor der verlassenen Fabrik",
+            "exits": ["COURTYARD"]
+        },
+        "COURTYARD": {
+            "description": "Der Innenhof",
+            "exits": ["ENTRY","WERK1"]
+        },
+        "WERK1": {
+            "name": "Werkshalle 1",
+            "description": "Werkshalle 1",
+            "exits": ["COURTYARD"],
+            "cards": {
+                "collect": [
+                    ["FAIL",10],
+                    ["METAL",2]
+                ]
+            }
+        }
+    },
+    "cards": {
+        "collect": {
+            "FAIL": {
+                "title": "Du findest nichts"
+            },
+            "METAL": {
+                "title": "Du findest etwas Metall"
+            }
+        }
+    }
+}
