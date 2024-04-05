@@ -1,0 +1,30 @@
+{% extends "base.jinja2" %}
+
+{% block content %}
+
+
+<table>
+{% for game in data.result_games %}
+    <tr><td colspan="2"><b>{{ game.name }}</b> => {{ game.date }}</td></tr>
+    <tr>
+        <td>
+            {% for player in game.home %}
+                <div>{{ player.name }}</div>
+                <div>{{ player.stats.percPlayed }}% gespielt</div>
+                <div>{{ player.stats.percSubst }}% eingewechselt</div>
+                <div>{{ player.stats.substScore_Avg }} Punkte bei Einwechslung</div>
+            {% endfor %}
+        </td>
+        <td>
+            {% for player in game.away %}
+                <div>{{ player.name }}</div>
+                <div>{{ player.stats.percPlayed }}% gespielt</div>
+                <div>{{ player.stats.percSubst }}% eingewechselt</div>
+                <div>{{ player.stats.substScore_Avg }} Punkte bei Einwechslung</div>
+            {% endfor %}
+
+        </td>
+    </tr>
+{% endfor %}
+</table>
+{% endblock %}
