@@ -2,25 +2,50 @@
 
 {% block content %}
 
+<style>
+.sorare-game-result-W {
+    background-color: lightgreen;
+}
+.sorare-game-result-D {
+    background-color: lightgrey;
+}
+.sorare-game-result-L {
+    background-color: red;
+}
+</style>
 
 <table>
 {% for game in data.result_games %}
     <tr><td colspan="2"><b>{{ game.name }}</b> => {{ game.date }}</td></tr>
     <tr>
         <td>
+            {% for res in game.homeTeamResults %}
+                <span class="sorare-game-result-{{ res }}">{{ res }} </span>
+            {% endfor %}
+        </td>
+        <td>
+            {% for res in game.awayTeamResults %}
+                <span class="sorare-game-result-{{ res }}">{{ res }}</span>
+            {% endfor %}
+        </td>
+    </tr>
+    <tr>
+        <td>
             {% for player in game.home %}
-                <div>{{ player.name }}</div>
+                <div>{{ player.name }} ({{ player.position }})</div>
                 <div>{{ player.stats.percPlayed }}% gespielt</div>
-                <div>{{ player.stats.percSubst }}% eingewechselt</div>
-                <div>{{ player.stats.substScore_Avg }} Punkte bei Einwechslung</div>
+                <div style="display:none">{{ player.stats.percSubst }}% eingewechselt</div>
+                <div style="display:none">{{ player.stats.substScore_Avg }} Punkte bei Einwechslung</div>
+                <div><b>{{ player.stats.l15l5Performance }} % Steigerung</b></div>
             {% endfor %}
         </td>
         <td>
             {% for player in game.away %}
-                <div>{{ player.name }}</div>
+                <div>{{ player.name }} ({{ player.position }})</div>
                 <div>{{ player.stats.percPlayed }}% gespielt</div>
-                <div>{{ player.stats.percSubst }}% eingewechselt</div>
-                <div>{{ player.stats.substScore_Avg }} Punkte bei Einwechslung</div>
+                <div style="display:none">{{ player.stats.percSubst }}% eingewechselt</div>
+                <div style="display:none">{{ player.stats.substScore_Avg }} Punkte bei Einwechslung</div>
+                <div><b>{{ player.stats.l15l5Performance }} % Steigerung</b></div>
             {% endfor %}
 
         </td>

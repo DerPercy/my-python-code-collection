@@ -1,23 +1,45 @@
 from client import Client
+from icecream import ic
 
 def aggregate_player_stats(player_stats:list[dict]) -> dict:
     played_perc = 0
     subst_perc = 0
     subst_score_avg = 0
+    score_avg = 0
+    l15_played_perc = 0
+    l15_score_avg = 0
+    l15_l5_performance = 0
+    
     if len(player_stats) > 0:
-        for stat in player_stats:
+        for stat in player_stats[:5]:
             if stat.get("played"):
                 played_perc = played_perc + 1
+                score_avg = score_avg + stat.get("score")
             if stat.get("played") and not stat.get("started"):
                 subst_perc = subst_perc + 1
                 subst_score_avg = subst_score_avg + stat.get("score")
         if subst_score_avg > 0:
             subst_score_avg = subst_score_avg / subst_perc
-        subst_perc =  100 * subst_perc / len(player_stats)
-        played_perc =  100 * played_perc / len(player_stats)
+        if score_avg > 0:
+            score_avg = score_avg / played_perc
+        subst_perc =  100 * subst_perc / len(player_stats[:5])
+        played_perc =  100 * played_perc / len(player_stats[:5])
+        #L15
+        for stat in player_stats[:15]:
+            if stat.get("played"):
+                l15_played_perc = l15_played_perc + 1
+                l15_score_avg = l15_score_avg + stat.get("score")
+        if l15_score_avg > 0:
+            l15_score_avg = l15_score_avg / l15_played_perc
+
+        if l15_score_avg > 0:
+            l15_l5_performance = int((( score_avg / l15_score_avg ) - 1 ) * 100)
     return {
         "percPlayed": played_perc,
         "percSubst": subst_perc,
+        "scoreAvg": score_avg,
+        "l15ScoreAvg": l15_score_avg,
+        "l15l5Performance": l15_l5_performance,
         "substScore_Avg": subst_score_avg
     }
 
@@ -30,7 +52,7 @@ def get_rivals_player_stats(client:Client, player_slug:str) -> list[dict]:
 query RivalsTeamPlayerScore($playerSlug: String!) {
   football {
     player(slug:$playerSlug) {
-      allSo5Scores(first:5){
+      allSo5Scores(first:15){
         nodes {
           game { so5Fixture { gameWeek } }
           playerGameStats {
@@ -69,6 +91,7 @@ query RivalsTeamPlayer($teamSlug: String!) {
         nodes {
           slug
           displayName
+          position
         }
       }
     }
@@ -89,18 +112,22 @@ query Rivals {
   football {
     rivals {
       upcomingGames {
-        game {
+         game {
           date
           homeTeam {
             __typename
           	... on TeamInterface {
-              name slug
+              name slug lastFiveGames{
+                winner{ slug }
+              }
             }
           }
           awayTeam {
             __typename
           	... on TeamInterface {
-              name slug
+              name slug lastFiveGames{
+                winner { slug }
+              }
             }
           }
         }
