@@ -22,11 +22,13 @@
             {% for res in game.homeTeamResults %}
                 <span class="sorare-game-result-{{ res }}">{{ res }} </span>
             {% endfor %}
+            ({{ game.homeTeamGoals[0] }}:{{ game.homeTeamGoals[1] }})
         </td>
         <td>
             {% for res in game.awayTeamResults %}
                 <span class="sorare-game-result-{{ res }}">{{ res }}</span>
             {% endfor %}
+            ({{ game.awayTeamGoals[0] }}:{{ game.awayTeamGoals[1] }})
         </td>
     </tr>
     <tr>

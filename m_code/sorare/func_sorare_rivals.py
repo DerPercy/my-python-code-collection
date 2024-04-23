@@ -1,6 +1,25 @@
 from client import Client
 from icecream import ic
 
+
+def calculate_goals_of_team(team_slug:str, games_list:list[dict]) -> tuple[int,int]:
+    """
+    returns tuple[scored_goals,received_goals]
+    """
+    goals_own = 0
+    goals_other = 0
+    for game in games_list:
+        if game.get("homeTeam").get("slug") == team_slug:
+            goals_own = goals_own + game.get("homeGoals")
+        else:
+            goals_other = goals_other + game.get("homeGoals")
+        if game.get("awayTeam").get("slug") == team_slug:
+            goals_own = goals_own + game.get("awayGoals")
+        else:
+            goals_other = goals_other + game.get("awayGoals")
+
+    return (goals_own,goals_other)
+
 def aggregate_player_stats(player_stats:list[dict]) -> dict:
     played_perc = 0
     subst_perc = 0
@@ -111,6 +130,7 @@ def get_next_rivals_games(client:Client) -> list[dict]:
 query Rivals {
   football {
     rivals {
+#      upcomingGames(query: "Bundesliga") {
       upcomingGames {
          game {
           date
@@ -119,6 +139,10 @@ query Rivals {
           	... on TeamInterface {
               name slug lastFiveGames{
                 winner{ slug }
+                homeTeam { slug }
+                homeGoals
+                awayTeam { slug }
+                awayGoals
               }
             }
           }
@@ -127,6 +151,11 @@ query Rivals {
           	... on TeamInterface {
               name slug lastFiveGames{
                 winner { slug }
+                homeTeam { slug }
+                homeGoals
+                awayTeam { slug }
+                awayGoals
+
               }
             }
           }

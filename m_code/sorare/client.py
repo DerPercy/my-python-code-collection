@@ -49,7 +49,7 @@ class Client:
         #print(r.text)
         jwtData = json.loads(r.text)
         self.jwt = jwtData["data"]["signIn"]["currentUser"]["jwtToken"]["token"]
-        print(self.jwt)
+        #print(self.jwt)
         pass
 
     def request(self,body:str, variables = {},options = {}):
@@ -115,7 +115,8 @@ class Client:
             return self.__request(body,variables,options)
         
         elif r.status_code != 200:
-            print(r.status_code)
+            logging.warn(r.status_code)
+            logging.warn("Invalid status code")
 
         try:
             result = r.json()
