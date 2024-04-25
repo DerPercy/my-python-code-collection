@@ -7,6 +7,7 @@ import os
 from dotenv import load_dotenv
 from icecream import ic
 from datetime import datetime
+import func_sorare_rivals
 from func_sorare_rivals import get_next_rivals_games, get_players_of_team_slug, get_rivals_player_stats, aggregate_player_stats
 import func_sorare_rivals
 import argparse, sys
@@ -66,7 +67,8 @@ def build_html():
         file.write(content)
 
 logging.info(len(games))
-for game in games: # Max 100 entries
+games = games[:100] # Max 100 entries
+for game in games: 
     result_player_home = []
     result_player_away = []
     result_games_home = []
@@ -126,19 +128,22 @@ for game in games: # Max 100 entries
                 "position": player.get("position"),
                 "stats": agg_stats
             })
-    if ( len(result_player_away) + len(result_player_home) ) > -1: #5:
-        result_game = {
-            "name": result_game_name,
-            "date": result_game_date,
-            "home": result_player_home,
-            "away": result_player_away,
-            "homeTeamResults": result_games_home,
-            "awayTeamResults": result_games_away,
-            "homeTeamGoals": result_goals_home,
-            "awayTeamGoals": result_goals_away
-        }
-        ic(result_game)
-        result.append(result_game)
-        build_html()
+    #if ( len(result_player_away) + len(result_player_home) ) > -1: #5:
+    result_game = {
+        "name": result_game_name,
+        "date": result_game_date,
+        "home": result_player_home,
+        "away": result_player_away,
+        "homeTeamResults": result_games_home,
+        "awayTeamResults": result_games_away,
+        "homeTeamGoals": result_goals_home,
+        "awayTeamGoals": result_goals_away
+    }
+    ic(result_game)
+    result.append(result_game)
+    # Calculate stats
+    # Team score_index
+    result = func_sorare_rivals.calc_team_off_def_indicator(result)
+    build_html()
 
 build_html()

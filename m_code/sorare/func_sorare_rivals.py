@@ -1,6 +1,68 @@
+import statistics
+import copy
+
 from client import Client
 from icecream import ic
 
+
+def calc_team_off_def_indicator(games_list:list[dict]):
+    """
+    Calculates the team Offense/Defense indicator
+
+    Additioanl Attributes at game:
+    * homeTeamOffenseIndicator
+    * homeTeamDefenseIndicator
+    * awayTeamOffenseIndicator
+    * awayTeamDefenseIndicator
+    
+    Indicator
+    {
+      "max": 10,
+      "min":0,
+      "avg": 4,
+      "own": 6
+    }
+    """
+    offense_indicator = {
+      "max": 0,
+      "min":0,
+      "avg": 0,
+      "own": 0        
+    }
+    defense_indicator = {
+      "max": 0,
+      "min":0,
+      "avg": 0,
+      "own": 0        
+    }
+    offense_scores = []
+    defense_scores = []
+    for game in games_list:
+      offense_scores.append(game.get("homeTeamGoals")[0] * 2 + game.get("awayTeamGoals")[1])
+      offense_scores.append(game.get("awayTeamGoals")[0] * 2 + game.get("homeTeamGoals")[1])
+      defense_scores.append(game.get("homeTeamGoals")[1] * 2 + game.get("awayTeamGoals")[0])
+      defense_scores.append(game.get("awayTeamGoals")[1] * 2 + game.get("homeTeamGoals")[0])
+    offense_scores.sort()
+    defense_scores.sort(reverse=True)
+    #print(offense_scores)  
+    #print(defense_scores)  
+    offense_indicator["min"] = offense_scores[0]
+    offense_indicator["max"] = offense_scores[-1]
+    defense_indicator["min"] = defense_scores[0]
+    defense_indicator["max"] = defense_scores[-1]
+    offense_indicator["avg"] = statistics.median(offense_scores)
+    defense_indicator["avg"] = statistics.median(defense_scores)
+
+    for game in games_list:
+      offense_indicator["own"] = game.get("homeTeamGoals")[0] * 2 + game.get("awayTeamGoals")[1]
+      game["homeTeamOffenseIndicator"] = copy.deepcopy(offense_indicator)
+      defense_indicator["own"] = game.get("homeTeamGoals")[1] * 2 + game.get("awayTeamGoals")[0]
+      game["homeTeamDefenseIndicator"] = copy.deepcopy(defense_indicator)
+      offense_indicator["own"] = game.get("awayTeamGoals")[0] * 2 + game.get("homeTeamGoals")[1]
+      game["awayTeamOffenseIndicator"] = copy.deepcopy(offense_indicator)
+      defense_indicator["own"] = game.get("awayTeamGoals")[1] * 2 + game.get("homeTeamGoals")[0]
+      game["awayTeamDefenseIndicator"] = copy.deepcopy(defense_indicator)
+    return games_list
 
 def calculate_goals_of_team(team_slug:str, games_list:list[dict]) -> tuple[int,int]:
     """

@@ -1,5 +1,49 @@
 {% extends "base.jinja2" %}
 
+{% macro progressionInfo(progressionData) %}
+    {% set reversed = False %}
+    {% if progressionData.max < progressionData.min %}
+        {% set reversed = True %}
+    {% endif %}
+    {% set percentage = 0 %}
+    {% set positive = True %}
+    {% if reversed == False %}
+    {% if progressionData.avg < progressionData.own %}
+        {% set percentage = 100 * ( progressionData.own - progressionData.avg ) / ( progressionData.max - progressionData.avg ) %}
+    {% elif progressionData.avg > progressionData.own %}
+        {% set positive = False %}
+        {% set percentage = 100 * ( progressionData.avg - progressionData.own ) / ( progressionData.avg - progressionData.min ) %}
+    {% else%}
+        {% set percentage = 0 %}
+    {% endif %}
+    {% else %}
+        {% if progressionData.avg > progressionData.own %}
+            {% set percentage = 100 * ( progressionData.avg - progressionData.own ) / ( progressionData.avg - progressionData.max ) %}
+        {% elif progressionData.avg < progressionData.own %}
+            {% set positive = False %}
+            {% set percentage = 100 * ( progressionData.own - progressionData.avg ) / ( progressionData.min - progressionData.avg ) %}
+        {% else%}
+            {% set percentage = 0 %}
+        {% endif %}
+        
+    {% endif %}
+    <div class="debug-info">
+    {{ positive }}
+    {{ percentage }}
+    
+    {{ progressionData.max }}
+    {{ progressionData.min }}
+    {{ progressionData.avg }}
+    {{ progressionData.own }}
+    </div>
+    {% set color = "green" %}
+    {% if positive == False %}
+        {% set color = "red" %}
+    {% endif %}
+    <div class="progressbar-border" style="border:1px solid black;">
+        <div class="progressbar-bar" style="background-color:{{ color }}; height:12px;width:{{ percentage|abs }}%"></div>
+    </div> 
+{% endmacro %}
 {% block content %}
 
 <style>
@@ -29,6 +73,16 @@
                 <span class="sorare-game-result-{{ res }}">{{ res }}</span>
             {% endfor %}
             ({{ game.awayTeamGoals[0] }}:{{ game.awayTeamGoals[1] }})
+        </td>
+    </tr>
+    <tr>
+        <td>
+            Offense: {{ progressionInfo(game.homeTeamOffenseIndicator) }}
+            Defense: {{ progressionInfo(game.homeTeamDefenseIndicator) }}
+        </td>
+        <td>
+            Offense: {{ progressionInfo(game.awayTeamOffenseIndicator) }}
+            Defense: {{ progressionInfo(game.awayTeamDefenseIndicator) }}    
         </td>
     </tr>
     <tr>
