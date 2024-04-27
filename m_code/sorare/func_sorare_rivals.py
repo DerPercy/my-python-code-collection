@@ -4,6 +4,80 @@ import copy
 from client import Client
 from icecream import ic
 
+def get_last_rivals_results(client:Client) -> list[dict]:
+    param = {}
+    body = """
+query RivalsLastGames {
+  football {
+    rivals {
+      pastGames {
+        
+        cap
+        slug
+        myArenaChallenge {
+          awayContestant {
+          	score
+            manager {
+              user {
+                slug
+              }
+            }
+            lineup {
+              appearances {
+                pictureUrl
+            		player {
+              		slug
+                  displayName
+              		averageScore(type: LAST_FIFTEEN_SO5_AVERAGE_SCORE )
+            			activeClub {
+                    slug
+                  }
+                }
+            		position
+            		score
+          		}
+            }
+          }
+        }
+        myPointsDelta
+        game {
+          
+          date
+        }
+        myLineup {
+          appearances {
+            pictureUrl
+            player {
+              slug
+              displayName
+              averageScore(type: LAST_FIFTEEN_SO5_AVERAGE_SCORE )
+            	activeClub {
+                slug
+              }
+            }
+            position
+            score
+          }
+        }
+      }
+    }
+  }
+}"""
+    #leaderBoardResult = json.loads(context["rootHandler"].external().getRequestHandler().request("sorareHeroesGetRankings",param))
+    res_last_results = client.request(body,param,{ "resultSelector": ["data","football","rivals","pastGames"]   })
+    result = []
+    for last_res in res_last_results:
+        if last_res.get("myPointsDelta") == None:
+            continue # Lineup without area challenge
+        won = True
+        if last_res.get("myPointsDelta") <= 0:
+            won = False
+        result.append({
+            "name": last_res.get("slug"),
+            "won": won
+        })
+        
+    return result
 
 def calc_team_off_def_indicator(games_list:list[dict]):
     """

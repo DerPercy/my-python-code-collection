@@ -60,8 +60,8 @@
 
 <table>
 {% for game in data.result_games %}
-    <tr><td colspan="2"><b>{{ game.name }}</b> => {{ game.date }}</td></tr>
-    <tr>
+    <tr class="behavior-show-until" data-show-until="{{ game.date }}"><td colspan="2">#{{ loop.index }} - <b>{{ game.name }}</b> => {{ game.date }}</td></tr>
+    <tr class="behavior-show-until" data-show-until="{{ game.date }}">
         <td>
             {% for res in game.homeTeamResults %}
                 <span class="sorare-game-result-{{ res }}">{{ res }} </span>
@@ -75,7 +75,7 @@
             ({{ game.awayTeamGoals[0] }}:{{ game.awayTeamGoals[1] }})
         </td>
     </tr>
-    <tr>
+    <tr class="behavior-show-until" data-show-until="{{ game.date }}">
         <td>
             Offense: {{ progressionInfo(game.homeTeamOffenseIndicator) }}
             Defense: {{ progressionInfo(game.homeTeamDefenseIndicator) }}
@@ -85,7 +85,7 @@
             Defense: {{ progressionInfo(game.awayTeamDefenseIndicator) }}    
         </td>
     </tr>
-    <tr>
+    <tr class="behavior-show-until" data-show-until="{{ game.date }}">
         <td>
             {% for player in game.home %}
                 <div>{{ player.name }} ({{ player.position }})</div>
@@ -108,4 +108,15 @@
     </tr>
 {% endfor %}
 </table>
+
+<script>
+var cusid_ele = document.getElementsByClassName('behavior-show-until');
+for (var i = 0; i < cusid_ele.length; ++i) {
+    var item = cusid_ele[i];  
+    var date_until = Date.parse(item.dataset.showUntil);
+    if((date_until - Date.now()) < 0){
+        item.style.display = "none";
+    }
+}
+</script>
 {% endblock %}

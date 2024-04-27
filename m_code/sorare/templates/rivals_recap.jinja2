@@ -1,0 +1,13 @@
+{% extends "base.jinja2" %}
+
+{% block content %}
+
+<table>
+{% for game in data.past_games %}
+    <tr>
+        <td colspan="2">{{ game.name }} => {{ game.won }}</td>
+    </tr>
+{% endfor %}
+</table>
+
+{% endblock %}
