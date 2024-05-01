@@ -63,16 +63,30 @@
     <tr class="behavior-show-until" data-show-until="{{ game.date }}"><td colspan="2">#{{ loop.index }} - <b>{{ game.name }}</b> => {{ game.date }}</td></tr>
     <tr class="behavior-show-until" data-show-until="{{ game.date }}">
         <td>
+            <div>
             {% for res in game.homeTeamResults %}
                 <span class="sorare-game-result-{{ res }}">{{ res }} </span>
             {% endfor %}
             ({{ game.homeTeamGoals[0] }}:{{ game.homeTeamGoals[1] }})
+            </div>
+            <div>
+                {% for res in game.homeTeamResultsAll %}
+                    <span class="sorare-game-result-{{ res }}">{{ res }} </span>
+                {% endfor %} (Overall)
+            </div>
         </td>
         <td>
+            <div>
             {% for res in game.awayTeamResults %}
                 <span class="sorare-game-result-{{ res }}">{{ res }}</span>
             {% endfor %}
             ({{ game.awayTeamGoals[0] }}:{{ game.awayTeamGoals[1] }})
+            </div>
+            <div>
+                {% for res in game.awayTeamResultsAll %}
+                    <span class="sorare-game-result-{{ res }}">{{ res }}</span>
+                {% endfor %} (Overall)
+            </div>
         </td>
     </tr>
     <tr class="behavior-show-until" data-show-until="{{ game.date }}">

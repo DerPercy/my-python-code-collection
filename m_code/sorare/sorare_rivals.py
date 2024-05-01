@@ -75,26 +75,35 @@ for game in games:
     result_games_away = []
     result_goals_home = (0,0)
     result_goals_away = (0,0)
+    result_games_home_all = []
+    result_games_away_all = []
     
     result_game_name = game.get("game").get('homeTeam').get("name")+" vs "+game.get("game").get('awayTeam').get("name")
     result_game_date = game.get("game").get('date')
     logging.info(result_game_name)
 
     # Team results
-    for team_result in game.get("game").get('homeTeam').get("lastFiveGames"):
-        if team_result.get("winner") == None:
-            result_games_home.append("D")
-        elif team_result.get("winner").get("slug") == game.get("game").get('homeTeam').get("slug"):
-            result_games_home.append("W")
-        else:
-            result_games_home.append("L")
-    for team_result in game.get("game").get('awayTeam').get("lastFiveGames"):
-        if team_result.get("winner") == None:
-            result_games_away.append("D")
-        elif team_result.get("winner").get("slug") == game.get("game").get('awayTeam').get("slug"):
-            result_games_away.append("W")
-        else:
-            result_games_away.append("L")
+    func_sorare_rivals.calc_team_results(
+        game.get("game").get('homeTeam').get("lastFiveGamesHomeAway"),
+        game.get("game").get('homeTeam').get("slug"),
+        result_games_home
+    )
+    func_sorare_rivals.calc_team_results(
+        game.get("game").get('awayTeam').get("lastFiveGamesHomeAway"),
+        game.get("game").get('awayTeam').get("slug"),
+        result_games_away
+    )
+    func_sorare_rivals.calc_team_results(
+        game.get("game").get('homeTeam').get("lastFiveGames"),
+        game.get("game").get('homeTeam').get("slug"),
+        result_games_home_all
+    )
+    func_sorare_rivals.calc_team_results(
+        game.get("game").get('awayTeam').get("lastFiveGames"),
+        game.get("game").get('awayTeam').get("slug"),
+        result_games_away_all
+    )
+
     # Team goals
     result_goals_home = func_sorare_rivals.calculate_goals_of_team(game.get("game").get('homeTeam').get("slug"),game.get("game").get('homeTeam').get("lastFiveGames"))
     result_goals_away = func_sorare_rivals.calculate_goals_of_team(game.get("game").get('awayTeam').get("slug"),game.get("game").get('awayTeam').get("lastFiveGames"))
@@ -136,6 +145,8 @@ for game in games:
         "away": result_player_away,
         "homeTeamResults": result_games_home,
         "awayTeamResults": result_games_away,
+        "homeTeamResultsAll": result_games_home_all,
+        "awayTeamResultsAll": result_games_away_all,
         "homeTeamGoals": result_goals_home,
         "awayTeamGoals": result_goals_away
     }

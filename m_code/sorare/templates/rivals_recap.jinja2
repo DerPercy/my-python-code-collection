@@ -4,8 +4,23 @@
 
 <table>
 {% for game in data.past_games %}
+    {% set color = "green" %}
+    {% if game.won == False %}
+        {% set color = "red" %}
+    {% endif %}
     <tr>
-        <td colspan="2">{{ game.name }} => {{ game.won }}</td>
+        <td colspan="4">{{ game.name }}</td>
+        <td style="background-color:{{color}}">{{ game.won }}</td>
+    </tr>
+    <tr>
+        {% for player in game.myLineup %}
+            <td><img style="width:80px"src="{{player.pictureUrl}}"/></td>
+        {% endfor %}
+    </tr>
+    <tr>
+        {% for player in game.otherLineup %}
+            <td><img style="width:80px"src="{{player.pictureUrl}}"/></td>
+        {% endfor %}
     </tr>
 {% endfor %}
 </table>

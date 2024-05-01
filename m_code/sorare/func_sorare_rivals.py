@@ -1,8 +1,30 @@
 import statistics
 import copy
+import logging
+import json
 
 from client import Client
 from icecream import ic
+
+
+def calc_team_results(games_data:list[dict],team_slug:str, result_data:list[str]):
+    logging.info("Calculation team results for:"+team_slug)
+    if games_data == None:
+        logging.error("No games data found: could not calculate result_data")
+        return
+    
+    logging.info(json.dumps(games_data, indent=4))
+  
+    for team_result in games_data:
+        if team_result.get("winner") == None:
+            result_data.append("D")
+        elif team_result.get("winner").get("slug") == team_slug:
+            result_data.append("W")
+        else:
+            result_data.append("L")
+    logging.info(result_data)
+
+
 
 def get_last_rivals_results(client:Client) -> list[dict]:
     param = {}
@@ -63,18 +85,33 @@ query RivalsLastGames {
     }
   }
 }"""
-    #leaderBoardResult = json.loads(context["rootHandler"].external().getRequestHandler().request("sorareHeroesGetRankings",param))
     res_last_results = client.request(body,param,{ "resultSelector": ["data","football","rivals","pastGames"]   })
     result = []
     for last_res in res_last_results:
         if last_res.get("myPointsDelta") == None:
             continue # Lineup without area challenge
+        # Check win flag
         won = True
         if last_res.get("myPointsDelta") <= 0:
             won = False
+        # My own lineup
+        my_lineup = []
+        for appearance in last_res.get("myLineup").get("appearances"):
+            my_lineup.append({
+                "pictureUrl": appearance.get("pictureUrl")
+            })
+        # My other lineup
+        other_lineup = []
+        for appearance in last_res.get("myArenaChallenge").get("awayContestant").get("lineup").get("appearances"):
+            other_lineup.append({
+                "pictureUrl": appearance.get("pictureUrl")
+            })
+        
         result.append({
             "name": last_res.get("slug"),
-            "won": won
+            "won": won,
+            "myLineup": my_lineup,
+            "otherLineup": other_lineup
         })
         
     return result
@@ -262,23 +299,27 @@ def get_next_rivals_games(client:Client) -> list[dict]:
     param = {
 		
 	}
+    game_payload = """
+  date
+  winner { slug }
+  homeTeam { slug }
+  homeGoals
+  awayTeam { slug }
+  awayGoals
+"""
     body = """
 query Rivals {
   football {
     rivals {
 #      upcomingGames(query: "Bundesliga") {
       upcomingGames {
-         game {
+        game {
           date
           homeTeam {
             __typename
           	... on TeamInterface {
               name slug lastFiveGames{
-                winner{ slug }
-                homeTeam { slug }
-                homeGoals
-                awayTeam { slug }
-                awayGoals
+                """+ game_payload+"""
               }
             }
           }
@@ -286,12 +327,7 @@ query Rivals {
             __typename
           	... on TeamInterface {
               name slug lastFiveGames{
-                winner { slug }
-                homeTeam { slug }
-                homeGoals
-                awayTeam { slug }
-                awayGoals
-
+                """+ game_payload+"""
               }
             }
           }
@@ -303,4 +339,42 @@ query Rivals {
 """
     #leaderBoardResult = json.loads(context["rootHandler"].external().getRequestHandler().request("sorareHeroesGetRankings",param))
     games = client.request(body,param,{ "resultSelector": ["data","football","rivals","upcomingGames"]   })
+    # Add last 15 games
+    for game in games: #[:3]:
+        home_team_slug = game.get("game").get("homeTeam").get("slug")
+        home_team_results = request_latest_games_of_team(client,home_team_slug,12,game_payload)
+        home_team_result_list = []
+        for home_team_result in home_team_results:
+            if home_team_result.get("homeTeam").get("slug") == home_team_slug:
+              home_team_result_list.append(home_team_result)
+        game.get("game").get("homeTeam")["lastFiveGamesHomeAway"] = home_team_result_list[:5]
+        game.get("game").get("homeTeam")["lastFiveGamesHomeAway"].reverse()
+
+        away_team_slug = game.get("game").get("awayTeam").get("slug")
+        away_team_results = request_latest_games_of_team(client,away_team_slug,12,game_payload)
+        away_team_result_list = []
+        for away_team_result in away_team_results:
+            if away_team_result.get("awayTeam").get("slug") == away_team_slug:
+              away_team_result_list.append(away_team_result)
+        
+        game.get("game").get("awayTeam")["lastFiveGamesHomeAway"] = away_team_result_list[:5]
+        game.get("game").get("awayTeam")["lastFiveGamesHomeAway"].reverse()
     return games
+
+def request_latest_games_of_team(client:Client, team_slug:str, number_games:int, game_payload:str) -> list[dict]:
+  body = """
+query Team {
+  football {
+    club(slug: \""""+team_slug+"""\") {
+      latestGames(first: """+str(number_games)+"""){
+        nodes {
+          """+game_payload+"""
+        }
+      }
+    }
+  }
+}
+"""
+  games = client.request(body,{},{ "resultSelector": ["data","football","club","latestGames","nodes"]   })
+  logging.info(json.dumps(games, indent=4))
+  return games
