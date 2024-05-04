@@ -45,9 +45,30 @@ client = SorareClient({
     'password': os.getenv('SORARE_PASSWORD')
 })
 
-past_games = func_sorare_rivals.get_last_rivals_results(client)
-
-
+past_games = func_sorare_rivals.get_last_rivals_results(client) #[:1]
+for game in past_games:
+    # Add game details
+    game_id = game.get("game").get("id")
+    game_data = func_sorare_rivals.request_game_by_id(client,game_id)
+    game["game"]["data"] = game_data
+    # add player scores
+    for player in game_data["homeFormation"]["bench"]:
+        player_score = func_sorare_rivals.request_game_player_score(client,game_id,player["slug"])
+        ic(player_score)
+        player["playerScore"] = player_score
+    for player in game_data["awayFormation"]["bench"]:
+        player_score = func_sorare_rivals.request_game_player_score(client,game_id,player["slug"])
+        player["playerScore"] = player_score
+    for area in game_data["awayFormation"]["startingLineup"]:
+        for player in area:
+            player_score = func_sorare_rivals.request_game_player_score(client,game_id,player["slug"])
+            player["playerScore"] = player_score
+    for area in game_data["homeFormation"]["startingLineup"]:
+        for player in area:
+            player_score = func_sorare_rivals.request_game_player_score(client,game_id,player["slug"])
+            player["playerScore"] = player_score
+    
+    
 environment = myjinja2.get_environment()
 template = environment.get_template("rivals_recap.jinja2")
 

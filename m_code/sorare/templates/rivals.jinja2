@@ -65,13 +65,13 @@
         <td>
             <div>
             {% for res in game.homeTeamResults %}
-                <span class="sorare-game-result-{{ res }}">{{ res }} </span>
+                <span class="sorare-game-result-{{ res }}">{{ res }}</span>
             {% endfor %}
             ({{ game.homeTeamGoals[0] }}:{{ game.homeTeamGoals[1] }})
             </div>
             <div>
                 {% for res in game.homeTeamResultsAll %}
-                    <span class="sorare-game-result-{{ res }}">{{ res }} </span>
+                    <span class="sorare-game-result-{{ res }}">{{ res }}</span>
                 {% endfor %} (Overall)
             </div>
         </td>

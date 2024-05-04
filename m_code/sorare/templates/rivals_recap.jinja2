@@ -1,4 +1,21 @@
 {% extends "base.jinja2" %}
+{% macro mySorareScoreColored(score) %}
+    {% set background_color = "red" %}
+    
+    
+    {% if score >= 74 %}
+        {% set background_color = "rgb(1, 147, 85)" %}
+    {% elif score >= 61 %}
+        {% set background_color = "rgb(29, 194, 155)" %}
+    {% elif score >= 49 %}
+        {% set background_color = "rgb(171, 194, 29)" %}
+    {% elif score >= 30 %}
+        {% set background_color = "rgb(241, 206, 23)" %}
+    {% elif score >= 15 %}
+        {% set background_color = "rgb(225, 146, 27)" %}
+    {% endif %}
+    <span style="color:white;background-color:{{background_color}}">{{score}}</span>
+{% endmacro %}
 
 {% block content %}
 
@@ -9,18 +26,107 @@
         {% set color = "red" %}
     {% endif %}
     <tr>
-        <td colspan="4">{{ game.name }}</td>
-        <td style="background-color:{{color}}">{{ game.won }}</td>
+        <td colspan="8">{{ game.name }}</td>
+        <td colspan="2" style="background-color:{{color}}">{{ game.won }}</td>
     </tr>
     <tr>
         {% for player in game.myLineup %}
-            <td><img style="width:80px"src="{{player.pictureUrl}}"/></td>
+            <td colspan="2">
+                <img style="width:80px"src="{{player.pictureUrl}}"/>
+                <div>{{mySorareScoreColored(player.score)}}</div>
+            </td>
         {% endfor %}
     </tr>
     <tr>
         {% for player in game.otherLineup %}
-            <td><img style="width:80px"src="{{player.pictureUrl}}"/></td>
+            <td colspan="2">
+                <img style="width:80px"src="{{player.pictureUrl}}"/>
+                <div>{{mySorareScoreColored(player.score)}}</div>
+            </td>
         {% endfor %}
+    </tr>
+    <tr>
+        <td colspan="5">
+            <table>
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <td>L15</td>
+                    <td>Score</td>
+                </tr>
+            {% for area in game.game.data.homeFormation.startingLineup %}
+                {% for player in area %}
+                    <tr>
+                        <td>{{ player.displayName }}</td>
+                        <td>{{player.position[:1]}}</td>
+                        <td>{{ mySorareScoreColored(player.averageScore) }}</td>
+                        <td>{{ mySorareScoreColored(player.playerScore.score) }}</td>
+                    </tr>
+                {% endfor %}
+            {% endfor %}
+            </table>
+        </td>
+        <td colspan="5">
+            <table>
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <td>L15</td>
+                    <td>Score</td>
+                </tr>
+            {% for area in game.game.data.awayFormation.startingLineup %}
+                {% for player in area %}
+                    <tr>
+                        <td>{{ player.displayName }}</td>
+                        <td>{{player.position[:1]}}</td>
+                        <td>{{ mySorareScoreColored(player.averageScore) }}</td>
+                        <td>{{ mySorareScoreColored(player.playerScore.score) }}</td>
+                    </tr>
+                {% endfor %}
+            {% endfor %}
+            </table>
+        </td>
+    </tr>
+    <tr>
+        <td colspan="5">
+            Bench
+            <table>
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <td>L15</td>
+                    <td>Score</td>
+                </tr>
+            {% for player in game.game.data.homeFormation.bench %}
+                <tr>
+                    <td>{{ player.displayName }}</td>
+                    <td>{{player.position[:1]}}</td>
+                    <td>{{ mySorareScoreColored(player.averageScore) }}</td>
+                    <td>{{ mySorareScoreColored(player.playerScore.score) }}</td>
+                </tr>
+            {% endfor %}
+            </table>
+        </td>
+        <td colspan="5">
+            Bench
+            <table>
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <td>L15</td>
+                    <td>Score</td>
+                </tr>
+            {% for player in game.game.data.awayFormation.bench %}
+                <tr>
+                    <td>{{ player.displayName }}</td>
+                    <td>{{player.position[:1]}}</td>
+                    <td>{{ mySorareScoreColored(player.averageScore) }}</td>
+                    <td>{{ mySorareScoreColored(player.playerScore.score) }}</td>
+                </tr>
+            {% endfor %}
+            </table>
+        </td>
+        
     </tr>
 {% endfor %}
 </table>

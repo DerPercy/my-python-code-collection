@@ -6,6 +6,64 @@ import json
 from client import Client
 from icecream import ic
 
+def request_game_player_score(client:Client,game_id:str,player_slug:str) -> dict:
+  param = {}
+  body = """
+query GameLineup {
+  football {
+    game(id:\""""+game_id+"""\") {
+      playerGameScore(playerSlug:\""""+player_slug+"""\"){
+        score
+      }    
+    }
+  }
+}"""
+  result = client.request(body,param,{ "resultSelector": ["data","football","game","playerGameScore"]   })
+  return result 
+
+def request_game_by_id(client:Client,game_id:str) -> dict:
+    param = {}
+    body = """
+query GameLineup {
+  football {
+    game(id:\""""+game_id+"""\") {
+      date
+      homeFormation{
+        bench {
+          slug
+          position
+          averageScore(type:LAST_FIFTEEN_SO5_AVERAGE_SCORE)
+          displayName
+        }
+        startingLineup{
+          position
+          slug
+          averageScore(type:LAST_FIFTEEN_SO5_AVERAGE_SCORE)
+          displayName
+        }
+      }
+      awayFormation{
+        bench {
+          slug
+          position
+          averageScore(type:LAST_FIFTEEN_SO5_AVERAGE_SCORE)
+          displayName
+        }
+        startingLineup{
+          position
+          slug
+          averageScore(type:LAST_FIFTEEN_SO5_AVERAGE_SCORE)
+          displayName
+        }
+      }
+    }
+  }
+}"""
+    game_result = client.request(body,param,{ "resultSelector": ["data","football","game"]   })
+    return game_result
+
+
+
 
 def calc_team_results(games_data:list[dict],team_slug:str, result_data:list[str]):
     logging.info("Calculation team results for:"+team_slug)
@@ -63,7 +121,7 @@ query RivalsLastGames {
         }
         myPointsDelta
         game {
-          
+          id
           date
         }
         myLineup {
@@ -98,20 +156,25 @@ query RivalsLastGames {
         my_lineup = []
         for appearance in last_res.get("myLineup").get("appearances"):
             my_lineup.append({
-                "pictureUrl": appearance.get("pictureUrl")
+                "pictureUrl": appearance.get("pictureUrl"),
+                "score": appearance.get("score")
             })
         # My other lineup
         other_lineup = []
         for appearance in last_res.get("myArenaChallenge").get("awayContestant").get("lineup").get("appearances"):
             other_lineup.append({
-                "pictureUrl": appearance.get("pictureUrl")
+                "pictureUrl": appearance.get("pictureUrl"),
+                "score": appearance.get("score")
             })
         
         result.append({
             "name": last_res.get("slug"),
             "won": won,
             "myLineup": my_lineup,
-            "otherLineup": other_lineup
+            "otherLineup": other_lineup,
+            "game": {
+                "id": last_res.get("game").get("id")[5:]
+            }
         })
         
     return result
