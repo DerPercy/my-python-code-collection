@@ -1,11 +1,6 @@
 from attrs import define
 from datetime import datetime
 
-
-"""
-Use Transaction from /handler folder
-
-"""
 @define
 class Transaction:
     """A representation of a coinbase tax transaction"""
