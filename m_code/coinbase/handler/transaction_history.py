@@ -9,7 +9,9 @@ class TransactionHistory:
 
     coinstacks = {}
     transactions = []
-
+    def __init__(self) -> None:
+        self.coinstacks = {}
+        self.transactions = []
     def action_buy(self, dt:datetime, symbol:str,quantity:float,rate:float,fees_in_fiat:float) -> None:
         """
         Action: buy a coin
