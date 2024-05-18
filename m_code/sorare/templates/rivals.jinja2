@@ -44,6 +44,17 @@
         <div class="progressbar-bar" style="background-color:{{ color }}; height:12px;width:{{ percentage|abs }}%"></div>
     </div> 
 {% endmacro %}
+
+{%- macro value_color(value,worst,best) -%}
+    {%- if value < worst -%}
+        #FF0000
+    {%- elif value > best -%}
+        #00FF00
+    {%- else -%}
+        #FFFF00
+    {%- endif -%}
+{%- endmacro -%}
+
 {% block content %}
 
 <style>
@@ -101,22 +112,51 @@
     </tr>
     <tr class="behavior-show-until" data-show-until="{{ game.date }}">
         <td>
-            {% for player in game.home %}
-                <div>{{ player.name }} ({{ player.position }})</div>
-                <div>{{ player.stats.percPlayed }}% gespielt</div>
-                <div style="display:none">{{ player.stats.percSubst }}% eingewechselt</div>
-                <div style="display:none">{{ player.stats.substScore_Avg }} Punkte bei Einwechslung</div>
-                <div><b>{{ player.stats.l15l5Performance }} % Steigerung</b></div>
+            <table>
+                {% for player in game.home %}
+                    <tr>
+                        <td><b>{{ player.name }}</b> ({{ player.position[:1] }})</td>
+                        <td>{{ player.l15 }}</td>
+                        <td>{{ player.numGames }}</td>
+                        <td style="background-color:{{value_color(player.scorePerformance,4,20)}}">{{ player.gamesScore | round(2) }}</td>
+                        <td style="background-color:{{value_color(player.avgAllAroundScore,5,12)}}">{{ player.avgAllAroundScore | round(2) }}</td>
+                    </tr>
+                    <tr>
+                        <td>{{ player.tactic.accuratePass | round(2) }}</td>
+                        <td>{{ player.tactic.dribblings | round(2) }}</td>
+                        <td>{{ player.tactic.shotsOnGoal | round(2) }}</td>
+                        <td>{{ player.tactic.clearance | round(2) }}</td>
+                        <td>{{ player.tactic.duelWon | round(2) }}</td>
+                    </tr>
+                    <tr style="display:none">
+                        <td colspan="5">{{ player.tempDetScores  }}</td>
+                    </tr>
             {% endfor %}
+            </table>
+           
         </td>
         <td>
-            {% for player in game.away %}
-                <div>{{ player.name }} ({{ player.position }})</div>
-                <div>{{ player.stats.percPlayed }}% gespielt</div>
-                <div style="display:none">{{ player.stats.percSubst }}% eingewechselt</div>
-                <div style="display:none">{{ player.stats.substScore_Avg }} Punkte bei Einwechslung</div>
-                <div><b>{{ player.stats.l15l5Performance }} % Steigerung</b></div>
+            <table>
+                {% for player in game.away %}
+                    <tr>
+                        <td>{{ player.name }} ({{ player.position[:1] }})</td>
+                        <td>{{ player.l15 }}</td>
+                        <td>{{ player.numGames }}</td>
+                        <td style="background-color:{{value_color(player.scorePerformance,4,20)}}">{{ player.gamesScore | round(2) }}</td>
+                        <td style="background-color:{{value_color(player.avgAllAroundScore,5,12)}}">{{ player.avgAllAroundScore | round(2) }}</td>
+                    </tr>
+                    <tr>
+                        <td>{{ player.tactic.accuratePass | round(2) }}</td>
+                        <td>{{ player.tactic.dribblings | round(2) }}</td>
+                        <td>{{ player.tactic.shotsOnGoal | round(2) }}</td>
+                        <td>{{ player.tactic.clearance | round(2) }}</td>
+                        <td>{{ player.tactic.duelWon | round(2) }}</td>
+                    </tr>
+                    <tr style="display:none">
+                        <td colspan="5">{{ player.tempDetScores  }}</td>
+                    </tr>
             {% endfor %}
+            </table>
 
         </td>
     </tr>

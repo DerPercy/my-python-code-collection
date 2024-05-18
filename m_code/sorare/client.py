@@ -23,10 +23,11 @@ class Client:
         query = """
             mutation SignInMutation($input: signInInput!) { 
                 signIn(input: $input) { 
-                    currentUser { 
-                        slug jwtToken(aud: "myPrivateApp") { 
+                    jwtToken(aud: "myPrivateApp") { 
                             token expiredAt 
                         } 
+                    currentUser { 
+                        slug 
                     } errors { 
                         message 
                     } 
@@ -46,9 +47,9 @@ class Client:
 
         
         r = requests.post("https://api.sorare.com/graphql", json=payloadJSON, headers=headers)
-        #print(r.text)
+        print(r.text)
         jwtData = json.loads(r.text)
-        self.jwt = jwtData["data"]["signIn"]["currentUser"]["jwtToken"]["token"]
+        self.jwt = jwtData["data"]["signIn"]["jwtToken"]["token"]
         #print(self.jwt)
         pass
 
@@ -83,7 +84,7 @@ class Client:
         #print(json.dumps(r.json(),indent=2))
         return result
 
-    def __request(self,body:str, variables = {},options = {}):
+    def __request(self,body:str, variables = {},options = {}, num_retries:int = 3):
         """ Returns an object with the following keys
         - result: the result
         - full_result: the complete result (in case f.e. options.resultSelector was set)
@@ -117,6 +118,11 @@ class Client:
         elif r.status_code != 200:
             logging.warn(r.status_code)
             logging.warn("Invalid status code")
+            if num_retries > 0:
+                logging.warn("Waiting 30 seconds and retry")
+                time.sleep(30)
+                return self.__request(body,variables,options, (num_retries - 1))
+            
 
         try:
             result = r.json()

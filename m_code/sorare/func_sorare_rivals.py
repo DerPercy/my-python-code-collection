@@ -6,6 +6,7 @@ import json
 from client import Client
 from icecream import ic
 
+
 def request_game_player_score(client:Client,game_id:str,player_slug:str) -> dict:
   param = {}
   body = """
@@ -146,11 +147,14 @@ query RivalsLastGames {
     res_last_results = client.request(body,param,{ "resultSelector": ["data","football","rivals","pastGames"]   })
     result = []
     for last_res in res_last_results:
+        with_match = True
+        won = None
         if last_res.get("myPointsDelta") == None:
-            continue # Lineup without area challenge
+            with_match = False
         # Check win flag
-        won = True
-        if last_res.get("myPointsDelta") <= 0:
+        if with_match == True:
+          won = True
+          if last_res.get("myPointsDelta") <= 0:
             won = False
         # My own lineup
         my_lineup = []
@@ -161,7 +165,8 @@ query RivalsLastGames {
             })
         # My other lineup
         other_lineup = []
-        for appearance in last_res.get("myArenaChallenge").get("awayContestant").get("lineup").get("appearances"):
+        if with_match == True:
+          for appearance in last_res.get("myArenaChallenge").get("awayContestant").get("lineup").get("appearances"):
             other_lineup.append({
                 "pictureUrl": appearance.get("pictureUrl"),
                 "score": appearance.get("score")
@@ -170,6 +175,7 @@ query RivalsLastGames {
         result.append({
             "name": last_res.get("slug"),
             "won": won,
+            "withMatch": with_match,
             "myLineup": my_lineup,
             "otherLineup": other_lineup,
             "game": {
@@ -298,7 +304,7 @@ def aggregate_player_stats(player_stats:list[dict]) -> dict:
         "substScore_Avg": subst_score_avg
     }
 
-def get_rivals_player_stats(client:Client, player_slug:str) -> list[dict]:
+def get_rivals_player_stats(client:Client, player_slug:str,team_slug:str,home_away:str) -> list[dict]:
 # Get leaderboard data
     param = {
 		"playerSlug": player_slug
@@ -307,13 +313,25 @@ def get_rivals_player_stats(client:Client, player_slug:str) -> list[dict]:
 query RivalsTeamPlayerScore($playerSlug: String!) {
   football {
     player(slug:$playerSlug) {
-      allSo5Scores(first:15){
+      averageScore(type:LAST_FIFTEEN_SO5_AVERAGE_SCORE)
+      position
+      displayName
+      allSo5Scores(first:40){
         nodes {
-          game { so5Fixture { gameWeek } }
+          game { homeTeam { slug } awayTeam { slug } so5Fixture { gameWeek startDate } }
           playerGameStats {
             gameStarted
           }
           score
+          decisiveScore {
+            category points stat statValue totalScore
+          }
+          detailedScore {
+            category points stat statValue totalScore
+          }
+          allAroundStats {
+            category points stat statValue totalScore  
+          }
         }
       }
     }
@@ -321,17 +339,87 @@ query RivalsTeamPlayerScore($playerSlug: String!) {
 }
 """
     #leaderBoardResult = json.loads(context["rootHandler"].external().getRequestHandler().request("sorareHeroesGetRankings",param))
-    scores = client.request(body,param,{ "resultSelector": ["data","football","player","allSo5Scores","nodes"]   })
-    result = []
-    for score in scores:
-        started = score.get("playerGameStats").get("gameStarted") != None
-        played = score.get("score") > 0
-        result.append({
-            "started": started,
-            "played": played,
-            "score": score.get("score")
-        }) 
+    player_data = client.request(body,param,{ "resultSelector": ["data","football","player"]   })
+    unfiltered_score_list = player_data.get("allSo5Scores").get("nodes")
+    
+    # Filter scores START
+    score_list = []
+    for score_entry in unfiltered_score_list:
+      # only games where the player started
+      if score_entry.get("playerGameStats").get("gameStarted") == None:
+          continue
+      # respect home/away scores
+      if home_away == "home" and score_entry.get("game").get("homeTeam").get("slug") != team_slug:
+          continue
+      if home_away == "away" and score_entry.get("game").get("awayTeam").get("slug") != team_slug:
+          continue
+      score_list.append(score_entry)
+    # Filter scores END
+
+    avg_score = 0
+    all_around_avg_score = 0
+    num_played = 0
+    num_games = len(score_list)
+    tactic_acc_pass = 0
+    score_performance = 0
+    l15 = player_data.get("averageScore","???")
+    detailed_scores = {}
+    for score in score_list:
+        if score.get("score") > 0:
+            num_played = num_played + 1
+            avg_score = avg_score + score.get("score")
+            all_around_avg_score = all_around_avg_score + score.get("score") - score.get("decisiveScore").get("totalScore")
+            tactic_acc_pass = tactic_acc_pass + get_detailed_score_count(score.get("detailedScore"),"accurate_pass")
+            for det_score in score.get("detailedScore"):
+                if detailed_scores.get(det_score.get("stat"),None) == None:
+                    detailed_scores[det_score.get("stat")] = 0
+                detailed_scores[det_score.get("stat")] = detailed_scores[det_score.get("stat")] + det_score.get("statValue")
+
+    if num_played > 0:
+      avg_score = avg_score / num_played
+      all_around_avg_score = all_around_avg_score / num_played
+      tactic_acc_pass = tactic_acc_pass / num_played
+      if l15 > 0:
+        score_performance = ( ( avg_score / l15 ) - 1 ) * 100 
+      for det_score_id in detailed_scores:
+          detailed_scores[det_score_id] = detailed_scores[det_score_id] / num_played
+
+    result = {
+        "name": player_data.get("displayName","???"),
+        "position": player_data.get("position","???"),
+        "l15": l15,
+        "numGames": num_games,
+        "gamesScore": avg_score,
+        "scorePerformance": score_performance,
+        "avgAllAroundScore": all_around_avg_score,
+        "tempDetScores": detailed_scores,
+        "tactic":{
+            "accuratePass": tactic_acc_pass,
+            "dribblings": detailed_scores.get("won_contest",0),
+            "shotsOnGoal": detailed_scores.get("ontarget_scoring_att",0),
+            "clearance": detailed_scores.get("effective_clearance",0),
+            "duelWon": detailed_scores.get("duel_won",0)
+        }
+    }
+    
+#    result = []
+#    for score in scores:
+#        started = score.get("playerGameStats").get("gameStarted") != None
+#        played = score.get("score") > 0
+#        result.append({
+#            "started": started,
+#
+#            "played": played,
+#            "score": score.get("score")
+#        }) 
     return result
+
+def get_detailed_score_count(detailed_score_list:dict,key:str) -> float:
+    for det_score in detailed_score_list:
+        if det_score.get("stat") == key:
+            return det_score.get("statValue")
+    return 0
+
 
 def get_players_of_team_slug(client:Client,team_slug:str) ->list[dict]:
     # Get leaderboard data
@@ -357,7 +445,7 @@ query RivalsTeamPlayer($teamSlug: String!) {
     players = client.request(body,param,{ "resultSelector": ["data","football","club","activePlayers","nodes"]   })
     return players
 
-def get_next_rivals_games(client:Client) -> list[dict]:
+def get_next_rivals_games(client:Client,num:int) -> list[dict]:
     # Get leaderboard data
     param = {
 		
@@ -376,6 +464,7 @@ query Rivals {
     rivals {
 #      upcomingGames(query: "Bundesliga") {
       upcomingGames {
+        cap slug
         game {
           date
           homeTeam {
@@ -403,7 +492,7 @@ query Rivals {
     #leaderBoardResult = json.loads(context["rootHandler"].external().getRequestHandler().request("sorareHeroesGetRankings",param))
     games = client.request(body,param,{ "resultSelector": ["data","football","rivals","upcomingGames"]   })
     # Add last 15 games
-    for game in games: #[:3]:
+    for game in games[:num]:
         home_team_slug = game.get("game").get("homeTeam").get("slug")
         home_team_results = request_latest_games_of_team(client,home_team_slug,12,game_payload)
         home_team_result_list = []

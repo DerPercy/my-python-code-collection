@@ -46,8 +46,8 @@ client = SorareClient({
     'password': os.getenv('SORARE_PASSWORD')
 })
 
-
-games = get_next_rivals_games(client)
+num_games = 100
+games = get_next_rivals_games(client,num_games)
 #ic(games)
 
 result = []
@@ -67,7 +67,7 @@ def build_html():
         file.write(content)
 
 logging.info(len(games))
-games = games[:100] # Max 100 entries
+games = games[:num_games] # Max 100 entries
 for game in games: 
     result_player_home = []
     result_player_away = []
@@ -113,30 +113,49 @@ for game in games:
     players_home = get_players_of_team_slug(client,game.get("game").get('homeTeam').get("slug"))
     players_away = get_players_of_team_slug(client,game.get("game").get('awayTeam').get("slug"))
     #ic(players_home)
+
+    def player_sorter(player):
+        pos = player.get("position")
+        if pos == "Goalkeeper":
+            return 1
+        elif pos == "Defender":
+            return 2
+        elif pos == "Midfielder":
+            return 3
+        elif pos == "Forward":
+            return 4
+        return 5
     for player in players_home:
-        player_stats = get_rivals_player_stats(client,player.get("slug"))
-        agg_stats = aggregate_player_stats(player_stats)
+        player_stats = get_rivals_player_stats(client,player.get("slug"),game.get("game").get('homeTeam').get("slug"),"home")
+        if player_stats.get("numGames") > 0:
+            result_player_home.append(player_stats)
+        #agg_stats = aggregate_player_stats(player_stats)
         #if agg_stats.get("percSubst") >= 80 and agg_stats.get("substScore_Avg") >= 32:
-        if agg_stats.get("l15l5Performance") > 14 and agg_stats.get("percPlayed") >= 60:
-            #ic(player.get("displayName"))
-            #ic(agg_stats)
-            result_player_home.append({
-                "name": player.get("displayName"),
-                "position": player.get("position"),
-                "stats": agg_stats
-            })
+        #if agg_stats.get("l15l5Performance") > 14 and agg_stats.get("percPlayed") >= 60:
+        #    #ic(player.get("displayName"))
+        #    #ic(agg_stats)
+        #    result_player_home.append({
+        #        "name": player.get("displayName"),
+        #        "position": player.get("position"),
+        #        "stats": agg_stats
+        #    })
+    result_player_home.sort(key=player_sorter)
     for player in players_away:
-        player_stats = get_rivals_player_stats(client,player.get("slug"))
-        agg_stats = aggregate_player_stats(player_stats)
+        player_stats = get_rivals_player_stats(client,player.get("slug"),game.get("game").get('awayTeam').get("slug"),"away")
+        #agg_stats = aggregate_player_stats(player_stats)
         #if agg_stats.get("percSubst") >= 80 and agg_stats.get("substScore_Avg") >= 32:
-        if agg_stats.get("l15l5Performance") > 14 and agg_stats.get("percPlayed") >= 60:
-            #ic(player.get("displayName"))
-            #ic(agg_stats)
-            result_player_away.append({
-                "name": player.get("displayName"),
-                "position": player.get("position"),
-                "stats": agg_stats
-            })
+        #if agg_stats.get("l15l5Performance") > 14 and agg_stats.get("percPlayed") >= 60:
+        #    #ic(player.get("displayName"))
+        #    #ic(agg_stats)
+        #    result_player_away.append({
+        #        "name": player.get("displayName"),
+        #        "position": player.get("position"),
+        #        "stats": agg_stats
+        #    })
+        if player_stats.get("numGames") > 0:
+            result_player_away.append(player_stats)
+    result_player_away.sort(key=player_sorter)
+    
     #if ( len(result_player_away) + len(result_player_home) ) > -1: #5:
     result_game = {
         "name": result_game_name,
@@ -151,6 +170,7 @@ for game in games:
         "awayTeamGoals": result_goals_away
     }
     ic(result_game)
+    file_func.write_json_to_file(result_game,"./temp/rivals/games/"+game.get("slug")+".json")
     result.append(result_game)
     # Calculate stats
     # Team score_index

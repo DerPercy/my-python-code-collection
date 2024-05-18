@@ -22,7 +22,9 @@
 <table>
 {% for game in data.past_games %}
     {% set color = "green" %}
-    {% if game.won == False %}
+    {% if game.withMatch == False %}
+        {% set color = "white" %}
+    {% elif game.won == False %}
         {% set color = "red" %}
     {% endif %}
     <tr>

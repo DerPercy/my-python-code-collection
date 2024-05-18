@@ -45,7 +45,7 @@ client = SorareClient({
     'password': os.getenv('SORARE_PASSWORD')
 })
 
-past_games = func_sorare_rivals.get_last_rivals_results(client) #[:1]
+past_games = func_sorare_rivals.get_last_rivals_results(client)#[:1]
 for game in past_games:
     # Add game details
     game_id = game.get("game").get("id")
