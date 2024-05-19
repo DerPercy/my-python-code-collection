@@ -1,0 +1,16 @@
+{% extends "base.jinja2" %}
+
+{% block content %}
+    <table>
+        {% for game in data.upcoming_games %}
+            <tr>
+                <td colspan="5">{{game.gameSlug}}</td>
+            </tr>
+            <tr>
+                {% for player in game.topTeam %}
+                    <td>{{player.slug}}</td>
+                {% endfor %}        
+            </tr>
+        {% endfor %}
+    </table>
+{% endblock %}

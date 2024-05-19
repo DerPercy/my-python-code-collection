@@ -7,6 +7,28 @@ from client import Client
 from icecream import ic
 
 
+def request_game_players_game_score(client:Client,game_id:str,player_slugs:list[str],data_payload:str) -> dict:
+    param={}
+    full_payload = ""
+    for player_slug in player_slugs:
+        id_ps = player_slug.replace("-","_")
+        full_payload = full_payload + " player_"+id_ps+": playerGameScore(playerSlug:\""+player_slug+"\"){"+data_payload+"}"
+        pass
+    body = """
+query GameLineup {
+  football {
+    game(id:\""""+game_id+"""\") {
+      """+full_payload+"""
+    }
+  }
+}"""
+    result = client.request(body,param,{ "resultSelector": ["data","football","game"]   })
+    result_data = {}
+    for player_slug in player_slugs:
+      id_ps = "player_"+player_slug.replace("-","_")
+      result_data[player_slug] = result[id_ps]
+    return result_data 
+
 def request_game_player_score(client:Client,game_id:str,player_slug:str) -> dict:
   param = {}
   body = """
@@ -87,12 +109,37 @@ def calc_team_results(games_data:list[dict],team_slug:str, result_data:list[str]
 
 def get_last_rivals_results(client:Client) -> list[dict]:
     param = {}
+    body_part_lineup="""
+tactic { slug } 
+score
+appearances {
+  pictureUrl
+	player {
+		slug
+    displayName
+		averageScore(type: LAST_FIFTEEN_SO5_AVERAGE_SCORE )
+		activeClub {
+      slug
+    }
+  }
+	position
+	score
+}
+"""
     body = """
 query RivalsLastGames {
   football {
     rivals {
       pastGames {
-        
+        lineupTactics {
+          slug
+          stat
+          displayName
+          thresholds{
+            score
+            threshold
+          }
+        }
         cap
         slug
         myArenaChallenge {
@@ -103,21 +150,7 @@ query RivalsLastGames {
                 slug
               }
             }
-            lineup {
-              appearances {
-                pictureUrl
-            		player {
-              		slug
-                  displayName
-              		averageScore(type: LAST_FIFTEEN_SO5_AVERAGE_SCORE )
-            			activeClub {
-                    slug
-                  }
-                }
-            		position
-            		score
-          		}
-            }
+            lineup {"""+body_part_lineup+"""}
           }
         }
         myPointsDelta
@@ -125,21 +158,7 @@ query RivalsLastGames {
           id
           date
         }
-        myLineup {
-          appearances {
-            pictureUrl
-            player {
-              slug
-              displayName
-              averageScore(type: LAST_FIFTEEN_SO5_AVERAGE_SCORE )
-            	activeClub {
-                slug
-              }
-            }
-            position
-            score
-          }
-        }
+        myLineup {"""+body_part_lineup+"""}
       }
     }
   }
@@ -161,24 +180,32 @@ query RivalsLastGames {
         for appearance in last_res.get("myLineup").get("appearances"):
             my_lineup.append({
                 "pictureUrl": appearance.get("pictureUrl"),
-                "score": appearance.get("score")
+                "score": appearance.get("score"),
+                "playerSlug": appearance["player"]["slug"],
             })
         # My other lineup
         other_lineup = []
+        other_lineup_score = None
         if with_match == True:
+          other_lineup_score = last_res.get("myArenaChallenge").get("awayContestant").get("lineup").get("score")
           for appearance in last_res.get("myArenaChallenge").get("awayContestant").get("lineup").get("appearances"):
             other_lineup.append({
                 "pictureUrl": appearance.get("pictureUrl"),
-                "score": appearance.get("score")
+                "score": appearance.get("score"),
+                "playerSlug": appearance["player"]["slug"],
             })
         
         result.append({
             "cap": last_res.get("cap"),
             "name": last_res.get("slug"),
+            "lineupTactics": last_res.get("lineupTactics"),
+            "myTacticSlug": last_res.get("myLineup")["tactic"]["slug"],
             "won": won,
             "withMatch": with_match,
             "myLineup": my_lineup,
+            "myLineupScore": last_res.get("myLineup").get("score"),
             "otherLineup": other_lineup,
+            "otherLineupScore": other_lineup_score,
             "game": {
                 "id": last_res.get("game").get("id")[5:]
             }
@@ -387,6 +414,7 @@ query RivalsTeamPlayerScore($playerSlug: String!) {
 
     result = {
         "name": player_data.get("displayName","???"),
+        "slug": player_slug,
         "position": player_data.get("position","???"),
         "l15": l15,
         "numGames": num_games,
@@ -446,7 +474,7 @@ query RivalsTeamPlayer($teamSlug: String!) {
     players = client.request(body,param,{ "resultSelector": ["data","football","club","activePlayers","nodes"]   })
     return players
 
-def get_next_rivals_games(client:Client,num:int) -> list[dict]:
+def get_next_rivals_games(client:Client,num:int,include_team_games:bool = True) -> list[dict]:
     # Get leaderboard data
     param = {
 		
@@ -465,8 +493,9 @@ query Rivals {
     rivals {
 #      upcomingGames(query: "Bundesliga") {
       upcomingGames {
-        cap slug
+        cap slug formationKnown
         game {
+          id
           date
           homeTeam {
             __typename
@@ -493,7 +522,8 @@ query Rivals {
     #leaderBoardResult = json.loads(context["rootHandler"].external().getRequestHandler().request("sorareHeroesGetRankings",param))
     games = client.request(body,param,{ "resultSelector": ["data","football","rivals","upcomingGames"]   })
     # Add last 15 games
-    for game in games[:num]:
+    if include_team_games:
+      for game in games[:num]:
         home_team_slug = game.get("game").get("homeTeam").get("slug")
         home_team_results = request_latest_games_of_team(client,home_team_slug,12,game_payload)
         home_team_result_list = []

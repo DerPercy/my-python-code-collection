@@ -28,7 +28,7 @@
         {% set color = "red" %}
     {% endif %}
     <tr>
-        <td colspan="7">{{ game.name }}</td>
+        <td colspan="9">{{ game.name }}</td>
         <td colspan="1">{{ game.cap }}</td>
         <td colspan="2" style="background-color:{{color}}">{{ game.won }}</td>
     </tr>
@@ -39,7 +39,21 @@
                 <div>{{mySorareScoreColored(player.score)}}</div>
             </td>
         {% endfor %}
+        <td colspan="2">{{game.myLineupScore | round(2)}}</td>
     </tr>
+    {% for tactic in game.tactics %}
+    <tr {% if tactic.slug == game.myTacticSlug %} style="font-weight:bold "{% endif %} >
+        {% for player in game.myLineup %}
+            <td colspan="2">{{game.playerDetailScores[player.playerSlug][tactic.stat]}}</td>
+        {% endfor %}
+
+        <td colspan="2">
+            {{ tactic.displayName }}
+        </td>
+    </tr>
+    {% endfor %}
+    <tr></tr>
+    {% if game.withMatch == True %}
     <tr>
         {% for player in game.otherLineup %}
             <td colspan="2">
@@ -47,8 +61,10 @@
                 <div>{{mySorareScoreColored(player.score)}}</div>
             </td>
         {% endfor %}
+        <td colspan="2">{{game.otherLineupScore | round(2)}}</td>
     </tr>
-    <tr><td colspan="10">Best possible lineup</td></tr>
+    {% endif %}
+    <tr><td colspan="12">Best possible lineup</td></tr>
     <tr>
         {% for player in game.topTeam %}
             <td colspan="2">
@@ -59,7 +75,7 @@
     </tr>
     
     <tr>
-        <td colspan="5">
+        <td colspan="6">
             <table>
                 <tr>
                     <td></td>
@@ -79,7 +95,7 @@
             {% endfor %}
             </table>
         </td>
-        <td colspan="5">
+        <td colspan="6">
             <table>
                 <tr>
                     <td></td>
