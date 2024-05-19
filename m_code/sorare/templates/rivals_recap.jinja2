@@ -28,7 +28,8 @@
         {% set color = "red" %}
     {% endif %}
     <tr>
-        <td colspan="8">{{ game.name }}</td>
+        <td colspan="7">{{ game.name }}</td>
+        <td colspan="1">{{ game.cap }}</td>
         <td colspan="2" style="background-color:{{color}}">{{ game.won }}</td>
     </tr>
     <tr>
@@ -47,6 +48,16 @@
             </td>
         {% endfor %}
     </tr>
+    <tr><td colspan="10">Best possible lineup</td></tr>
+    <tr>
+        {% for player in game.topTeam %}
+            <td colspan="2">
+                <div>{{player.displayName}}</div>
+                <div>{{mySorareScoreColored(player.playerScore.score)}}</div>
+            </td>
+        {% endfor %}
+    </tr>
+    
     <tr>
         <td colspan="5">
             <table>

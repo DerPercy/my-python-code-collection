@@ -173,6 +173,7 @@ query RivalsLastGames {
             })
         
         result.append({
+            "cap": last_res.get("cap"),
             "name": last_res.get("slug"),
             "won": won,
             "withMatch": with_match,
