@@ -4,13 +4,12 @@
     <table>
         {% for game in data.upcoming_games %}
             <tr>
-                <td colspan="5">{{game.gameSlug}}</td>
+                <td colspan="1"><b>{{game.gameSlug}}</b></td>
             </tr>
-            <tr>
                 {% for player in game.topTeam %}
-                    <td>{{player.slug}}</td>
-                {% endfor %}        
-            </tr>
+                    <tr><td>{{player.slug}}</td></tr>
+                {% endfor %} 
+            <tr><td>{{game.topTeamTactics}}</td></tr>       
         {% endfor %}
     </table>
 {% endblock %}

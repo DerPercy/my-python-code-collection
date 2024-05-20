@@ -5,6 +5,9 @@ Calculate the best lineup based on a list of players
 """
 
 from attrs import define
+from . import rivals_tactic
+import logging
+from icecream import ic
 
 """ 
 ========== MODELS ========== 
@@ -16,17 +19,19 @@ class Player:
     position: str #G,D,M,F
     cap_score: float
     score: float
+    detailed_score_list: list[rivals_tactic.PlayerDetailedScore] = []
 
 
 """ 
 ========== FUNCTIONS ==========
 """
 
-def calculate_best_lineup(players:list[Player],cap_limit:float) -> list[str]:
+def calculate_best_lineup(players:list[Player],cap_limit:float, tactic_def_list: list[rivals_tactic.TacticDefinition] = None) -> tuple[list[str],str]:
     """
     Returns a list of the player entity_data of the best lineup
     """
     player_list = []
+    tactic_slug = None
     #print(players)
     max_score = 0
     for idx1, player1 in enumerate(players):
@@ -37,6 +42,12 @@ def calculate_best_lineup(players:list[Player],cap_limit:float) -> list[str]:
                         try:
                             check_cap_requirement(player1,player2,player3,player4,player5,cap_limit)
                             score = get_lineup_score(player1,player2,player3,player4,player5)
+                            tactics_score = 0
+                            if tactic_def_list != None:
+                                tactics_result = get_tactics_score(player1,player2,player3,player4,player5,tactic_def_list)
+                                tactic_slug = tactics_result[1]
+                                tactics_score = tactics_result[0]
+                                score = score + tactics_score
                             #print(player1.entity_data+"->"+player2.entity_data+"->"+player3.entity_data+"->"+player4.entity_data+"->"+player5.entity_data)
                             #print(score)
                             if score > max_score:
@@ -47,7 +58,34 @@ def calculate_best_lineup(players:list[Player],cap_limit:float) -> list[str]:
                             # Invalid lineup: ignore
                             pass    
     #print(player_list)                    
-    return player_list
+    return (player_list,tactic_slug)
+
+
+def get_tactics_score(p1:Player,p2:Player,p3:Player,p4:Player,p5:Player,tdl:list[rivals_tactic.TacticDefinition]) -> tuple[float,str]:
+    max_score = 0
+    tactic_slug = "???"
+    for tactic in tdl:
+        tactic_score = 0
+        pds = rivals_tactic.get_detailed_score_by_tactic_stat(p1.detailed_score_list,tactic.stat)
+        if pds != None:
+            tactic_score = tactic_score + pds.statValue
+        pds = rivals_tactic.get_detailed_score_by_tactic_stat(p2.detailed_score_list,tactic.stat)
+        if pds != None:
+            tactic_score = tactic_score + pds.statValue
+        pds = rivals_tactic.get_detailed_score_by_tactic_stat(p3.detailed_score_list,tactic.stat)
+        if pds != None:
+            tactic_score = tactic_score + pds.statValue
+        pds = rivals_tactic.get_detailed_score_by_tactic_stat(p4.detailed_score_list,tactic.stat)
+        if pds != None:
+            tactic_score = tactic_score + pds.statValue
+        pds = rivals_tactic.get_detailed_score_by_tactic_stat(p5.detailed_score_list,tactic.stat)
+        if pds != None:
+            tactic_score = tactic_score + pds.statValue
+        th_score = rivals_tactic.get_threshold_score(tactic_score,tactic)
+        if th_score >= max_score:
+            max_score = th_score
+            tactic_slug = tactic.slug
+    return [max_score,tactic_slug]
 
 def get_lineup_score(p1:Player,p2:Player,p3:Player,p4:Player,p5:Player) -> float:
     if not valid_lineup_position([p1.position,p2.position,p3.position,p4.position,p5.position]):
@@ -72,3 +110,7 @@ def valid_lineup_position(positions:list[str]) -> bool:
 def check_cap_requirement(p1:Player,p2:Player,p3:Player,p4:Player,p5:Player,cap: float) -> None:
     if p1.cap_score + p2.cap_score + p3.cap_score + p4.cap_score + p5.cap_score > cap:
         raise Exception("Too expensive")
+
+""" 
+========== FACTORIES ==========
+"""

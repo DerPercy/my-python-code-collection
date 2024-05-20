@@ -3,6 +3,7 @@ Rivals tactics models and service functions
 """
 
 from attrs import define
+from icecream import ic
 
 """ 
 ========== MODELS ========== 
@@ -32,6 +33,19 @@ class PlayerDetailedScore:
 ========== FUNCTIONS ==========
 """
 
+def get_detailed_score_by_tactic_stat(pdsl:list[PlayerDetailedScore],tactic_stat:str) -> PlayerDetailedScore:
+    
+    for pds in pdsl:
+        if pds.stat == tactic_stat:
+            return pds
+    return None
+
+def get_threshold_score(score:float,tactic_def:TacticDefinition) -> float:
+    max_score = 0
+    for threshold in tactic_def.thresholds:
+        if score >= threshold.threshold and threshold.score > max_score:
+            max_score = threshold.score
+    return max_score
 """ 
 ========== FACTORIES ==========
 """
@@ -63,3 +77,12 @@ def conv_player_detailed_scores_to_object(player_det_score_list:list[PlayerDetai
     for pds in player_det_score_list:
         ret_obj[pds.stat] = pds.statValue
     return ret_obj
+
+def conv_object_to_player_detailed_scores(obj:dict) -> list[PlayerDetailedScore]:
+    ret_list = []
+    for pds in obj:
+        ret_list.append(PlayerDetailedScore(
+            stat=pds,
+            statValue=obj[pds]
+        ))
+    return ret_list

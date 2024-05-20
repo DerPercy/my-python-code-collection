@@ -493,6 +493,15 @@ query Rivals {
     rivals {
 #      upcomingGames(query: "Bundesliga") {
       upcomingGames {
+        lineupTactics {
+          slug
+          stat
+          displayName
+          thresholds{
+            score
+            threshold
+          }
+        }
         cap slug formationKnown
         game {
           id

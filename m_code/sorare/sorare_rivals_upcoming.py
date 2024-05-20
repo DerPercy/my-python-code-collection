@@ -58,6 +58,10 @@ for game in games[:num_games]:
     logging.info("Formation known! Checking lineup")
     game_details = func_sorare_rivals.request_game_by_id(client,game["game"]["id"][5:])
     game_data = file_func.read_json_from_file("./temp/rivals/games/"+game["slug"]+".json")
+    
+    logging.info("Get tactics")
+    game_tactic_def_list = rivals_tactic.build_tactic_list_from_api_response(game.get("lineupTactics"))
+    #logging.info(game_tactic_def_list)
     starting_player_slugs = []
     for position in game_details["homeFormation"]["startingLineup"]:
         for player in position:
@@ -86,16 +90,23 @@ for game in games[:num_games]:
             cap_score=cap_score,
             entity_data=player_data,
             position=player_data["position"][:1],
-            score=player_data["gamesScore"]
+            score=player_data["gamesScore"],
+            detailed_score_list=rivals_tactic.conv_object_to_player_detailed_scores(player_data["tempDetScores"])
         ))
-    top_team = lineup_ranking.calculate_best_lineup(players=ranking_players,cap_limit=float(game["cap"]))
+    best_lineup = lineup_ranking.calculate_best_lineup(
+        players=ranking_players,
+        cap_limit=float(game["cap"]),
+        tactic_def_list=game_tactic_def_list
+    )
+    top_team = best_lineup[0]
     logging.info("Lineup found:")
     for player in top_team:
         logging.info(player["slug"])
     
     upcoming_games.append({
         "gameSlug": game["slug"],
-        "topTeam": top_team
+        "topTeam": top_team,
+        "topTeamTactics": best_lineup[1],
     })
     
 

@@ -46,7 +46,7 @@ client = SorareClient({
     'password': os.getenv('SORARE_PASSWORD')
 })
 
-past_games = func_sorare_rivals.get_last_rivals_results(client)#[:1]
+past_games = func_sorare_rivals.get_last_rivals_results(client)[:5]
 for game in past_games:
     # Add game details
     game_id = game.get("game").get("id")
@@ -92,11 +92,19 @@ for game in past_games:
             cap_score=float(player["averageScore"]),
             entity_data=player,
             position=player["position"][:1],
-            score=float(player["playerScore"]["score"])
+            score=float(player["playerScore"]["score"]),
+            detailed_score_list=rivals_tactic.conv_object_to_player_detailed_scores(player_det_scores[player["slug"]])
         ))
-    top_team = lineup_ranking.calculate_best_lineup(players=ranking_players,cap_limit=float(game["cap"]))
-    game["topTeam"] = top_team
-    #ic(top_team)
+    best_lineup_result = lineup_ranking.calculate_best_lineup(
+        players=ranking_players,
+        cap_limit=float(game["cap"]),
+        tactic_def_list=game_tactic_def_list
+    )
+    game["topTeam"] = best_lineup_result[0]
+    game["topTeamTactic"] = best_lineup_result[1]
+    #ic(game["topTeam"])
+    #ic(game["topTeamTactic"])
+    
     
 environment = myjinja2.get_environment()
 template = environment.get_template("rivals_recap.jinja2")
