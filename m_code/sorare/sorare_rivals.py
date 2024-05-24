@@ -11,6 +11,7 @@ import func_sorare_rivals
 from func_sorare_rivals import get_next_rivals_games, get_players_of_team_slug, get_rivals_player_stats, aggregate_player_stats
 import func_sorare_rivals
 import argparse, sys
+import cattrs
 
 '''
 Initializing
@@ -114,8 +115,8 @@ for game in games:
     players_away = get_players_of_team_slug(client,game.get("game").get('awayTeam').get("slug"))
     #ic(players_home)
 
-    def player_sorter(player):
-        pos = player.get("position")
+    def player_sorter(player:func_sorare_rivals.PlayerStats):
+        pos = player.position
         if pos == "Goalkeeper":
             return 1
         elif pos == "Defender":
@@ -127,32 +128,12 @@ for game in games:
         return 5
     for player in players_home:
         player_stats = get_rivals_player_stats(client,player.get("slug"),game.get("game").get('homeTeam').get("slug"),"home")
-        if player_stats.get("numGames") > 0:
+        if player_stats.numGames > 0:
             result_player_home.append(player_stats)
-        #agg_stats = aggregate_player_stats(player_stats)
-        #if agg_stats.get("percSubst") >= 80 and agg_stats.get("substScore_Avg") >= 32:
-        #if agg_stats.get("l15l5Performance") > 14 and agg_stats.get("percPlayed") >= 60:
-        #    #ic(player.get("displayName"))
-        #    #ic(agg_stats)
-        #    result_player_home.append({
-        #        "name": player.get("displayName"),
-        #        "position": player.get("position"),
-        #        "stats": agg_stats
-        #    })
     result_player_home.sort(key=player_sorter)
     for player in players_away:
         player_stats = get_rivals_player_stats(client,player.get("slug"),game.get("game").get('awayTeam').get("slug"),"away")
-        #agg_stats = aggregate_player_stats(player_stats)
-        #if agg_stats.get("percSubst") >= 80 and agg_stats.get("substScore_Avg") >= 32:
-        #if agg_stats.get("l15l5Performance") > 14 and agg_stats.get("percPlayed") >= 60:
-        #    #ic(player.get("displayName"))
-        #    #ic(agg_stats)
-        #    result_player_away.append({
-        #        "name": player.get("displayName"),
-        #        "position": player.get("position"),
-        #        "stats": agg_stats
-        #    })
-        if player_stats.get("numGames") > 0:
+        if player_stats.numGames > 0:
             result_player_away.append(player_stats)
     result_player_away.sort(key=player_sorter)
     
@@ -160,8 +141,8 @@ for game in games:
     result_game = {
         "name": result_game_name,
         "date": result_game_date,
-        "home": result_player_home,
-        "away": result_player_away,
+        "home": cattrs.unstructure(result_player_home),
+        "away": cattrs.unstructure(result_player_away),
         "homeTeamResults": result_games_home,
         "awayTeamResults": result_games_away,
         "homeTeamResultsAll": result_games_home_all,
@@ -169,7 +150,7 @@ for game in games:
         "homeTeamGoals": result_goals_home,
         "awayTeamGoals": result_goals_away
     }
-    ic(result_game)
+    #ic(result_game)
     file_func.write_json_to_file(result_game,"./temp/rivals/games/"+game.get("slug")+".json")
     result.append(result_game)
     # Calculate stats

@@ -5,6 +5,40 @@ import json
 
 from client import Client
 from icecream import ic
+from attrs import define
+
+
+""" 
+========== MODELS ========== 
+"""
+
+@define
+class PlayerStatsTactic:
+  accuratePass: float
+  dribblings: float
+  shotsOnGoal: float
+  clearance: float
+  duelWon: float
+
+@define
+class PlayerStats:
+    
+    """A representation of player stats"""
+    name: str         # Name of the player
+    slug: str         # Slug of the player
+    position: str     #Position of the player
+    l15: float        # Average score of the last 15 games
+    numGames: int     # Number of games in player stats
+    gamesScore: float  # Average score of the last filtered numGames (f.e. home/away)
+    scorePerformance: float   # performance l15 -> gamesScore
+    avgAllAroundScore: float  # Average allAroundScore of the last filtered numGames (f.e. home/away)
+    tempDetScores: dict       # Temoprary details score (see -> rivals_tactic.py)
+    tactic: PlayerStatsTactic # Tactic
+
+""" 
+========== FUNCTIONS ==========
+"""
+
 
 
 def request_game_players_game_score(client:Client,game_id:str,player_slugs:list[str],data_payload:str) -> dict:
@@ -332,7 +366,7 @@ def aggregate_player_stats(player_stats:list[dict]) -> dict:
         "substScore_Avg": subst_score_avg
     }
 
-def get_rivals_player_stats(client:Client, player_slug:str,team_slug:str,home_away:str) -> list[dict]:
+def get_rivals_player_stats(client:Client, player_slug:str,team_slug:str,home_away:str) -> PlayerStats:
 # Get leaderboard data
     param = {
 		"playerSlug": player_slug
@@ -412,24 +446,24 @@ query RivalsTeamPlayerScore($playerSlug: String!) {
       for det_score_id in detailed_scores:
           detailed_scores[det_score_id] = detailed_scores[det_score_id] / num_played
 
-    result = {
-        "name": player_data.get("displayName","???"),
-        "slug": player_slug,
-        "position": player_data.get("position","???"),
-        "l15": l15,
-        "numGames": num_games,
-        "gamesScore": avg_score,
-        "scorePerformance": score_performance,
-        "avgAllAroundScore": all_around_avg_score,
-        "tempDetScores": detailed_scores,
-        "tactic":{
-            "accuratePass": tactic_acc_pass,
-            "dribblings": detailed_scores.get("won_contest",0),
-            "shotsOnGoal": detailed_scores.get("ontarget_scoring_att",0),
-            "clearance": detailed_scores.get("effective_clearance",0),
-            "duelWon": detailed_scores.get("duel_won",0)
-        }
-    }
+    result = PlayerStats(
+        name=player_data.get("displayName","???"),
+        slug=player_slug,
+        position=player_data.get("position","???"),
+        l15=l15,
+        numGames=num_games,
+        gamesScore=avg_score,
+        scorePerformance=score_performance,
+        avgAllAroundScore=all_around_avg_score,
+        tempDetScores=detailed_scores,
+        tactic=PlayerStatsTactic(
+            accuratePass=tactic_acc_pass,
+            dribblings=detailed_scores.get("won_contest",0),
+            shotsOnGoal=detailed_scores.get("ontarget_scoring_att",0),
+            clearance=detailed_scores.get("effective_clearance",0),
+            duelWon=detailed_scores.get("duel_won",0)
+        )
+    )
     
 #    result = []
 #    for score in scores:

@@ -46,13 +46,15 @@ client = SorareClient({
     'password': os.getenv('SORARE_PASSWORD')
 })
 
-past_games = func_sorare_rivals.get_last_rivals_results(client)[:5]
+past_games = func_sorare_rivals.get_last_rivals_results(client)#[:5]
 for game in past_games:
+    logging.info("Handling game:"+game.get("name"))
     # Add game details
     game_id = game.get("game").get("id")
     game_data = func_sorare_rivals.request_game_by_id(client,game_id)
     game["game"]["data"] = game_data
     players = []
+    players_det_score = []
     # Getting game tactics
     game_tactic_def_list = rivals_tactic.build_tactic_list_from_api_response(game.get("lineupTactics"))
     game["tactics"] = game_tactic_def_list
@@ -61,27 +63,33 @@ for game in past_games:
     for player in game_data["homeFormation"]["bench"]:
         player_score = func_sorare_rivals.request_game_player_score(client,game_id,player["slug"])
         player["playerScore"] = player_score
+        players_det_score.append(player)
     for player in game_data["awayFormation"]["bench"]:
         player_score = func_sorare_rivals.request_game_player_score(client,game_id,player["slug"])
         player["playerScore"] = player_score
+        players_det_score.append(player)
     for area in game_data["awayFormation"]["startingLineup"]:
         for player in area:
             player_score = func_sorare_rivals.request_game_player_score(client,game_id,player["slug"])
             player["playerScore"] = player_score
             players.append(player)
+            players_det_score.append(player)
+    
     for area in game_data["homeFormation"]["startingLineup"]:
         for player in area:
             player_score = func_sorare_rivals.request_game_player_score(client,game_id,player["slug"])
             player["playerScore"] = player_score
             players.append(player)
+            players_det_score.append(player)
+    
     # Getting tactics from players
     tactic_player_slugs = []
     tactic_payload = "detailedScore { stat statValue } score"
-    for player in players:
+    for player in players_det_score:
         tactic_player_slugs.append(player["slug"])
     result = func_sorare_rivals.request_game_players_game_score(client,game_id,tactic_player_slugs,tactic_payload)
     player_det_scores = {}
-    for player in players:
+    for player in players_det_score:
         det_score = rivals_tactic.build_player_detailed_score_from_api_response(result[player["slug"]]["detailedScore"])
         player_det_scores[player["slug"]] = rivals_tactic.conv_player_detailed_scores_to_object(det_score)
     game["playerDetailScores"] = player_det_scores

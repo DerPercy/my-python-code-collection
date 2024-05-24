@@ -7,7 +7,7 @@
                 <td colspan="1"><b>{{game.gameSlug}}</b></td>
             </tr>
                 {% for player in game.topTeam %}
-                    <tr><td>{{player.slug}}</td></tr>
+                    <tr><td>{{player.name}} ({{player.position}})</td></tr>
                 {% endfor %} 
             <tr><td>{{game.topTeamTactics}}</td></tr>       
         {% endfor %}
