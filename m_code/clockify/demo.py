@@ -84,8 +84,8 @@ headers = {
     'X-Api-Key': api_key
 }
 payloadJSON = {
-	"dateRangeStart":   "2024-01-01T00:00:00.000",
-	"dateRangeEnd":     "2024-01-31T23:59:59.000",
+	"dateRangeStart":   "2024-05-01T00:00:00.000",
+	"dateRangeEnd":     "2024-05-31T23:59:59.000",
 	"sortOrder":        "ASCENDING",
 	"detailedFilter":   {
 		"page": 1,
@@ -95,7 +95,7 @@ payloadJSON = {
 
 r = requests.post("https://reports.api.clockify.me/v1/workspaces/"+ws_id+"/reports/detailed", json=payloadJSON, headers=headers)
 value = r.json()   
-
+#print(value)
 retValue = {
 	"response": value,
 	"entries": []
@@ -131,11 +131,12 @@ for timeentry in value["timeentries"]:
 
 		entry["psp"] = psp
 		entry["ticket"] = parse_description(timeentry["description"]).get("ticket")
+		entry["task"] = timeentry.get("taskName","")
 		setTotalTime(entry)
 		retValue["entries"].append(entry)
 
 retValue["entries"] = mergeEntries(retValue["entries"])
-print(json.dumps(retValue,indent=2))
+#print(json.dumps(retValue,indent=2))
 with open('temp/demo.csv', 'w', newline='') as csvfile:
     csv_writer = csv.writer(csvfile)
     for entry in retValue["entries"]:
@@ -150,6 +151,7 @@ with open('temp/demo.csv', 'w', newline='') as csvfile:
 			entry.get("clientName"),
 			entry.get("projectName"),
 			entry.get("psp"),
-			entry.get("ticket"),			
+			entry.get("ticket"),		
+			entry.get("task"),			
 		])
 
