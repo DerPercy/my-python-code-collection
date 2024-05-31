@@ -26,6 +26,7 @@ class PlayerStats:
     """A representation of player stats"""
     name: str         # Name of the player
     slug: str         # Slug of the player
+    playerId: str         # ID of the player
     position: str     #Position of the player
     l15: float        # Average score of the last 15 games
     numGames: int     # Number of games in player stats
@@ -34,11 +35,43 @@ class PlayerStats:
     avgAllAroundScore: float  # Average allAroundScore of the last filtered numGames (f.e. home/away)
     tempDetScores: dict       # Temoprary details score (see -> rivals_tactic.py)
     tactic: PlayerStatsTactic # Tactic
+    teamSlug: str # Slug of the player team
+    unfilteredScores: list[dict]
 
 """ 
 ========== FUNCTIONS ==========
 """
 
+def request_game_draftable_player_ids(client:Client,game_slug:str) -> dict:
+
+  body = """
+query RivalsGame {
+  football {
+    rivals {
+      game(slug:\"""" + game_slug + """\"){
+        draftablePlayers{
+          __typename
+          ... on FootballRivalsDraftableCard {
+            player { slug }
+            id
+          }
+          __typename
+          ... on FootballRivalsDraftablePlayer {
+            player { slug }
+            id
+          }
+        }
+      }
+    }
+  }
+}
+"""
+  result = client.request(body,{},{ "resultSelector": ["data","football","rivals","game","draftablePlayers"]   })
+  
+  ret_player = {}
+  for player in result:
+    ret_player[player["player"]["slug"]] = player["id"]
+  return ret_player
 
 
 def request_game_players_game_score(client:Client,game_id:str,player_slugs:list[str],data_payload:str) -> dict:
@@ -128,7 +161,7 @@ def calc_team_results(games_data:list[dict],team_slug:str, result_data:list[str]
         logging.error("No games data found: could not calculate result_data")
         return
     
-    logging.info(json.dumps(games_data, indent=4))
+    #logging.info(json.dumps(games_data, indent=4))
   
     for team_result in games_data:
         if team_result.get("winner") == None:
@@ -377,6 +410,7 @@ query RivalsTeamPlayerScore($playerSlug: String!) {
     player(slug:$playerSlug) {
       averageScore(type:LAST_FIFTEEN_SO5_AVERAGE_SCORE)
       position
+      id
       displayName
       allSo5Scores(first:40){
         nodes {
@@ -448,6 +482,7 @@ query RivalsTeamPlayerScore($playerSlug: String!) {
 
     result = PlayerStats(
         name=player_data.get("displayName","???"),
+        playerId=player_data.get("id","???"),
         slug=player_slug,
         position=player_data.get("position","???"),
         l15=l15,
@@ -462,7 +497,9 @@ query RivalsTeamPlayerScore($playerSlug: String!) {
             shotsOnGoal=detailed_scores.get("ontarget_scoring_att",0),
             clearance=detailed_scores.get("effective_clearance",0),
             duelWon=detailed_scores.get("duel_won",0)
-        )
+        ),
+        teamSlug=team_slug,
+        unfilteredScores=unfiltered_score_list
     )
     
 #    result = []
@@ -496,6 +533,7 @@ query RivalsTeamPlayer($teamSlug: String!) {
       activePlayers(first:100){
         nodes {
           slug
+          id
           displayName
           position
         }
@@ -505,7 +543,11 @@ query RivalsTeamPlayer($teamSlug: String!) {
 }
 """
     #leaderBoardResult = json.loads(context["rootHandler"].external().getRequestHandler().request("sorareHeroesGetRankings",param))
-    players = client.request(body,param,{ "resultSelector": ["data","football","club","activePlayers","nodes"]   })
+    try:
+      players = client.request(body,param,{ "resultSelector": ["data","football","club","activePlayers","nodes"]   })
+    except Exception:
+       logging.error("No active players found for team "+team_slug)
+       return []
     return players
 
 def get_next_rivals_games(client:Client,num:int,include_team_games:bool = True) -> list[dict]:
@@ -527,6 +569,7 @@ query Rivals {
     rivals {
 #      upcomingGames(query: "Bundesliga") {
       upcomingGames {
+        id
         lineupTactics {
           slug
           stat
@@ -536,7 +579,7 @@ query Rivals {
             threshold
           }
         }
-        cap slug formationKnown
+        cap slug formationKnown shouldNotify
         game {
           id
           date
@@ -601,6 +644,10 @@ query Team {
   }
 }
 """
-  games = client.request(body,{},{ "resultSelector": ["data","football","club","latestGames","nodes"]   })
-  logging.info(json.dumps(games, indent=4))
+  try:
+    games = client.request(body,{},{ "resultSelector": ["data","football","club","latestGames","nodes"]   })
+  except Exception:
+     logging.error("No latest games for team "+team_slug+" found")
+     return []
+  #logging.info(json.dumps(games, indent=4))
   return games

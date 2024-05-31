@@ -71,6 +71,7 @@
 
 <table>
 {% for game in data.result_games %}
+    {% set game_id = "game"+ ( loop.index|string ) %}
     <tr class="behavior-show-until" data-show-until="{{ game.date }}"><td colspan="2">#{{ loop.index }} - <b>{{ game.name }}</b> => {{ game.date }}</td></tr>
     <tr class="behavior-show-until" data-show-until="{{ game.date }}">
         <td>
@@ -115,7 +116,8 @@
             <table>
                 {% for player in game.home %}
                     <tr>
-                        <td><b>{{ player.name }}</b> ({{ player.position[:1] }})</td>
+                        <td><input type="checkbox" class="player-{{game_id}}" value="{{player.slug}}" onchange="handle_{{game_id}}()"/>
+                            <b>{{ player.name }}</b> ({{ player.position[:1] }})</td>
                         <td>{{ player.l15 }}</td>
                         <td>{{ player.numGames }}</td>
                         <td style="background-color:{{value_color(player.scorePerformance,4,20)}}">{{ player.gamesScore | round(2) }}</td>
@@ -139,7 +141,8 @@
             <table>
                 {% for player in game.away %}
                     <tr>
-                        <td>{{ player.name }} ({{ player.position[:1] }})</td>
+                        <td><input type="checkbox" class="player-{{game_id}}" value="{{player.slug}}" onchange="handle_{{game_id}}()"/>
+                            {{ player.name }} ({{ player.position[:1] }})</td>
                         <td>{{ player.l15 }}</td>
                         <td>{{ player.numGames }}</td>
                         <td style="background-color:{{value_color(player.scorePerformance,4,20)}}">{{ player.gamesScore | round(2) }}</td>
@@ -160,6 +163,16 @@
 
         </td>
     </tr>
+    <script>
+        function handle_{{game_id}}(){
+            const checked = document.querySelectorAll('input[type="checkbox"].player-{{game_id}}:checked');
+            selected = Array.from(checked).map( x => x.value );
+            tb_value = "{{game.slug}},"+selected;
+            
+            document.querySelector('.text-{{game_id}}').value = tb_value
+        }
+    </script>
+    <tr class="behavior-show-until" data-show-until="{{ game.date }}"><td colspan="2"><textarea style="width:100%"class="text-{{game_id}}" onfocus="this.select()"></textarea></td></tr>
 {% endfor %}
 </table>
 

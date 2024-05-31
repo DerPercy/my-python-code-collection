@@ -47,7 +47,7 @@ client = SorareClient({
     'password': os.getenv('SORARE_PASSWORD')
 })
 
-num_games = 100
+num_games = 50
 games = get_next_rivals_games(client,num_games)
 #ic(games)
 
@@ -108,8 +108,8 @@ for game in games:
     # Team goals
     result_goals_home = func_sorare_rivals.calculate_goals_of_team(game.get("game").get('homeTeam').get("slug"),game.get("game").get('homeTeam').get("lastFiveGamesHomeAway"))
     result_goals_away = func_sorare_rivals.calculate_goals_of_team(game.get("game").get('awayTeam').get("slug"),game.get("game").get('awayTeam').get("lastFiveGamesHomeAway"))
-    logging.info(result_goals_home)
-    logging.info(result_goals_away)
+    #logging.info(result_goals_home)
+    #logging.info(result_goals_away)
     # get players 
     players_home = get_players_of_team_slug(client,game.get("game").get('homeTeam').get("slug"))
     players_away = get_players_of_team_slug(client,game.get("game").get('awayTeam').get("slug"))
@@ -140,6 +140,7 @@ for game in games:
     #if ( len(result_player_away) + len(result_player_home) ) > -1: #5:
     result_game = {
         "name": result_game_name,
+        "slug": game.get("slug"),
         "date": result_game_date,
         "home": cattrs.unstructure(result_player_home),
         "away": cattrs.unstructure(result_player_away),
