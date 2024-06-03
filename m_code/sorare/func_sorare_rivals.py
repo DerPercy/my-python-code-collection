@@ -225,6 +225,7 @@ query RivalsLastGames {
         game {
           id
           date
+          competition { slug } 
         }
         myLineup {"""+body_part_lineup+"""}
       }
@@ -275,7 +276,8 @@ query RivalsLastGames {
             "otherLineup": other_lineup,
             "otherLineupScore": other_lineup_score,
             "game": {
-                "id": last_res.get("game").get("id")[5:]
+                "id": last_res.get("game").get("id")[5:],
+                "competitionSlug": last_res.get("game").get("competition").get("slug")
             }
         })
         

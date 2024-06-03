@@ -20,6 +20,15 @@
 {% block content %}
 
 <table>
+{% for com_sum in data.competition_summary %}
+    <tr>
+        <td>{{ com_sum.slug }}</td>
+        <td>{{ com_sum.numGames }}</td>
+        <td>{{ com_sum.avgScorePerc }}</td>
+    </tr>
+{% endfor %}
+</table>
+<table>
 {% for game in data.past_games %}
     {% set color = "green" %}
     {% if game.withMatch == False %}

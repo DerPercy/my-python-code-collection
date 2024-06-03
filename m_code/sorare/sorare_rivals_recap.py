@@ -46,7 +46,8 @@ client = SorareClient({
     'password': os.getenv('SORARE_PASSWORD')
 })
 
-past_games = func_sorare_rivals.get_last_rivals_results(client)#[:5]
+competition_summary = []
+past_games = func_sorare_rivals.get_last_rivals_results(client)
 for game in past_games:
     logging.info("Handling game:"+game.get("name"))
     # Add game details
@@ -116,16 +117,30 @@ for game in past_games:
         game["maxScorePercentage"] = 0
     else:    
         game["maxScorePercentage"] = int( game["myLineupScore"]  * 100 / best_lineup_result[3] ) 
-    #ic(game["topTeam"])
-    #ic(game["topTeamTactic"])
     
+    comp_found = False
+    for com_summary_entry in competition_summary:
+        if com_summary_entry["slug"] == game["game"]["competitionSlug"]:
+            comp_found = True
+            com_summary_entry["numGames"] = com_summary_entry["numGames"] + 1
+            com_summary_entry["avgScoreTotal"] = com_summary_entry["avgScoreTotal"] + game["maxScorePercentage"]
+            com_summary_entry["avgScorePerc"] = com_summary_entry["avgScoreTotal"] / com_summary_entry["numGames"]
     
+    if comp_found == False:
+        competition_summary.append({
+            "numGames": 1,
+            "avgScoreTotal": game["maxScorePercentage"],
+            "avgScorePerc": game["maxScorePercentage"],
+            "slug": game["game"]["competitionSlug"]
+        })
+        
 environment = myjinja2.get_environment()
 template = environment.get_template("rivals_recap.jinja2")
 
 content = template.render(
     data = {
-        "past_games": past_games
+        "past_games": past_games,
+        "competition_summary": competition_summary
     }
 )
 with open("temp/sorare-rivals-recap-report.html", mode="w", encoding="utf-8") as file:
