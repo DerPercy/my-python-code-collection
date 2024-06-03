@@ -126,13 +126,18 @@ for game in games:
         elif pos == "Forward":
             return 4
         return 5
+    
+    respect_home_away = True
+    if game.get("game").get("competition").get("slug") in []:
+        logging.info("Game in a special competition: ignore home/away player logic")
+        respect_home_away = False
     for player in players_home:
-        player_stats = get_rivals_player_stats(client,player.get("slug"),game.get("game").get('homeTeam').get("slug"),"home")
+        player_stats = get_rivals_player_stats(client,player.get("slug"),game.get("game").get('homeTeam').get("slug"),"home",respect_home_away)
         if player_stats.numGames > 0:
             result_player_home.append(player_stats)
     result_player_home.sort(key=player_sorter)
     for player in players_away:
-        player_stats = get_rivals_player_stats(client,player.get("slug"),game.get("game").get('awayTeam').get("slug"),"away")
+        player_stats = get_rivals_player_stats(client,player.get("slug"),game.get("game").get('awayTeam').get("slug"),"away",respect_home_away)
         if player_stats.numGames > 0:
             result_player_away.append(player_stats)
     result_player_away.sort(key=player_sorter)
@@ -140,6 +145,7 @@ for game in games:
     #if ( len(result_player_away) + len(result_player_home) ) > -1: #5:
     result_game = {
         "name": result_game_name,
+        "competitionSlug": game.get("game").get("competition").get("slug"),
         "slug": game.get("slug"),
         "date": result_game_date,
         "home": cattrs.unstructure(result_player_home),

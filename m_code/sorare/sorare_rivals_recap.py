@@ -110,6 +110,12 @@ for game in past_games:
     )
     game["topTeam"] = best_lineup_result[0]
     game["topTeamTactic"] = best_lineup_result[1]
+    game["topTeamScore"] = best_lineup_result[3]
+
+    if best_lineup_result[3] == 0:
+        game["maxScorePercentage"] = 0
+    else:    
+        game["maxScorePercentage"] = int( game["myLineupScore"]  * 100 / best_lineup_result[3] ) 
     #ic(game["topTeam"])
     #ic(game["topTeamTactic"])
     

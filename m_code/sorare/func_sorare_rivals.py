@@ -30,6 +30,7 @@ class PlayerStats:
     position: str     #Position of the player
     l15: float        # Average score of the last 15 games
     numGames: int     # Number of games in player stats
+    gamesList: list[str] # List of the games which are calculated 
     gamesScore: float  # Average score of the last filtered numGames (f.e. home/away)
     scorePerformance: float   # performance l15 -> gamesScore
     avgAllAroundScore: float  # Average allAroundScore of the last filtered numGames (f.e. home/away)
@@ -399,7 +400,13 @@ def aggregate_player_stats(player_stats:list[dict]) -> dict:
         "substScore_Avg": subst_score_avg
     }
 
-def get_rivals_player_stats(client:Client, player_slug:str,team_slug:str,home_away:str) -> PlayerStats:
+def get_rivals_player_stats(
+      client:Client, 
+      player_slug:str,
+      team_slug:str,
+      home_away:str,
+      respect_home_away:bool = True   # Filter home/away scores
+      ) -> PlayerStats:
 # Get leaderboard data
     param = {
 		"playerSlug": player_slug
@@ -414,7 +421,7 @@ query RivalsTeamPlayerScore($playerSlug: String!) {
       displayName
       allSo5Scores(first:40){
         nodes {
-          game { homeTeam { slug } awayTeam { slug } so5Fixture { gameWeek startDate } }
+          game { rivalsGame { slug } homeTeam { slug } awayTeam { slug } so5Fixture { gameWeek startDate } }
           playerGameStats {
             gameStarted
           }
@@ -440,16 +447,23 @@ query RivalsTeamPlayerScore($playerSlug: String!) {
     
     # Filter scores START
     score_list = []
+    game_slugs = []
     for score_entry in unfiltered_score_list:
       # only games where the player started
       if score_entry.get("playerGameStats").get("gameStarted") == None:
           continue
       # respect home/away scores
-      if home_away == "home" and score_entry.get("game").get("homeTeam").get("slug") != team_slug:
+      if respect_home_away == True:
+        if home_away == "home" and score_entry.get("game").get("homeTeam").get("slug") != team_slug:
           continue
-      if home_away == "away" and score_entry.get("game").get("awayTeam").get("slug") != team_slug:
+        if home_away == "away" and score_entry.get("game").get("awayTeam").get("slug") != team_slug:
           continue
+      else:
+         if score_entry.get("game").get("homeTeam").get("slug") != team_slug and score_entry.get("game").get("awayTeam").get("slug") != team_slug:
+            continue
+         
       score_list.append(score_entry)
+      game_slugs.append(score_entry.get("game").get("homeTeam").get("slug") + " vs " + score_entry.get("game").get("awayTeam").get("slug"))
     # Filter scores END
 
     avg_score = 0
@@ -486,6 +500,7 @@ query RivalsTeamPlayerScore($playerSlug: String!) {
         slug=player_slug,
         position=player_data.get("position","???"),
         l15=l15,
+        gamesList=game_slugs,
         numGames=num_games,
         gamesScore=avg_score,
         scorePerformance=score_performance,
@@ -521,7 +536,7 @@ def get_detailed_score_count(detailed_score_list:dict,key:str) -> float:
     return 0
 
 
-def get_players_of_team_slug(client:Client,team_slug:str) ->list[dict]:
+def get_players_of_team_slug(client:Client,team_slug:str, team_type: str = "club") ->list[dict]:
     # Get leaderboard data
     param = {
 		"teamSlug": team_slug
@@ -529,7 +544,7 @@ def get_players_of_team_slug(client:Client,team_slug:str) ->list[dict]:
     body = """
 query RivalsTeamPlayer($teamSlug: String!) {
   football {
-    club(slug: $teamSlug) {
+    """ + team_type + """(slug: $teamSlug) {
       activePlayers(first:100){
         nodes {
           slug
@@ -544,11 +559,14 @@ query RivalsTeamPlayer($teamSlug: String!) {
 """
     #leaderBoardResult = json.loads(context["rootHandler"].external().getRequestHandler().request("sorareHeroesGetRankings",param))
     try:
-      players = client.request(body,param,{ "resultSelector": ["data","football","club","activePlayers","nodes"]   })
+      players = client.request(body,param,{ "resultSelector": ["data","football",team_type,"activePlayers","nodes"]   })
     except Exception:
-       logging.error("No active players found for team "+team_slug)
-       return []
+        logging.error("No active players found for team "+team_slug)
+        if team_type == "club":  
+          return get_players_of_team_slug(client,team_slug,"nationalTeam")
+        return []
     return players
+    
 
 def get_next_rivals_games(client:Client,num:int,include_team_games:bool = True) -> list[dict]:
     # Get leaderboard data
@@ -581,6 +599,7 @@ query Rivals {
         }
         cap slug formationKnown shouldNotify
         game {
+          competition { slug displayName }
           id
           date
           homeTeam {
@@ -611,6 +630,7 @@ query Rivals {
     if include_team_games:
       for game in games[:num]:
         home_team_slug = game.get("game").get("homeTeam").get("slug")
+        logging.debug("Get latest games of home team ("+ home_team_slug +")")
         home_team_results = request_latest_games_of_team(client,home_team_slug,12,game_payload)
         home_team_result_list = []
         for home_team_result in home_team_results:
@@ -646,8 +666,30 @@ query Team {
 """
   try:
     games = client.request(body,{},{ "resultSelector": ["data","football","club","latestGames","nodes"]   })
+    return games
   except Exception:
      logging.error("No latest games for team "+team_slug+" found")
-     return []
+     
+  logging.info("Try, if it's a national team")
+  body = """
+query Team {
+  football {
+    nationalTeam(slug: \""""+team_slug+"""\") {
+      latestGames(first: """+str(number_games)+"""){
+        nodes {
+          """+game_payload+"""
+        }
+      }
+    }
+  }
+}
+"""
+  try:
+    games = client.request(body,{},{ "resultSelector": ["data","football","nationalTeam","latestGames","nodes"]   })
+    return games
+  except Exception:
+     logging.error("No latest games for nationalTeam "+team_slug+" found")
+  
   #logging.info(json.dumps(games, indent=4))
-  return games
+  return []
+  

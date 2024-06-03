@@ -68,13 +68,25 @@ else:
 logging.info("Looking for upcoming games")
 
 
-num_games = 15
+# Read lineups, which should be automatically posted
+post_lineups = []
+with open("temp/notify_lineups.txt", mode="r", encoding="utf-8") as file:
+    post_lineups = file.readlines()
+logging.info(post_lineups)
+
+num_games = 50
 games = func_sorare_rivals.get_next_rivals_games(client,num_games,False)
 
 upcoming_games = []
+lineup_games = []
+    
 for game in games[:num_games]:
     logging.info("Checking "+game["slug"])
     starting_player_slugs = []
+    if game["shouldNotify"] == True:
+        lineup_games.append(game["slug"])
+        logging.info("Game "+game["slug"]+" should auto lineup")
+        
     if game["formationKnown"] != True:
         lu_found = False
         for man_lu in my_lineups:
@@ -146,7 +158,8 @@ for game in games[:num_games]:
         "captainSlug": best_lineup[2]["slug"]
     })
 
-    if game["shouldNotify"] == True:
+    for post_lu in post_lineups:
+      if game["slug"] == post_lu.strip():
         playerids = func_sorare_rivals.request_game_draftable_player_ids(client,game["slug"])
         lineup_player_list = []
 
@@ -189,3 +202,7 @@ content = template.render(
 )
 with open("temp/sorare-rivals-upcoming-report.html", mode="w", encoding="utf-8") as file:
     file.write(content)
+
+with open("temp/notify_lineups.txt", mode="w", encoding="utf-8") as file:
+    for line in lineup_games:
+        file.write(f"{line}\n")

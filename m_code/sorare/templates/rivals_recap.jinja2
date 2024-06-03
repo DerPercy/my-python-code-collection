@@ -73,6 +73,7 @@
             </td>
         {% endfor %}
         <td colspan="2">
+            <p><b>{{ game.topTeamScore | round(2)}}</b> ({{ game.maxScorePercentage }}%)</p>
             {{ game.topTeamTactic}}
         </td>
 

@@ -72,7 +72,9 @@
 <table>
 {% for game in data.result_games %}
     {% set game_id = "game"+ ( loop.index|string ) %}
-    <tr class="behavior-show-until" data-show-until="{{ game.date }}"><td colspan="2">#{{ loop.index }} - <b>{{ game.name }}</b> => {{ game.date }}</td></tr>
+    <tr class="behavior-show-until" data-show-until="{{ game.date }}">
+        <td colspan="2">#{{ loop.index }} - <b>{{ game.name }}</b> => {{ game.date }}<div>{{game.competitionSlug}}</div></td>
+    </tr>
     <tr class="behavior-show-until" data-show-until="{{ game.date }}">
         <td>
             <div>
@@ -119,7 +121,7 @@
                         <td><input type="checkbox" class="player-{{game_id}}" value="{{player.slug}}" onchange="handle_{{game_id}}()"/>
                             <b>{{ player.name }}</b> ({{ player.position[:1] }})</td>
                         <td>{{ player.l15 }}</td>
-                        <td>{{ player.numGames }}</td>
+                        <td><span title="{{player.gamesList }}">{{ player.numGames }}</span> </td>
                         <td style="background-color:{{value_color(player.scorePerformance,4,20)}}">{{ player.gamesScore | round(2) }}</td>
                         <td style="background-color:{{value_color(player.avgAllAroundScore,5,12)}}">{{ player.avgAllAroundScore | round(2) }}</td>
                     </tr>
@@ -142,9 +144,9 @@
                 {% for player in game.away %}
                     <tr>
                         <td><input type="checkbox" class="player-{{game_id}}" value="{{player.slug}}" onchange="handle_{{game_id}}()"/>
-                            {{ player.name }} ({{ player.position[:1] }})</td>
+                            <b>{{ player.name }}</b> ({{ player.position[:1] }})</td>
                         <td>{{ player.l15 }}</td>
-                        <td>{{ player.numGames }}</td>
+                        <td><span title="{{player.gamesList }}">{{ player.numGames }}</span></td>
                         <td style="background-color:{{value_color(player.scorePerformance,4,20)}}">{{ player.gamesScore | round(2) }}</td>
                         <td style="background-color:{{value_color(player.avgAllAroundScore,5,12)}}">{{ player.avgAllAroundScore | round(2) }}</td>
                     </tr>

@@ -43,8 +43,8 @@ def calculate_best_lineup(players:list[Player],cap_limit:float, tactic_def_list:
                     for idx5, player5 in enumerate(players[(idx1+idx2+idx3+idx4+4):]):
                         try:
                             check_cap_requirement(player1,player2,player3,player4,player5,cap_limit)
-                            score = get_lineup_score(player1,player2,player3,player4,player5)
                             captain = get_lineup_captain(player1,player2,player3,player4,player5)
+                            score = get_lineup_score(player1,player2,player3,player4,player5,captain)
                             tactics_score = 0
                             if tactic_def_list != None:
                                 tactics_result = get_tactics_score(player1,player2,player3,player4,player5,tactic_def_list)
@@ -55,11 +55,15 @@ def calculate_best_lineup(players:list[Player],cap_limit:float, tactic_def_list:
                                 player_list = [player1.entity_data,player2.entity_data,player3.entity_data,player4.entity_data,player5.entity_data]
                                 max_score = score
                                 max_tactic_slug = tactic_slug
-                                max_captain =captain
+                                max_captain =captain.entity_data
                         except Exception as e:
+                            #logging.info(e)
                             pass    
-    #print(player_list)                    
-    return (player_list,max_tactic_slug,max_captain)
+    return (player_list,        # List of players in mx lineup
+            max_tactic_slug,    # Slug of the best tactic
+            max_captain,        # The captain
+            max_score           # the score of the lineup
+    )
 
 
 def get_tactics_score(p1:Player,p2:Player,p3:Player,p4:Player,p5:Player,tdl:list[rivals_tactic.TacticDefinition]) -> tuple[float,str]:
@@ -88,10 +92,10 @@ def get_tactics_score(p1:Player,p2:Player,p3:Player,p4:Player,p5:Player,tdl:list
             tactic_slug = tactic.slug
     return [max_score,tactic_slug]
 
-def get_lineup_score(p1:Player,p2:Player,p3:Player,p4:Player,p5:Player) -> float:
+def get_lineup_score(p1:Player,p2:Player,p3:Player,p4:Player,p5:Player, captain: Player) -> float:
     if not valid_lineup_position([p1.position,p2.position,p3.position,p4.position,p5.position]):
         raise Exception("Invalid position combination")
-    return p1.score + p2.score + p3.score + p4.score + p5.score 
+    return p1.score + p2.score + p3.score + p4.score + p5.score  + ( captain.score * 0.2 )
 
 def get_lineup_captain(p1:Player,p2:Player,p3:Player,p4:Player,p5:Player) -> dict:
     captain = p1
@@ -103,7 +107,7 @@ def get_lineup_captain(p1:Player,p2:Player,p3:Player,p4:Player,p5:Player) -> dic
         captain = p4
     if p5.score > captain.score:
         captain = p5
-    return captain.entity_data 
+    return captain 
 
 
 def valid_lineup_position(positions:list[str]) -> bool:
