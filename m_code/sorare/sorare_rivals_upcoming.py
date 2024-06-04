@@ -97,6 +97,9 @@ for game in games[:num_games]:
                     starting_player_slugs.append(player_slug.strip())
         if lu_found == False:
             continue
+    
+    draftable_player_map = func_sorare_rivals.request_game_draftable_player_ids(client,game["slug"])
+        
     logging.info("Formation known! Checking lineup")
     game_details = func_sorare_rivals.request_game_by_id(client,game["game"]["id"][5:])
     game_data = file_func.read_json_from_file("./temp/rivals/games/"+game["slug"]+".json")
@@ -127,9 +130,11 @@ for game in games[:num_games]:
             logging.warn("Not enough data for "+player_slug+" found! Did not consider in lineup.")
             continue
         player_data = starting_player_data[player_slug]
-        cap_score = player_data["l15"]
-        if cap_score < 25:
-            cap_score = 25
+        
+        cap_score = draftable_player_map.get_item(player_slug).capValue
+        
+        #if cap_score < 25:
+        #    cap_score = 25
 
         player_pos = player_data["position"]
         
@@ -160,7 +165,7 @@ for game in games[:num_games]:
 
     for post_lu in post_lineups:
       if game["slug"] == post_lu.strip():
-        playerids = func_sorare_rivals.request_game_draftable_player_ids(client,game["slug"])
+        #draftable_player_map = func_sorare_rivals.request_game_draftable_player_ids(client,game["slug"])
         lineup_player_list = []
 
         logging.info("Notify flag: set lineup")
@@ -173,15 +178,15 @@ for game in games[:num_games]:
                 is_captain = True
             lineup_player_list.append(
                 api_rivals_mutations.RivalsGameAppearance(
-                    draftableObjectId=playerids[player["slug"]],
+                    draftableObjectId=draftable_player_map.get_item(player["slug"]).id,
                     captain=is_captain
                 )
             )
             #ic(player.keys())
-            logging.info(playerids[player["slug"]])
+            logging.info(draftable_player_map.get_item(player["slug"]).id)
             #ic(player.keys())
         logging.info("Captain:")
-        logging.info(playerids[best_lineup[2]["slug"]])
+        logging.info(draftable_player_map.get_item(best_lineup[2]["slug"]).id)
         #ic(best_lineup[2].keys())
         logging.info("Tactic")
         logging.info(best_lineup[1])

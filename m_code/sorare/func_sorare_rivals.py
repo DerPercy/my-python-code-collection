@@ -7,6 +7,7 @@ from client import Client
 from icecream import ic
 from attrs import define
 
+from context import hash_map
 
 """ 
 ========== MODELS ========== 
@@ -39,12 +40,17 @@ class PlayerStats:
     teamSlug: str # Slug of the player team
     unfilteredScores: list[dict]
 
+@define
+class DraftablePlayerData:
+   id: str
+   capValue: int
+
 """ 
 ========== FUNCTIONS ==========
 """
 
-def request_game_draftable_player_ids(client:Client,game_slug:str) -> dict:
-
+def request_game_draftable_player_ids(client:Client,game_slug:str) -> hash_map.MyHashMap[DraftablePlayerData]:
+  ret_map = hash_map.MyHashMap[DraftablePlayerData]()
   body = """
 query RivalsGame {
   football {
@@ -54,11 +60,13 @@ query RivalsGame {
           __typename
           ... on FootballRivalsDraftableCard {
             player { slug }
+            capValue
             id
           }
           __typename
           ... on FootballRivalsDraftablePlayer {
             player { slug }
+            capValue
             id
           }
         }
@@ -69,10 +77,14 @@ query RivalsGame {
 """
   result = client.request(body,{},{ "resultSelector": ["data","football","rivals","game","draftablePlayers"]   })
   
-  ret_player = {}
+  #ret_player = {}
   for player in result:
-    ret_player[player["player"]["slug"]] = player["id"]
-  return ret_player
+    ret_map.set_item(player["player"]["slug"],DraftablePlayerData(
+       id=player["id"],
+       capValue=player["capValue"]
+    ))
+    #ret_player[player["player"]["slug"]] = player["id"]
+  return ret_map
 
 
 def request_game_players_game_score(client:Client,game_id:str,player_slugs:list[str],data_payload:str) -> dict:
