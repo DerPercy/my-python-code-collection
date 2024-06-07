@@ -18,6 +18,7 @@ Initializing
 parser = argparse.ArgumentParser()
 parser.add_argument("--logfile", help="Specify the logfile destination")
 parser.add_argument("--lineupfile", help="Specify the players, which should be used for lineups")
+parser.add_argument("--joinarena", help="If 'X' join the arena")
 
 args = parser.parse_args()
 
@@ -64,6 +65,12 @@ else:
     
     logging.info(my_lineups)
         #file.write(content)
+
+join_arena = False
+logging.info("Checking joinarena flag")
+if args.joinarena == 'X':
+    logging.info("joinarena = X: Auto join arena")
+    join_arena = True
 
 logging.info("Looking for upcoming games")
 
@@ -152,45 +159,49 @@ for game in games[:num_games]:
         tactic_def_list=game_tactic_def_list
     )
     top_team = best_lineup[0]
-    logging.info("Lineup found:")
-    for player in top_team:
-        logging.info(player["slug"])
-    #logging.info("Captain:")
-    upcoming_games.append({
-        "gameSlug": game["slug"],
-        "topTeam": top_team,
-        "topTeamTactics": best_lineup[1],
-        "captainSlug": best_lineup[2]["slug"]
-    })
-
-    for post_lu in post_lineups:
-      if game["slug"] == post_lu.strip():
-        #draftable_player_map = func_sorare_rivals.request_game_draftable_player_ids(client,game["slug"])
-        lineup_player_list = []
-
-        logging.info("Notify flag: set lineup")
-        logging.info("Game:")
-        logging.info(game["id"])    
-        logging.info("Player:")
+    if len(top_team) == 0:
+        logging.warning("No lineup found")
+    else:
+        logging.info("Lineup found:")
         for player in top_team:
-            is_captain = False
-            if best_lineup[2]["slug"] == player["slug"]:
-                is_captain = True
-            lineup_player_list.append(
-                api_rivals_mutations.RivalsGameAppearance(
-                    draftableObjectId=draftable_player_map.get_item(player["slug"]).id,
-                    captain=is_captain
-                )
-            )
-            #ic(player.keys())
-            logging.info(draftable_player_map.get_item(player["slug"]).id)
-            #ic(player.keys())
+            logging.info(player["slug"])
         logging.info("Captain:")
-        logging.info(draftable_player_map.get_item(best_lineup[2]["slug"]).id)
-        #ic(best_lineup[2].keys())
-        logging.info("Tactic")
-        logging.info(best_lineup[1])
-        api_rivals_mutations.set_rivals_game_lineup(client,game["id"],lineup_player_list,best_lineup[1])
+        #logging.info(best_lineup[2])
+        upcoming_games.append({
+            "gameSlug": game["slug"],
+            "topTeam": top_team,
+            "topTeamTactics": best_lineup[1],
+            "captainSlug": best_lineup[2]["slug"]
+        })
+
+        for post_lu in post_lineups:
+            if game["slug"] == post_lu.strip():
+                #draftable_player_map = func_sorare_rivals.request_game_draftable_player_ids(client,game["slug"])
+                lineup_player_list = []
+
+                logging.info("Notify flag: set lineup")
+                logging.info("Game:")
+                logging.info(game["id"])    
+                logging.info("Player:")
+                for player in top_team:
+                    is_captain = False
+                    if best_lineup[2]["slug"] == player["slug"]:
+                        is_captain = True
+                    lineup_player_list.append(
+                        api_rivals_mutations.RivalsGameAppearance(
+                            draftableObjectId=draftable_player_map.get_item(player["slug"]).id,
+                            captain=is_captain
+                        )
+                    )
+                    #ic(player.keys())
+                    logging.info(draftable_player_map.get_item(player["slug"]).id)
+                    #ic(player.keys())
+                logging.info("Captain:")
+                logging.info(draftable_player_map.get_item(best_lineup[2]["slug"]).id)
+                #ic(best_lineup[2].keys())
+                logging.info("Tactic")
+                logging.info(best_lineup[1])
+                api_rivals_mutations.set_rivals_game_lineup(client,game["id"],lineup_player_list,best_lineup[1],join_arena)
             
 
         

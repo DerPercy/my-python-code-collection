@@ -7,12 +7,12 @@ class RivalsGameAppearance:
     draftableObjectId: str
     captain:bool
 
-def set_rivals_game_lineup(client:Client,game_id:str,player: list[RivalsGameAppearance], tactic_slug:str) -> None:
+def set_rivals_game_lineup(client:Client,game_id:str,player: list[RivalsGameAppearance], tactic_slug:str,join_arena:bool = False) -> None:
     params = {
         "input":{
             "gameId": game_id,
             "tacticSlug": tactic_slug,
-            "joinArena": False,
+            "joinArena": join_arena,
             "appearances": cattrs.unstructure(player)
         }
     }

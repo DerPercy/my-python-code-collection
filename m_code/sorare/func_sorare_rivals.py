@@ -14,6 +14,11 @@ from context import hash_map
 """
 
 @define
+class PlayerStatsCalculationRule:
+  respectHomeAway: bool = True  # Should result be separated by home/away
+  numberOfGames: int = 100      # Maximum number of games 
+
+@define
 class PlayerStatsTactic:
   accuratePass: float
   dribblings: float
@@ -419,7 +424,7 @@ def get_rivals_player_stats(
       player_slug:str,
       team_slug:str,
       home_away:str,
-      respect_home_away:bool = True   # Filter home/away scores
+      calc_rule:PlayerStatsCalculationRule
       ) -> PlayerStats:
 # Get leaderboard data
     param = {
@@ -467,7 +472,7 @@ query RivalsTeamPlayerScore($playerSlug: String!) {
       if score_entry.get("playerGameStats").get("gameStarted") == None:
           continue
       # respect home/away scores
-      if respect_home_away == True:
+      if calc_rule.respectHomeAway == True:
         if home_away == "home" and score_entry.get("game").get("homeTeam").get("slug") != team_slug:
           continue
         if home_away == "away" and score_entry.get("game").get("awayTeam").get("slug") != team_slug:
@@ -480,6 +485,8 @@ query RivalsTeamPlayerScore($playerSlug: String!) {
       game_slugs.append(score_entry.get("game").get("homeTeam").get("slug") + " vs " + score_entry.get("game").get("awayTeam").get("slug"))
     # Filter scores END
 
+    score_list = score_list[:calc_rule.numberOfGames]
+    game_slugs = game_slugs[:calc_rule.numberOfGames]
     avg_score = 0
     all_around_avg_score = 0
     num_played = 0

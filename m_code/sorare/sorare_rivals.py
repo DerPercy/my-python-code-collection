@@ -47,7 +47,7 @@ client = SorareClient({
     'password': os.getenv('SORARE_PASSWORD')
 })
 
-num_games = 50
+num_games = 100
 games = get_next_rivals_games(client,num_games)
 #ic(games)
 
@@ -127,17 +127,23 @@ for game in games:
             return 4
         return 5
     
-    respect_home_away = True
+    calc_rule = func_sorare_rivals.PlayerStatsCalculationRule(numberOfGames=100, respectHomeAway=True)
+
+    if game.get("game").get("competition").get("slug") == "european-championship":
+        # EM-2024: Didnot consider home/away and only the latest 5 games 
+        calc_rule = func_sorare_rivals.PlayerStatsCalculationRule(numberOfGames=5, respectHomeAway=False)
+
     if game.get("game").get("competition").get("slug") in []:
         logging.info("Game in a special competition: ignore home/away player logic")
-        respect_home_away = False
+        calc_rule.respectHomeAway = False
+
     for player in players_home:
-        player_stats = get_rivals_player_stats(client,player.get("slug"),game.get("game").get('homeTeam').get("slug"),"home",respect_home_away)
+        player_stats = get_rivals_player_stats(client,player.get("slug"),game.get("game").get('homeTeam').get("slug"),"home",calc_rule)
         if player_stats.numGames > 0:
             result_player_home.append(player_stats)
     result_player_home.sort(key=player_sorter)
     for player in players_away:
-        player_stats = get_rivals_player_stats(client,player.get("slug"),game.get("game").get('awayTeam').get("slug"),"away",respect_home_away)
+        player_stats = get_rivals_player_stats(client,player.get("slug"),game.get("game").get('awayTeam').get("slug"),"away",calc_rule)
         if player_stats.numGames > 0:
             result_player_away.append(player_stats)
     result_player_away.sort(key=player_sorter)
