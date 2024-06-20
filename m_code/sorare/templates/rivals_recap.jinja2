@@ -87,7 +87,21 @@
         </td>
 
     </tr>
-    
+    {% if game.strategyTeam %}
+    <tr><td colspan="12">Strategy</td></tr>
+    <tr>
+        {% for player in game.strategyTeam %}
+            <td colspan="2">
+                <div>{{player.name}}</div>
+            </td>
+        {% endfor %}
+        <td colspan="2">
+            <p><b>{{ game.strategyTeamScore | round(2)}}</b></p>
+            {{ game.strategyTeamTactic}}
+        </td>
+
+    </tr>
+    {% endif %}
     <tr>
         <td colspan="6">
             <table>

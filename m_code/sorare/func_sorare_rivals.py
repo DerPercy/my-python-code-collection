@@ -62,7 +62,6 @@ class DraftablePlayerData:
 """
 
 def request_game_draftable_player_ids(client:Client,game_slug:str) -> hash_map.MyHashMap[DraftablePlayerData]:
-  ret_map = hash_map.MyHashMap[DraftablePlayerData]()
   body = """
 query RivalsGame {
   football {
@@ -88,7 +87,10 @@ query RivalsGame {
 }
 """
   result = client.request(body,{},{ "resultSelector": ["data","football","rivals","game","draftablePlayers"]   })
-  
+  return result
+
+def draftable_player_ids_to_hashmap(result:dict):
+  ret_map = hash_map.MyHashMap[DraftablePlayerData]()
   #ret_player = {}
   for player in result:
     ret_map.set_item(player["player"]["slug"],DraftablePlayerData(
@@ -560,8 +562,30 @@ def calculate_rivals_player_stats(
     )
     return result
 
-def getPlayerStatsFromGameJSONFile(json:dict,calc_rule:PlayerStatsCalculationRule) -> list[PlayerStats]:
-   pass
+def get_player_stats_from_game_json_file(json:dict,calc_rule:PlayerStatsCalculationRule) -> list[PlayerStats]:
+  """
+  Get the player stats of the json file, which is stored on file system and created in sorare_rivals.py
+  """
+  def calc_player_stats(player_list: list[dict],home_away:str) -> list[PlayerStats]:
+    result_list = []
+    for player in player_list:
+      result_list.append(calculate_rivals_player_stats(
+        calc_rule=calc_rule,
+        unfiltered_score_list=player.get("unfilteredScores"),
+        home_away=home_away,
+        team_slug=player.get("teamSlug"),
+        player_data_model=PlayerData(
+          l15=player.get("l15"),
+          name=player.get("name"),
+          position=player.get("position"),
+          slug=player.get("slug")
+        )
+      ))
+    return result_list
+  result = []
+  result.extend(calc_player_stats(json.get("home"),"home")) 
+  result.extend(calc_player_stats(json.get("away"),"away")) 
+  return result
 
 def get_detailed_score_count(detailed_score_list:dict,key:str) -> float:
     for det_score in detailed_score_list:

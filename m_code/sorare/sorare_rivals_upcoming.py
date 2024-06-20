@@ -88,6 +88,10 @@ upcoming_games = []
 lineup_games = []
     
 for game in games[:num_games]:
+    file_func.write_json_to_file(
+        filename="./temp/rivals/games_upcoming/"+game["slug"]+"/game_info.json",
+        json_data=game
+    )
     logging.info("Checking "+game["slug"])
     starting_player_slugs = []
     if game["shouldNotify"] == True:
@@ -106,9 +110,19 @@ for game in games[:num_games]:
             continue
     
     draftable_player_map = func_sorare_rivals.request_game_draftable_player_ids(client,game["slug"])
-        
+    file_func.write_json_to_file(
+        filename="./temp/rivals/games_upcoming/"+game["slug"]+"/draftable_player_map.json",
+        json_data=draftable_player_map
+    )
+    draftable_player_map = func_sorare_rivals.draftable_player_ids_to_hashmap(draftable_player_map)
+    
     logging.info("Formation known! Checking lineup")
     game_details = func_sorare_rivals.request_game_by_id(client,game["game"]["id"][5:])
+    file_func.write_json_to_file(
+        filename="./temp/rivals/games_upcoming/"+game["slug"]+"/game_details.json",
+        json_data=game_details
+    )
+    
     game_data = file_func.read_json_from_file("./temp/rivals/games/"+game["slug"]+".json")
     
     logging.info("Get tactics")
