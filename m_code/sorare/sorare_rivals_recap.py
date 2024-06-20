@@ -1,6 +1,6 @@
 from client import Client as SorareClient
 from account_entry import get_account_entries
-from context import myjinja2
+from context import myjinja2,file_func
 from services import lineup_ranking,rivals_tactic
 
 import logging, logging.handlers
@@ -133,6 +133,12 @@ for game in past_games:
             "avgScorePerc": game["maxScorePercentage"],
             "slug": game["game"]["competitionSlug"]
         })
+
+    # Strategies here
+    game_data = file_func.read_json_from_file("./temp/rivals/games/"+game.get("slug")+".json")
+    if game_data.get("name",None) != None: # Entry exists
+        logging.info("Found game info from filesystem: Calculate strategies")
+        
         
 environment = myjinja2.get_environment()
 template = environment.get_template("rivals_recap.jinja2")

@@ -26,13 +26,20 @@ class PlayerStatsTactic:
   clearance: float
   duelWon: float
 
+@define 
+class PlayerData:
+   name: str      # Name of player
+   slug: str      # Slug of player
+   position: str  # Position of player
+   l15: float     # Last 15 average
+
 @define
 class PlayerStats:
     
     """A representation of player stats"""
     name: str         # Name of the player
     slug: str         # Slug of the player
-    playerId: str         # ID of the player
+    #playerId: str         # ID of the player
     position: str     #Position of the player
     l15: float        # Average score of the last 15 games
     numGames: int     # Number of games in player stats
@@ -283,6 +290,7 @@ query RivalsLastGames {
         
         result.append({
             "cap": last_res.get("cap"),
+            "slug": last_res.get("slug"),
             "name": last_res.get("slug"),
             "lineupTactics": last_res.get("lineupTactics"),
             "myTacticSlug": last_res.get("myLineup")["tactic"]["slug"],
@@ -462,8 +470,22 @@ query RivalsTeamPlayerScore($playerSlug: String!) {
 """
     #leaderBoardResult = json.loads(context["rootHandler"].external().getRequestHandler().request("sorareHeroesGetRankings",param))
     player_data = client.request(body,param,{ "resultSelector": ["data","football","player"]   })
+    player_data_model = PlayerData(
+       l15= player_data.get("averageScore","???"),
+       name= player_data.get("displayName","???"),
+       position=player_data.get("position","???"),
+       slug=player_slug
+    )
     unfiltered_score_list = player_data.get("allSo5Scores").get("nodes")
-    
+    return calculate_rivals_player_stats(unfiltered_score_list,player_data_model,team_slug,home_away,calc_rule)
+
+def calculate_rivals_player_stats(
+      unfiltered_score_list: list[dict],
+      player_data_model: PlayerData,
+      team_slug:str,
+      home_away:str,
+      calc_rule:PlayerStatsCalculationRule
+      ) -> PlayerStats:
     # Filter scores START
     score_list = []
     game_slugs = []
@@ -493,7 +515,7 @@ query RivalsTeamPlayerScore($playerSlug: String!) {
     num_games = len(score_list)
     tactic_acc_pass = 0
     score_performance = 0
-    l15 = player_data.get("averageScore","???")
+    l15 = player_data_model.l15
     detailed_scores = {}
     for score in score_list:
         if score.get("score") > 0:
@@ -516,10 +538,9 @@ query RivalsTeamPlayerScore($playerSlug: String!) {
           detailed_scores[det_score_id] = detailed_scores[det_score_id] / num_played
 
     result = PlayerStats(
-        name=player_data.get("displayName","???"),
-        playerId=player_data.get("id","???"),
-        slug=player_slug,
-        position=player_data.get("position","???"),
+        name=player_data_model.name,
+        slug=player_data_model.slug,
+        position=player_data_model.position,
         l15=l15,
         gamesList=game_slugs,
         numGames=num_games,
@@ -537,18 +558,10 @@ query RivalsTeamPlayerScore($playerSlug: String!) {
         teamSlug=team_slug,
         unfilteredScores=unfiltered_score_list
     )
-    
-#    result = []
-#    for score in scores:
-#        started = score.get("playerGameStats").get("gameStarted") != None
-#        played = score.get("score") > 0
-#        result.append({
-#            "started": started,
-#
-#            "played": played,
-#            "score": score.get("score")
-#        }) 
     return result
+
+def getPlayerStatsFromGameJSONFile(json:dict,calc_rule:PlayerStatsCalculationRule) -> list[PlayerStats]:
+   pass
 
 def get_detailed_score_count(detailed_score_list:dict,key:str) -> float:
     for det_score in detailed_score_list:
