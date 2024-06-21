@@ -8,6 +8,8 @@ from icecream import ic
 """ 
 ========== MODELS ========== 
 """
+# ========== see models/f_rivals/upcoming.py ==========
+
 @define
 class TacticDefinitionThreshold:
     """A representation of a tactic definition treshold"""

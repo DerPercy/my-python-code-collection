@@ -3,8 +3,8 @@ from context import file_func
 import logging
 from services import lineup_ranking,rivals_tactic
 import func_sorare_rivals
-
-
+from func_sorare_rivals import calculate_rivals_player_stats, PlayerStats
+from context import hash_map
 """
 Functions for Lineup predictions
 """
@@ -51,11 +51,23 @@ def predict_best_lineup_of_game( game_slug:str) -> tuple[list[str],str]:
             for player in position:
                 starting_player_slugs.append(player["slug"])
     
+    player_stats_map = hash_map.MyHashMap[PlayerStats]()
+
     logging.info("Found staring players")
     logging.info(starting_player_slugs)
     starting_player_data = {}
     for player in game_data["home"]:
         starting_player_data[player["slug"]] = player
+        #player_stats_map.set_item(
+        #    k=player["slug"],
+        #    v=calculate_rivals_player_stats(
+        #        calc_rule=
+        #        home_away=
+        #        player_data_model=
+        #        team_slug=
+        #        unfiltered_score_list=
+        #    )
+        #)
     for player in game_data["away"]:
         starting_player_data[player["slug"]] = player
     ranking_players = []
@@ -71,13 +83,15 @@ def predict_best_lineup_of_game( game_slug:str) -> tuple[list[str],str]:
         #    cap_score = 25
 
         player_pos = player_data["position"]
-        
 
+        #calculate_rivals_player_stats(calc_rule=)
+        #player["unfilteredScores"]
         ranking_players.append(lineup_ranking.Player(
             cap_score=cap_score,
             entity_data=player_data,
             position=player_pos[:1],
-            score=player_data["gamesScore"],
+            score=player_data["gamesScore"], # <<<<<< Need to be calculated by strategy
+            #score=player_stats_map.get_item(player_slug).gamesScore, # <<<<<< Need to be calculated by strategy
             detailed_score_list=rivals_tactic.conv_object_to_player_detailed_scores(player_data["tempDetScores"])
         ))
     best_lineup = lineup_ranking.calculate_best_lineup(

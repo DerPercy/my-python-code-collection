@@ -11,6 +11,7 @@ from datetime import datetime
 import func_sorare_rivals, api_rivals_mutations
 import argparse, sys
 
+from models.rivals import RivalsGame, read_rivals_game_from_fileSystem
 '''
 Initializing
 '''
@@ -109,12 +110,12 @@ for game in games[:num_games]:
         if lu_found == False:
             continue
     
-    draftable_player_map = func_sorare_rivals.request_game_draftable_player_ids(client,game["slug"])
+    draftable_player_map_1 = func_sorare_rivals.request_game_draftable_player_ids(client,game["slug"])
     file_func.write_json_to_file(
         filename="./temp/rivals/games_upcoming/"+game["slug"]+"/draftable_player_map.json",
-        json_data=draftable_player_map
+        json_data=draftable_player_map_1
     )
-    draftable_player_map = func_sorare_rivals.draftable_player_ids_to_hashmap(draftable_player_map)
+    draftable_player_map = func_sorare_rivals.draftable_player_ids_to_hashmap(draftable_player_map_1)
     
     logging.info("Formation known! Checking lineup")
     game_details = func_sorare_rivals.request_game_by_id(client,game["game"]["id"][5:])
@@ -123,6 +124,13 @@ for game in games[:num_games]:
         json_data=game_details
     )
     
+    rg = read_rivals_game_from_fileSystem("./temp/rivals/games/",game["slug"])
+    if rg != None:
+        rg.add_pre_game_info(
+            game_info=game,
+            game_details=game_details,
+            draftable_player_map=draftable_player_map_1
+        )
     game_data = file_func.read_json_from_file("./temp/rivals/games/"+game["slug"]+".json")
     
     logging.info("Get tactics")

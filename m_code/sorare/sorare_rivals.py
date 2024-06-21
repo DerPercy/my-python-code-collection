@@ -12,6 +12,7 @@ from func_sorare_rivals import get_next_rivals_games, get_players_of_team_slug, 
 import func_sorare_rivals
 import argparse, sys
 import cattrs
+from models.rivals import RivalsGame,create_rivals_game_from_api_response
 
 '''
 Initializing
@@ -165,7 +166,10 @@ for game in games:
     }
     #ic(result_game)
     file_func.write_json_to_file(result_game,"./temp/rivals/games/"+game.get("slug")+".json")
+    rg = create_rivals_game_from_api_response(result_game)
+    rg.save_on_filessystem("./temp/rivals/games/")
     result.append(result_game)
+
     # Calculate stats
     # Team score_index
     result = func_sorare_rivals.calc_team_off_def_indicator(result)
