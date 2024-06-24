@@ -122,7 +122,12 @@
                             <b>{{ player.name }}</b> ({{ player.position[:1] }})</td>
                         <td>{{ player.l15 }}</td>
                         <td><span title="{{player.gamesList }}">{{ player.numGames }}</span> </td>
-                        <td style="background-color:{{value_color(player.scorePerformance,4,20)}}">{{ player.gamesScore | round(2) }}</td>
+                        <td style="background-color:{{value_color(player.scorePerformance,4,20)}}">
+                            {{ player.gamesScore | round(2) }}
+                            {% if game.pred_map.get_item(player.slug) %}
+                                {{ game.pred_map.get_item(player.slug).calculated_score | round(2) }}
+                            {% endif %}
+                        </td>
                         <td style="background-color:{{value_color(player.avgAllAroundScore,5,12)}}">{{ player.avgAllAroundScore | round(2) }}</td>
                     </tr>
                     <tr>
@@ -147,7 +152,12 @@
                             <b>{{ player.name }}</b> ({{ player.position[:1] }})</td>
                         <td>{{ player.l15 }}</td>
                         <td><span title="{{player.gamesList }}">{{ player.numGames }}</span></td>
-                        <td style="background-color:{{value_color(player.scorePerformance,4,20)}}">{{ player.gamesScore | round(2) }}</td>
+                        <td style="background-color:{{value_color(player.scorePerformance,4,20)}}">
+                            {{ player.gamesScore | round(2) }}
+                            {% if game.pred_map.get_item(player.slug) %}
+                                {{ game.pred_map.get_item(player.slug).calculated_score | round(2) }}
+                            {% endif %}
+                        </td>
                         <td style="background-color:{{value_color(player.avgAllAroundScore,5,12)}}">{{ player.avgAllAroundScore | round(2) }}</td>
                     </tr>
                     <tr>

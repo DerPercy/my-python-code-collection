@@ -1,6 +1,6 @@
 from client import Client as SorareClient
 from account_entry import get_account_entries
-from context import myjinja2, CoinStackHandler,AssetHandler, file_func
+from context import myjinja2, CoinStackHandler,AssetHandler, file_func,hash_map
 from models.tax_entry import TaxEntry
 import logging, logging.handlers
 import os
@@ -13,7 +13,7 @@ import func_sorare_rivals
 import argparse, sys
 import cattrs
 from models.rivals import RivalsGame,create_rivals_game_from_api_response
-
+from services.rivals_predict import calc_predictions_from_rivals_game, PlayerPredictedScore
 '''
 Initializing
 '''
@@ -168,6 +168,13 @@ for game in games:
     file_func.write_json_to_file(result_game,"./temp/rivals/games/"+game.get("slug")+".json")
     rg = create_rivals_game_from_api_response(result_game)
     rg.save_on_filessystem("./temp/rivals/games/")
+    list_predictions = calc_predictions_from_rivals_game(rg,calc_rule)
+    pred_map = hash_map.create_from_list(
+        map_type=PlayerPredictedScore,
+        entry_list=list_predictions,
+        key_field="player_slug"
+    )
+    result_game["pred_map"] = pred_map
     result.append(result_game)
 
     # Calculate stats

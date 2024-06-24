@@ -14,13 +14,13 @@ class MyHashMap(Generic[T]):
         self._store[k] = v
     
     def get_item(self, k: str) -> T:
-        return self._store[k]
+        if hasattr(self._store,k):
+            return self._store[k]
+        return None
   
-#if __name__ == "__main__":
-#    family_name_reg = Registry[str]()
-#    family_age_reg = Registry[int]()
-#    
-#    family_name_reg.set_item("husband", "steve")
-#    family_name_reg.set_item("dad", "john")
-#    
-#    family_age_reg.set_item("steve", 30)
+
+def create_from_list(map_type:Generic[T], entry_list:list[T], key_field: str ) -> MyHashMap[T]:
+    ret_map = MyHashMap[T]()
+    for entry in entry_list:
+        ret_map.set_item(k=getattr(entry, key_field), v=entry)
+    return ret_map

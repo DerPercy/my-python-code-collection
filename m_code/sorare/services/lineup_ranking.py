@@ -9,6 +9,8 @@ from . import rivals_tactic
 import logging
 from icecream import ic
 
+#from models.rivals import RivalsGame
+
 """ 
 ========== MODELS ========== 
 """
