@@ -125,7 +125,7 @@
                         <td style="background-color:{{value_color(player.scorePerformance,4,20)}}">
                             {{ player.gamesScore | round(2) }}
                             {% if game.pred_map.get_item(player.slug) %}
-                                {{ game.pred_map.get_item(player.slug).calculated_score | round(2) }}
+                                <span title="{{game.pred_map.get_item(player.slug).game_slugs}}">{{ game.pred_map.get_item(player.slug).calculated_score | round(2) }}</span>
                             {% endif %}
                         </td>
                         <td style="background-color:{{value_color(player.avgAllAroundScore,5,12)}}">{{ player.avgAllAroundScore | round(2) }}</td>
@@ -167,6 +167,15 @@
                         <td>{{ player.tactic.clearance | round(2) }}</td>
                         <td>{{ player.tactic.duelWon | round(2) }}</td>
                     </tr>
+                    {% if game.pred_map.get_item(player.slug) %}
+                    <tr>
+                        <td>{{ game.pred_map.get_item(player.slug).get_average_count_for_stat("accurate_pass") | round(2) }}</td>
+                        <td>{{ game.pred_map.get_item(player.slug).get_average_count_for_stat("won_contest") | round(2) }}</td>
+                        <td>{{ game.pred_map.get_item(player.slug).get_average_count_for_stat("ontarget_scoring_att") | round(2) }}</td>
+                        <td>{{ game.pred_map.get_item(player.slug).get_average_count_for_stat("effective_clearance") | round(2) }}</td>
+                        <td>{{ game.pred_map.get_item(player.slug).get_average_count_for_stat("duel_won") | round(2) }}</td>
+                    </tr>
+                    {% endif %}
                     <tr style="display:none">
                         <td colspan="5">{{ player.tempDetScores  }}</td>
                     </tr>

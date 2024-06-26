@@ -3,6 +3,7 @@ from account_entry import get_account_entries
 from context import myjinja2,file_func
 from services import lineup_ranking,rivals_tactic
 from func_sorare_rivals_predict import predict_best_lineup_of_game
+from models.rivals import RivalsGame, read_rivals_game_from_fileSystem
 
 import logging, logging.handlers
 import os
@@ -51,6 +52,11 @@ competition_summary = []
 past_games = func_sorare_rivals.get_last_rivals_results(client)
 for game in past_games:
     logging.info("Handling game:"+game.get("name"))
+    rg = read_rivals_game_from_fileSystem("./temp/rivals/games/",game["slug"])
+    if rg == None:
+        logging.warning("No rivals game data found!")
+    
+
     # Add game details
     game_id = game.get("game").get("id")
     game_data = func_sorare_rivals.request_game_by_id(client,game_id)

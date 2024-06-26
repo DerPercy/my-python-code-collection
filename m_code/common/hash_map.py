@@ -1,7 +1,7 @@
 """
 My HashMap implementation
 """
-
+import logging
 from typing import Dict, Generic, TypeVar
 
 T = TypeVar("T")
@@ -14,9 +14,10 @@ class MyHashMap(Generic[T]):
         self._store[k] = v
     
     def get_item(self, k: str) -> T:
-        if hasattr(self._store,k):
+        try:
             return self._store[k]
-        return None
+        except:
+            return None
   
 
 def create_from_list(map_type:Generic[T], entry_list:list[T], key_field: str ) -> MyHashMap[T]:

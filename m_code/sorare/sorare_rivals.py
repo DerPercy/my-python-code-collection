@@ -12,7 +12,7 @@ from func_sorare_rivals import get_next_rivals_games, get_players_of_team_slug, 
 import func_sorare_rivals
 import argparse, sys
 import cattrs
-from models.rivals import RivalsGame,create_rivals_game_from_api_response
+from models.rivals import RivalsGame,create_rivals_game_from_api_response, read_rivals_game_from_fileSystem
 from services.rivals_predict import calc_predictions_from_rivals_game, PlayerPredictedScore
 '''
 Initializing
@@ -134,9 +134,9 @@ for game in games:
         # EM-2024: Didnot consider home/away and only the latest 5 games 
         calc_rule = func_sorare_rivals.PlayerStatsCalculationRule(numberOfGames=3, respectHomeAway=False)
 
-    if game.get("game").get("competition").get("slug") in []:
-        logging.info("Game in a special competition: ignore home/away player logic")
-        calc_rule.respectHomeAway = False
+    #if game.get("game").get("competition").get("slug") in []:
+    #    logging.info("Game in a special competition: ignore home/away player logic")
+    #    calc_rule.respectHomeAway = False
 
     for player in players_home:
         player_stats = get_rivals_player_stats(client,player.get("slug"),game.get("game").get('homeTeam').get("slug"),"home",calc_rule)
@@ -155,6 +155,8 @@ for game in games:
         "competitionSlug": game.get("game").get("competition").get("slug"),
         "slug": game.get("slug"),
         "date": result_game_date,
+        "homeTeamSlug": game.get("game").get("homeTeam").get("slug"),
+        "awayTeamSlug": game.get("game").get("awayTeam").get("slug"),        
         "home": cattrs.unstructure(result_player_home),
         "away": cattrs.unstructure(result_player_away),
         "homeTeamResults": result_games_home,
@@ -168,6 +170,7 @@ for game in games:
     file_func.write_json_to_file(result_game,"./temp/rivals/games/"+game.get("slug")+".json")
     rg = create_rivals_game_from_api_response(result_game)
     rg.save_on_filessystem("./temp/rivals/games/")
+    #rg = read_rivals_game_from_fileSystem("./temp/rivals/games/",game.get("slug"))
     list_predictions = calc_predictions_from_rivals_game(rg,calc_rule)
     pred_map = hash_map.create_from_list(
         map_type=PlayerPredictedScore,
