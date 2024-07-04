@@ -166,20 +166,20 @@ for game in games[:num_games]:
     for player_slug in starting_player_slugs:
         
         if starting_player_data.get(player_slug,None) == None:
-            logging.warn("Not enough data for "+player_slug+" found! Did not consider in lineup.")
+            logging.warning("Not enough data for "+player_slug+" found! Did not consider in lineup.")
             continue
         player_data = starting_player_data[player_slug]
         
         player_score = player_data["gamesScore"]
-        #if pred_map.get_item(player_slug) == None:
-        #    logging.warn("Not enough data for "+player_slug+" via new logic!")
-        #else:
-        #    if player_data["gamesScore"] != pred_map.get_item(player_slug).calculated_score:
-        #        logging.warn("GamesScore for "+player_slug+" did not match")
-        #        logging.warn("Old "+str(player_data["gamesScore"]))
-        #        logging.warn("New "+str(pred_map.get_item(player_slug).calculated_score))
-        #    if pred_map.get_item(player_slug).game_slugs.count > 1:
-        #        player_score = pred_map.get_item(player_slug).calculated_score
+        if pred_map.get_item(player_slug) == None:
+            logging.warning("Not enough data for "+player_slug+" via new logic!")
+        else:
+            if player_data["gamesScore"] != pred_map.get_item(player_slug).calculated_score:
+                logging.warning("GamesScore for "+player_slug+" did not match")
+                logging.warning("Old "+str(player_data["gamesScore"]))
+                logging.warning("New "+str(pred_map.get_item(player_slug).calculated_score))
+            if len(pred_map.get_item(player_slug).game_slugs) > 1:
+                player_score = pred_map.get_item(player_slug).calculated_score
                    
         
         cap_score = draftable_player_map.get_item(player_slug).capValue
