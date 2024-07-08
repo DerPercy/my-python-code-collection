@@ -25,6 +25,7 @@
         <td>{{ com_sum.slug }}</td>
         <td>{{ com_sum.numGames }}</td>
         <td>{{ com_sum.avgScorePerc }}</td>
+        <td>{{ com_sum.winRate.get_average( ) | round(0)}} %</td>
     </tr>
 {% endfor %}
 </table>
@@ -53,7 +54,9 @@
     {% for tactic in game.tactics %}
     <tr {% if tactic.slug == game.myTacticSlug %} style="font-weight:bold "{% endif %} >
         {% for player in game.myLineup %}
-            <td colspan="2">{{game.playerDetailScores[player.playerSlug][tactic.stat]}}</td>
+            {% if game.playerDetailScores[player.playerSlug] %}
+                <td colspan="2">{{game.playerDetailScores[player.playerSlug][tactic.stat]}}</td>
+            {% endif %}
         {% endfor %}
 
         <td colspan="2">
@@ -73,6 +76,7 @@
         <td colspan="2">{{game.otherLineupScore | round(2)}}</td>
     </tr>
     {% endif %}
+    {% if game.topTeam %}
     <tr><td colspan="12">Best possible lineup</td></tr>
     <tr>
         {% for player in game.topTeam %}
@@ -87,6 +91,7 @@
         </td>
 
     </tr>
+    {% endif %}
     {% if game.strategyTeam %}
     <tr><td colspan="12">Strategy</td></tr>
     <tr>
@@ -111,6 +116,7 @@
                     <td>L15</td>
                     <td>Score</td>
                 </tr>
+            {% if game.game.data %}
             {% for area in game.game.data.homeFormation.startingLineup %}
                 {% for player in area %}
                     <tr>
@@ -121,6 +127,7 @@
                     </tr>
                 {% endfor %}
             {% endfor %}
+            {% endif %}
             </table>
         </td>
         <td colspan="6">
@@ -131,6 +138,7 @@
                     <td>L15</td>
                     <td>Score</td>
                 </tr>
+            {% if game.game.data %}
             {% for area in game.game.data.awayFormation.startingLineup %}
                 {% for player in area %}
                     <tr>
@@ -141,6 +149,7 @@
                     </tr>
                 {% endfor %}
             {% endfor %}
+            {% endif %}
             </table>
         </td>
     </tr>
@@ -154,6 +163,8 @@
                     <td>L15</td>
                     <td>Score</td>
                 </tr>
+            {% if game.game.data %}
+            
             {% for player in game.game.data.homeFormation.bench %}
                 <tr>
                     <td>{{ player.displayName }}</td>
@@ -162,6 +173,8 @@
                     <td>{{ mySorareScoreColored(player.playerScore.score) }}</td>
                 </tr>
             {% endfor %}
+            {% endif %}
+            
             </table>
         </td>
         <td colspan="5">
@@ -173,6 +186,8 @@
                     <td>L15</td>
                     <td>Score</td>
                 </tr>
+            {% if game.game.data %}
+            
             {% for player in game.game.data.awayFormation.bench %}
                 <tr>
                     <td>{{ player.displayName }}</td>
@@ -181,6 +196,8 @@
                     <td>{{ mySorareScoreColored(player.playerScore.score) }}</td>
                 </tr>
             {% endfor %}
+            {% endif %}
+            
             </table>
         </td>
         

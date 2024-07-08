@@ -1,6 +1,6 @@
 from client import Client as SorareClient
 from account_entry import get_account_entries
-from context import myjinja2,file_func
+from context import myjinja2,file_func,value_aggregator
 from services import lineup_ranking,rivals_tactic
 from func_sorare_rivals_predict import predict_best_lineup_of_game
 from models.rivals import RivalsGame, read_rivals_game_from_fileSystem
@@ -51,6 +51,8 @@ client = SorareClient({
 competition_summary = []
 past_games = func_sorare_rivals.get_last_rivals_results(client)
 for game in past_games:
+    if game["withMatch"] == False:
+        continue
     logging.info("Handling game:"+game.get("name"))
     rg = read_rivals_game_from_fileSystem("./temp/rivals/games/",game["slug"])
     if rg == None:
@@ -60,6 +62,9 @@ for game in past_games:
     # Add game details
     game_id = game.get("game").get("id")
     game_data = func_sorare_rivals.request_game_by_id(client,game_id)
+    if game_data == None:
+        logging.error("No game data found!")
+        continue
     game["game"]["data"] = game_data
     players = []
     players_det_score = []
@@ -126,19 +131,28 @@ for game in past_games:
         game["maxScorePercentage"] = int( game["myLineupScore"]  * 100 / best_lineup_result[3] ) 
     
     comp_found = False
+    win_value = 0
+    if game["won"] == True:
+        win_value = 100
+
     for com_summary_entry in competition_summary:
         if com_summary_entry["slug"] == game["game"]["competitionSlug"]:
             comp_found = True
+            com_summary_entry["winRate"].add_value(win_value)
             com_summary_entry["numGames"] = com_summary_entry["numGames"] + 1
             com_summary_entry["avgScoreTotal"] = com_summary_entry["avgScoreTotal"] + game["maxScorePercentage"]
             com_summary_entry["avgScorePerc"] = com_summary_entry["avgScoreTotal"] / com_summary_entry["numGames"]
     
     if comp_found == False:
+        win_rate = value_aggregator.MyValueAggregator()
+        win_rate.add_value(win_value)
+            
         competition_summary.append({
             "numGames": 1,
             "avgScoreTotal": game["maxScorePercentage"],
             "avgScorePerc": game["maxScorePercentage"],
-            "slug": game["game"]["competitionSlug"]
+            "slug": game["game"]["competitionSlug"],
+            "winRate": win_rate
         })
 
     # Strategies here
