@@ -22,6 +22,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--logfile", help="Specify the logfile destination")
 parser.add_argument("--lineupfile", help="Specify the players, which should be used for lineups")
 parser.add_argument("--joinarena", help="If 'X' join the arena")
+parser.add_argument("--settingsfile", help="Path of the game settings")
 
 args = parser.parse_args()
 
@@ -49,6 +50,12 @@ client = SorareClient({
     'email': os.getenv('SORARE_EMAIL'),
     'password': os.getenv('SORARE_PASSWORD')
 })
+
+settings_file = "./temp/comp_settings.json"
+if args.settingsfile != None:
+    settings_file = args.settingsfile
+game_settings_map = file_func.read_json_from_file(settings_file)
+
 
 my_lineups = []
 logging.info("Checking, if lineup file exists")
@@ -84,7 +91,7 @@ with open("temp/notify_lineups.txt", mode="r", encoding="utf-8") as file:
     post_lineups = file.readlines()
 logging.info(post_lineups)
 
-num_games = 50
+num_games = 10
 games = func_sorare_rivals.get_next_rivals_games(client,num_games,False)
 
 upcoming_games = []
@@ -157,7 +164,7 @@ for game in games[:num_games]:
         starting_player_data[player["slug"]] = player
     ranking_players = []
     
-    calc_pred = calc_predictions_from_rivals_game(rg)
+    calc_pred = calc_predictions_from_rivals_game(rg,None,game_settings_map[game.get("slug")])
     pred_map = hash_map.create_from_list(
         map_type=PlayerPredictedScore,
         entry_list=calc_pred,

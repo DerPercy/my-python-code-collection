@@ -20,6 +20,7 @@ Initializing
 # Arguments
 parser = argparse.ArgumentParser()
 parser.add_argument("--logfile", help="Specify the logfile destination")
+parser.add_argument("--settingsfile", help="Path of the game settings")
 
 args = parser.parse_args()
 
@@ -48,21 +49,30 @@ client = SorareClient({
     'password': os.getenv('SORARE_PASSWORD')
 })
 
-num_games = 50
+settings_file = "./temp/comp_settings.json"
+if args.settingsfile != None:
+    #logging.info("File found")
+    settings_file = args.settingsfile
+game_settings_map = file_func.read_json_from_file(settings_file)
+#logging.info(game_settings_map)
+
+
+num_games = 27
 games = get_next_rivals_games(client,num_games)
 #ic(games)
 
 result = []
 
-
 def build_html():
     global result
+    global game_settings_map
     environment = myjinja2.get_environment()
     template = environment.get_template("rivals.jinja2")
 
     content = template.render(
         data = {
-            "result_games": result
+            "result_games": result,
+            "game_settings_map": game_settings_map
         }
     )
     with open("temp/sorare-rivals-report.html", mode="w", encoding="utf-8") as file:
@@ -83,6 +93,11 @@ for game in games:
     result_game_name = game.get("game").get('homeTeam').get("name")+" vs "+game.get("game").get('awayTeam').get("name")
     result_game_date = game.get("game").get('date')
     logging.info(result_game_name)
+    if game_settings_map.get(game.get("slug")) == None:
+        game_settings_map[game.get("slug")] = {
+            "rate_home": 1,
+            "rate_away": 1
+        }
 
     # Team results
     func_sorare_rivals.calc_team_results(
@@ -171,7 +186,7 @@ for game in games:
     rg = create_rivals_game_from_api_response(result_game)
     rg.save_on_filessystem("./temp/rivals/games/")
     #rg = read_rivals_game_from_fileSystem("./temp/rivals/games/",game.get("slug"))
-    list_predictions = calc_predictions_from_rivals_game(rg,calc_rule)
+    list_predictions = calc_predictions_from_rivals_game(rg,calc_rule,game_settings_map[game.get("slug")])
     pred_map = hash_map.create_from_list(
         map_type=PlayerPredictedScore,
         entry_list=list_predictions,

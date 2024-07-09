@@ -69,6 +69,7 @@
 }
 </style>
 
+
 <table>
 {% for game in data.result_games %}
     {% set game_id = "game"+ ( loop.index|string ) %}
@@ -77,6 +78,9 @@
     </tr>
     <tr class="behavior-show-until" data-show-until="{{ game.date }}">
         <td>
+            <div>
+                <input type="number" value="{{data.game_settings_map[game.slug].rate_home}}" onchange="set_team_bet_rate('{{game.slug}}','home',this.value)"/>
+            </div>
             <div>
             {% for res in game.homeTeamResults %}
                 <span class="sorare-game-result-{{ res }}">{{ res }}</span>
@@ -90,6 +94,9 @@
             </div>
         </td>
         <td>
+            <div>
+                <input type="number" value="{{data.game_settings_map[game.slug].rate_away}}" onchange="set_team_bet_rate('{{game.slug}}','away',this.value)"/>
+            </div>
             <div>
             {% for res in game.awayTeamResults %}
                 <span class="sorare-game-result-{{ res }}">{{ res }}</span>
@@ -196,6 +203,20 @@
     <tr class="behavior-show-until" data-show-until="{{ game.date }}"><td colspan="2"><textarea style="width:100%"class="text-{{game_id}}" onfocus="this.select()"></textarea></td></tr>
 {% endfor %}
 </table>
+
+<textarea style="width:100%" id="ta-game-settings" onfocus="this.select()">
+{{data.game_settings_map | tojson(indent=2) }}
+</textarea>
+<script>
+function set_team_bet_rate(comp_slug,home_away,rate){
+    console.log(comp_slug)
+    console.log(home_away)
+    console.log(rate)
+    const obj = JSON.parse(document.getElementById("ta-game-settings").value); 
+    obj[comp_slug]["rate_"+home_away] = rate
+    document.getElementById("ta-game-settings").value = JSON.stringify(obj)
+}
+</script>
 
 <script>
 var cusid_ele = document.getElementsByClassName('behavior-show-until');

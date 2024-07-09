@@ -38,10 +38,10 @@ def get_calc_rule_by_competition_slug(comp_slug:str) -> PlayerStatsCalculationRu
         calc_rule = PlayerStatsCalculationRule(numberOfGames=3, respectHomeAway=False)
     return calc_rule
 
-def calc_predictions_from_rivals_game(rg:RivalsGame, rule: PlayerStatsCalculationRule = None) -> list[PlayerPredictedScore]:
+def calc_predictions_from_rivals_game(rg:RivalsGame, rule: PlayerStatsCalculationRule = None, game_settings: dict = {}) -> list[PlayerPredictedScore]:
     if rule == None:
         rule = get_calc_rule_by_competition_slug(rg.competition_slug)
-    def sub_calc_player_prediction(rgp:RivalsGamePlayer, rg:RivalsGame, rule: PlayerStatsCalculationRule, home_away:str) -> PlayerPredictedScore:
+    def sub_calc_player_prediction(rgp:RivalsGamePlayer, rg:RivalsGame, rule: PlayerStatsCalculationRule, home_away:str,game_settings: dict) -> PlayerPredictedScore:
         va = value_aggregator.MyValueAggregator()
         stats_map = hash_map.MyHashMap[value_aggregator.MyValueAggregator]()
         games_list = []
@@ -74,8 +74,17 @@ def calc_predictions_from_rivals_game(rg:RivalsGame, rule: PlayerStatsCalculatio
         if va.has_values( ) == False:
             return None 
         
+        game_bet_rate = 1
+        rate_home = float(game_settings.get("rate_home",1))
+        rate_away = float(game_settings.get("rate_away",1))
+        if home_away == "home":
+            game_bet_rate = rate_away / rate_home
+        else:
+            game_bet_rate = rate_home / rate_away
+        # Abschwächen
+        game_bet_rate = game_bet_rate**(1/4)
         pps = PlayerPredictedScore(
-            calculated_score=va.get_average( ),
+            calculated_score=va.get_average( ) * game_bet_rate,
             player_slug=rgp.slug,
             stats_map=stats_map,
             game_slugs= games_list  
@@ -85,13 +94,13 @@ def calc_predictions_from_rivals_game(rg:RivalsGame, rule: PlayerStatsCalculatio
     result_list = []
     for player in rg.away_player:
         result = sub_calc_player_prediction(
-            player, rg, rule, "away"
+            player, rg, rule, "away",game_settings
         )
         if result != None:
             result_list.append(result)
     for player in rg.home_player:
         result = sub_calc_player_prediction(
-            player, rg, rule, "home"
+            player, rg, rule, "home",game_settings
         )
         if result != None:
             result_list.append(result)
