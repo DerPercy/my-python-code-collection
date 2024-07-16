@@ -4,12 +4,14 @@ Rivals prediction
 Calculate performance scores of players based on their past performance
 """
 import logging
+import services.rivals_tactic
 
 from attrs import define
 
 from models.rivals import RivalsGame, RivalsGamePlayer
 from func_sorare_rivals import PlayerStatsCalculationRule
 from context import value_aggregator, hash_map
+from icecream import ic
 
 """ 
 ========== MODELS ========== 
@@ -26,6 +28,42 @@ class PlayerPredictedScore:
             return 0
         return self.stats_map.get_item(key).get_average( )
 
+    
+    def get_player_detailed_score_list(self) -> list[services.rivals_tactic.PlayerDetailedScore]:
+        ret_list = []
+        for key in self.stats_map.get_keys():
+            ret_list.append(
+                services.rivals_tactic.PlayerDetailedScore(
+                    stat=key,
+                    statValue=self.stats_map.get_item(key).get_average()
+                )
+            )
+        return ret_list
+
+@define 
+class Strategy:
+    score_map: hash_map.MyHashMap[PlayerPredictedScore] = []
+
+    def ui_player_score(self,player_slug):
+        try:
+            return str(round(self.score_map.get_item(player_slug).calculated_score,1))
+        except:
+            return ""
+
+
+
+@define 
+class StrategyContainer:
+    strategy_map: hash_map.MyHashMap[Strategy] = []
+
+    def get_strategy_keys(self) -> list[str]:
+        return self.strategy_map.get_keys()
+
+    def ui_strategy_value_of_player(self,strat_key,player_slug) -> str:
+        return self.strategy_map.get_item(strat_key).ui_player_score(player_slug)
+    
+    def get_player_pred_score_map(self,strat_key) -> hash_map.MyHashMap[PlayerPredictedScore]:
+        return self.strategy_map.get_item(strat_key).score_map
 
 """ 
 ========== FUNCTIONS ==========
@@ -107,4 +145,28 @@ def calc_predictions_from_rivals_game(rg:RivalsGame, rule: PlayerStatsCalculatio
 
     return result_list        
 
+def calc_strategy_container(rg:RivalsGame, rule_map: hash_map.MyHashMap[PlayerStatsCalculationRule]) -> StrategyContainer:
+    strat_map = hash_map.MyHashMap[Strategy]()
+
+    for rule_key in rule_map.get_keys():
+        rule = rule_map.get_item(rule_key)
+        pred_list = calc_predictions_from_rivals_game(
+            rg= rg,
+            rule= rule
+        )
+        pred_map = hash_map.create_from_list(
+            map_type=PlayerPredictedScore,
+            entry_list=pred_list,
+            key_field="player_slug"
+        )
+        strat = Strategy(
+            score_map=pred_map
+        )
+        strat_map.set_item(
+            k = rule_key,
+            v= strat
+        )
+    return StrategyContainer(
+        strategy_map=strat_map
+    )
 

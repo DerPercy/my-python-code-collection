@@ -2,7 +2,7 @@ from client import Client as SorareClient
 #from account_entry import get_account_entries
 from context import myjinja2, file_func, hash_map
 from services import lineup_ranking,rivals_tactic
-from services.rivals_predict import calc_predictions_from_rivals_game,PlayerPredictedScore
+from services.rivals_predict import calc_predictions_from_rivals_game,PlayerPredictedScore,StrategyContainer
 
 import logging, logging.handlers
 import os
@@ -11,7 +11,7 @@ from icecream import ic
 from datetime import datetime
 import func_sorare_rivals, api_rivals_mutations
 import argparse, sys
-
+import cattrs
 from models.rivals import RivalsGame, read_rivals_game_from_fileSystem
 
 '''
@@ -107,7 +107,7 @@ for game in games[:num_games]:
     if game["shouldNotify"] == True:
         lineup_games.append(game["slug"])
         logging.info("Game "+game["slug"]+" should auto lineup")
-    rg = read_rivals_game_from_fileSystem("./temp/rivals/games/",game["slug"])
+    #rg = read_rivals_game_from_fileSystem("./temp/rivals/games/",game["slug"])
     
     if game["formationKnown"] != True:
         lu_found = False
@@ -134,13 +134,13 @@ for game in games[:num_games]:
         json_data=game_details
     )
     
-    if rg != None:
-        rg.add_pre_game_info(
+    #if rg != None:
+    pre_game_info =  RivalsGame.add_pre_game_info(
             game_info=game,
             game_details=game_details,
             draftable_player_map=draftable_player_map_1
         )
-    game_data = file_func.read_json_from_file("./temp/rivals/games/"+game["slug"]+".json")
+    #game_data = file_func.read_json_from_file("./temp/rivals/games/"+game["slug"]+".json")
     
     logging.info("Get tactics")
     game_tactic_def_list = rivals_tactic.build_tactic_list_from_api_response(game.get("lineupTactics"))
@@ -155,55 +155,35 @@ for game in games[:num_games]:
             for player in position:
                 starting_player_slugs.append(player["slug"])
     
+    # Strategy
+    json = file_func.read_json_from_file("./temp/rivals/games/"+game.get("slug")+"/strategies.json")
+    
+    strategy = hash_map.prepare_converter(cattrs.GenConverter()).structure(json,StrategyContainer)
+    
+    
     logging.info("Found staring players")
     logging.info(starting_player_slugs)
-    starting_player_data = {}
-    for player in game_data["home"]:
-        starting_player_data[player["slug"]] = player
-    for player in game_data["away"]:
-        starting_player_data[player["slug"]] = player
     ranking_players = []
     
-    calc_pred = calc_predictions_from_rivals_game(rg,None,game_settings_map[game.get("slug")])
-    pred_map = hash_map.create_from_list(
-        map_type=PlayerPredictedScore,
-        entry_list=calc_pred,
-        key_field="player_slug"
-    )
+    pred_map = strategy.get_player_pred_score_map("default")
     for player_slug in starting_player_slugs:
         
-        if starting_player_data.get(player_slug,None) == None:
+        if pred_map.has_item(player_slug) == False:
             logging.warning("Not enough data for "+player_slug+" found! Did not consider in lineup.")
             continue
-        player_data = starting_player_data[player_slug]
-        
-        player_score = player_data["gamesScore"]
-        if pred_map.get_item(player_slug) == None:
-            logging.warning("Not enough data for "+player_slug+" via new logic!")
-        else:
-            if player_data["gamesScore"] != pred_map.get_item(player_slug).calculated_score:
-                logging.warning("GamesScore for "+player_slug+" did not match")
-                logging.warning("Old "+str(player_data["gamesScore"]))
-                logging.warning("New "+str(pred_map.get_item(player_slug).calculated_score))
-            if len(pred_map.get_item(player_slug).game_slugs) > 1:
-                player_score = pred_map.get_item(player_slug).calculated_score
+        player_score = pred_map.get_item(player_slug).calculated_score
                    
         
         cap_score = draftable_player_map.get_item(player_slug).capValue
         
-        #if cap_score < 25:
-        #    cap_score = 25
-
-        player_pos = player_data["position"]
-        
-        #pred_map.get_item(player_slug).calculated_score
         ranking_players.append(lineup_ranking.Player(
             cap_score=cap_score,
-            entity_data=player_data,
-            position=player_pos[:1],
+            entity_data=pre_game_info.get_player_by_slug(player_slug), # Maybe here more details
+            position=pre_game_info.get_position_of_player(player_slug)[:1],
             score=player_score,
-            detailed_score_list=rivals_tactic.conv_object_to_player_detailed_scores(player_data["tempDetScores"])
+            detailed_score_list=pred_map.get_item(player_slug).get_player_detailed_score_list()
         ))
+    logging.info("Cap limit"+str(game["cap"]))
     best_lineup = lineup_ranking.calculate_best_lineup(
         players=ranking_players,
         cap_limit=float(game["cap"]),
@@ -215,15 +195,15 @@ for game in games[:num_games]:
     else:
         logging.info("Lineup found:")
         for player in top_team:
-            logging.info(player["slug"])
+            logging.info(player)
         logging.info("Captain:")
-        #logging.info(best_lineup[2])
+        logging.info(best_lineup[2])
+        logging.info(top_team)
         upcoming_games.append({
             "gameSlug": game["slug"],
             "topTeam": top_team,
             "topTeamTactics": best_lineup[1],
-            "captainSlug": best_lineup[2]["slug"]
-        })
+            "captainSlug": best_lineup[2].slug        })
 
         for post_lu in post_lineups:
             if game["slug"] == post_lu.strip():

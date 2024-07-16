@@ -164,9 +164,9 @@ class RivalsGame:
             filename=file_name,
             json_data=c.unstructure(self)
         )
-    def add_pre_game_info(self,game_info:dict,game_details:dict,draftable_player_map:dict):
+    def add_pre_game_info(game_info:dict,game_details:dict,draftable_player_map:dict) -> RivalsGamePreGameInfo:
         lineups = create_lineups(game_details=game_details, draftable_player_map=draftable_player_map)
-        self.pre_game_info = RivalsGamePreGameInfo(
+        pre_game_info = RivalsGamePreGameInfo(
             cap=game_info["cap"],
             lineup_tactics=cattrs.structure(game_info["lineupTactics"],list[TacticDefinition]),
             home_lineup= lineups[0],
@@ -174,10 +174,11 @@ class RivalsGame:
             away_lineup=lineups[2],
             away_bench=lineups[3]
         )
-        if self.fs_location == None:
-            logging.error("Could not store RivalsPreGameInfo on Filesystem")
-        else:
-            self.pre_game_info.save_on_filessystem(self.fs_location)
+        #if self.fs_location == None:
+        #    logging.error("Could not store RivalsPreGameInfo on Filesystem")
+        #else:
+        #    self.pre_game_info.save_on_filessystem(self.fs_location)
+        return pre_game_info
         
 
 def create_rivals_game_from_api_response(json:dict) -> RivalsGame:

@@ -13,7 +13,7 @@ import func_sorare_rivals
 import argparse, sys
 import cattrs
 from models.rivals import RivalsGame,create_rivals_game_from_api_response, read_rivals_game_from_fileSystem
-from services.rivals_predict import calc_predictions_from_rivals_game, PlayerPredictedScore
+from services.rivals_predict import calc_predictions_from_rivals_game, PlayerPredictedScore, PlayerStatsCalculationRule,calc_strategy_container
 '''
 Initializing
 '''
@@ -182,9 +182,9 @@ for game in games:
         "awayTeamGoals": result_goals_away
     }
     #ic(result_game)
-    file_func.write_json_to_file(result_game,"./temp/rivals/games/"+game.get("slug")+".json")
+    #file_func.write_json_to_file(result_game,"./temp/rivals/games/"+game.get("slug")+".json")
     rg = create_rivals_game_from_api_response(result_game)
-    rg.save_on_filessystem("./temp/rivals/games/")
+    #rg.save_on_filessystem("./temp/rivals/games/")
     #rg = read_rivals_game_from_fileSystem("./temp/rivals/games/",game.get("slug"))
     list_predictions = calc_predictions_from_rivals_game(rg,calc_rule,game_settings_map[game.get("slug")])
     pred_map = hash_map.create_from_list(
@@ -193,7 +193,37 @@ for game in games:
         key_field="player_slug"
     )
     result_game["pred_map"] = pred_map
+
+
+    # Strategies
+    calc_map = hash_map.MyHashMap[PlayerStatsCalculationRule]()
+    calc_map.set_item(
+        k="default",
+        v=calc_rule
+    )
+    calc_map.set_item(
+        k="l5_ha",
+        v=PlayerStatsCalculationRule(respectHomeAway=True,numberOfGames=5)
+    )
+    calc_map.set_item(
+        k="l5",
+        v=PlayerStatsCalculationRule(respectHomeAway=False,numberOfGames=5)
+    )
+    calc_map.set_item(
+        k="l15_ha",
+        v=PlayerStatsCalculationRule(respectHomeAway=True,numberOfGames=15)
+    )
+    
+    strategy = calc_strategy_container(rg,calc_map)
+
+    result_game["strategies"] = strategy
+
+    json = hash_map.prepare_converter(cattrs.GenConverter()).unstructure(strategy)
+    file_func.write_json_to_file(json,"./temp/rivals/games/"+game.get("slug")+"/strategies.json")
+    
+
     result.append(result_game)
+
 
     # Calculate stats
     # Team score_index

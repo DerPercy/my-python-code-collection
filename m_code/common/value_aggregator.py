@@ -1,10 +1,13 @@
 
+from attrs import define, field
+from icecream import ic
+from attr import attrs
+
+@define
+@attrs(auto_attribs=True)
 class MyValueAggregator():
-    sum_value = None
-    cnt = None
-    def __init__(self) -> None:
-        self.sum_value = 0
-        self.cnt = 0
+    sum_value: float = field(default=0)
+    cnt: int = field(default=0)
     def add_value(self,val:float):
         self.cnt = self.cnt + 1
         self.sum_value = self.sum_value + val

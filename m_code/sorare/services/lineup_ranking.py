@@ -44,16 +44,19 @@ def calculate_best_lineup(players:list[Player],cap_limit:float, tactic_def_list:
                 for idx4, player4 in enumerate(players[(idx1+idx2+idx3+3):]):
                     for idx5, player5 in enumerate(players[(idx1+idx2+idx3+idx4+4):]):
                         try:
+
                             check_cap_requirement(player1,player2,player3,player4,player5,cap_limit)
                             captain = get_lineup_captain(player1,player2,player3,player4,player5)
                             score = get_lineup_score(player1,player2,player3,player4,player5,captain)
                             tactics_score = 0
+                            #logging.info("Score "+str(score)+" found")
                             if tactic_def_list != None:
                                 tactics_result = get_tactics_score(player1,player2,player3,player4,player5,tactic_def_list)
                                 tactic_slug = tactics_result[1]
                                 tactics_score = tactics_result[0]
                                 score = score + tactics_score
                             if score > max_score:
+                                
                                 player_list = [player1.entity_data,player2.entity_data,player3.entity_data,player4.entity_data,player5.entity_data]
                                 max_score = score
                                 max_tactic_slug = tactic_slug
@@ -116,6 +119,7 @@ def valid_lineup_position(positions:list[str]) -> bool:
     """
     Checks, if the combination of plaer positions is valid
     """
+    #logging.info(positions)
     if positions.count("G") != 1: # Only one Goalkeeper
         return False
     if positions.count("D") < 1 or positions.count("D") > 2: # One or two Defender

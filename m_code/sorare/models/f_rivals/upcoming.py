@@ -1,6 +1,7 @@
 from attrs import define
 import cattrs
 from context import file_func
+import logging
 
 # ========== see rivals_tactic.py ==========
 @define
@@ -23,6 +24,7 @@ class LineupPlayer:
     position: str
     cap_score: float
     id: str
+    name: str
 
 
 
@@ -36,6 +38,24 @@ class RivalsGamePreGameInfo:
     home_bench: list[LineupPlayer]
     away_lineup: list[LineupPlayer]
     away_bench: list[LineupPlayer]
+
+    def get_position_of_player(self,player_slug) -> str:
+        for player in self.home_lineup:
+            if player.slug == player_slug:
+                return player.position
+        for player in self.away_lineup:
+            if player.slug == player_slug:
+                return player.position
+        logging.error("No position found for"+player_slug)
+
+    def get_player_by_slug(self,player_slug) -> LineupPlayer:
+        for player in self.home_lineup:
+            if player.slug == player_slug:
+                return player
+        for player in self.away_lineup:
+            if player.slug == player_slug:
+                return player
+        logging.error("No player found for"+player_slug)
 
     def save_on_filessystem(self,filepath:str):
         file_name = filepath+"/pregame_info.json"
@@ -52,28 +72,30 @@ def create_lineups(game_details:dict,draftable_player_map:dict) -> tuple[
         list[LineupPlayer]  # away bench
     ]:
 
-    def create_lineup_player(draftable_player_map:dict,game_det_entry:dict) -> LineupPlayer:
+    def create_lineup_player(draftable_player_map:dict,game_det_entry:dict,game_details:dict) -> LineupPlayer:
         for dp in draftable_player_map:
             if dp["player"]["slug"] == game_det_entry["slug"]:
+                #logging.info(game_details)
                 return LineupPlayer(
                     cap_score=dp["capValue"],
                     position=game_det_entry["position"],
                     slug=game_det_entry["slug"],
-                    id=dp["id"]
+                    id=dp["id"],
+                    name=game_det_entry["displayName"]
                 )
     home_bench_list = []
     home_lineup_list = []
     away_bench_list = []
     away_lineup_list = []
     for home_bench in game_details["homeFormation"]["bench"]:
-        home_bench_list.append(create_lineup_player(draftable_player_map,home_bench))
+        home_bench_list.append(create_lineup_player(draftable_player_map,home_bench,game_details))
     for away_bench in game_details["awayFormation"]["bench"]:
-        away_bench_list.append(create_lineup_player(draftable_player_map,away_bench))
+        away_bench_list.append(create_lineup_player(draftable_player_map,away_bench,game_details))
     for player_list in game_details["homeFormation"]["startingLineup"]:
         for player in player_list:
-            home_lineup_list.append(create_lineup_player(draftable_player_map,player))
+            home_lineup_list.append(create_lineup_player(draftable_player_map,player,game_details))
     for player_list in game_details["awayFormation"]["startingLineup"]:
         for player in player_list:
-            away_lineup_list.append(create_lineup_player(draftable_player_map,player))
+            away_lineup_list.append(create_lineup_player(draftable_player_map,player,game_details))
     return (home_lineup_list,home_bench_list,away_lineup_list,away_bench_list)
     

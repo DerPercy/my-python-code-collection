@@ -123,6 +123,12 @@
     <tr class="behavior-show-until" data-show-until="{{ game.date }}">
         <td>
             <table>
+                <tr>
+                    <td colspan="5"></td>
+                    {% for key in game.strategies.get_strategy_keys() %}
+                        <td>{{ key }}</td>
+                    {% endfor %}
+                </tr>
                 {% for player in game.home %}
                     <tr>
                         <td><input type="checkbox" class="player-{{game_id}}" value="{{player.slug}}" onchange="handle_{{game_id}}()"/>
@@ -136,6 +142,9 @@
                             {% endif %}
                         </td>
                         <td style="background-color:{{value_color(player.avgAllAroundScore,5,12)}}">{{ player.avgAllAroundScore | round(2) }}</td>
+                        {% for key in game.strategies.get_strategy_keys() %}
+                            <td>{{ game.strategies.ui_strategy_value_of_player(key,player.slug) }}</td>
+                        {% endfor %}
                     </tr>
                     <tr>
                         <td>{{ player.tactic.accuratePass | round(2) }}</td>

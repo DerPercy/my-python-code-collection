@@ -42,19 +42,19 @@ class CSVProcessorV2(CSVProcessor):
         action = row[2]
         symbol = row[3]
         quantity = float(row[4])
-        rate = float(row[6])
+        rate = float(row[6].replace("€",""))
         if row[7] == "":
             eurWoFees = 0 
         else:
-            eurWoFees = float(row[7])
+            eurWoFees = float(row[7].replace("€",""))
         if row[9] == "":
             fees = float(0)
         else:
-            fees = float(row[9])
+            fees = float(row[9].replace("€",""))
         transactionDescription = row[10]
 
         try:
-            if action == 'Buy' or action == 'Receive' or action == 'Advanced Trade Buy': # Buy/Receive coins in coinbase
+            if action == 'Buy' or action == 'Receive' or action == 'Advance Trade Buy': # Buy/Receive coins in coinbase
                 transaction_history.action_buy(
                     dt          =   self.getDatetime(timestamp),
                     symbol      =   symbol,

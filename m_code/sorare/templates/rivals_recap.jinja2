@@ -25,7 +25,7 @@
         <td>{{ com_sum.slug }}</td>
         <td>{{ com_sum.numGames }}</td>
         <td>{{ com_sum.avgScorePerc }}</td>
-        <td>{{ com_sum.winRate.get_average( ) | round(0)}} %</td>
+        <td>{% if com_sum.winRate.count() > 0 %}{{ com_sum.winRate.get_average( ) | round(0)}} %{% endif %}</td>
     </tr>
 {% endfor %}
 </table>

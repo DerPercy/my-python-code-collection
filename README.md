@@ -1,5 +1,10 @@
 # Content
 
+## Testen
+```
+pytest tests/common
+```
+
 ## Django
 
 ### Starting dev server

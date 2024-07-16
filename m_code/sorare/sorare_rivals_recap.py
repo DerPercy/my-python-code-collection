@@ -51,8 +51,8 @@ client = SorareClient({
 competition_summary = []
 past_games = func_sorare_rivals.get_last_rivals_results(client)
 for game in past_games:
-    if game["withMatch"] == False:
-        continue
+    #if game["withMatch"] == False:
+    #    continue
     logging.info("Handling game:"+game.get("name"))
     rg = read_rivals_game_from_fileSystem("./temp/rivals/games/",game["slug"])
     if rg == None:
@@ -138,7 +138,8 @@ for game in past_games:
     for com_summary_entry in competition_summary:
         if com_summary_entry["slug"] == game["game"]["competitionSlug"]:
             comp_found = True
-            com_summary_entry["winRate"].add_value(win_value)
+            if game["withMatch"] == True:
+                com_summary_entry["winRate"].add_value(win_value)
             com_summary_entry["numGames"] = com_summary_entry["numGames"] + 1
             com_summary_entry["avgScoreTotal"] = com_summary_entry["avgScoreTotal"] + game["maxScorePercentage"]
             com_summary_entry["avgScorePerc"] = com_summary_entry["avgScoreTotal"] / com_summary_entry["numGames"]
