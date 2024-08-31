@@ -30,7 +30,8 @@ log_handlers = []
 log_handlers.append(logging.StreamHandler(sys.stdout))
 if args.logfile != None:
     log_handlers.append(logging.handlers.RotatingFileHandler(
-        args.logfile, maxBytes=(1048576*5), backupCount=7))
+        #args.logfile, maxBytes=(1048576*5), backupCount=7))
+        args.logfile, maxBytes=(104857*5), backupCount=7))
 
 
 # Logging
@@ -216,19 +217,19 @@ for game in games[:num_games]:
                 logging.info("Player:")
                 for player in top_team:
                     is_captain = False
-                    if best_lineup[2]["slug"] == player["slug"]:
+                    if best_lineup[2].slug == player.slug:
                         is_captain = True
                     lineup_player_list.append(
                         api_rivals_mutations.RivalsGameAppearance(
-                            draftableObjectId=draftable_player_map.get_item(player["slug"]).id,
+                            draftableObjectId=draftable_player_map.get_item(player.slug).id,
                             captain=is_captain
                         )
                     )
                     #ic(player.keys())
-                    logging.info(draftable_player_map.get_item(player["slug"]).id)
+                    logging.info(draftable_player_map.get_item(player.slug).id)
                     #ic(player.keys())
                 logging.info("Captain:")
-                logging.info(draftable_player_map.get_item(best_lineup[2]["slug"]).id)
+                logging.info(draftable_player_map.get_item(best_lineup[2].slug).id)
                 #ic(best_lineup[2].keys())
                 logging.info("Tactic")
                 logging.info(best_lineup[1])
