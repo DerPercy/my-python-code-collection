@@ -143,7 +143,7 @@ for game in games:
             return 4
         return 5
     
-    calc_rule = func_sorare_rivals.PlayerStatsCalculationRule(numberOfGames=7, respectHomeAway=True)
+    calc_rule = func_sorare_rivals.PlayerStatsCalculationRule(numberOfGames=27, respectHomeAway=True)
 
     if game.get("game").get("competition").get("slug") == "european-championship":
         # EM-2024: Didnot consider home/away and only the latest 5 games 

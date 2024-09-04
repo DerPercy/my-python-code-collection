@@ -49,7 +49,51 @@ client = SorareClient({
 })
 
 competition_summary = []
-past_games = func_sorare_rivals.get_last_rivals_results(client)
+lineup_flags_summary = []
+lineup_flags_summary.append({
+    "name": "Goalkeeper from home team",
+    "calc": lineup_ranking.LineupCheckGoalkeeperHome(),
+    "va": value_aggregator.MyValueAggregator(),
+})
+lineup_flags_summary.append({
+    "name": "5 home player",
+    "calc": lineup_ranking.LineupCheckNumberPlayerInTeam("home",5),
+    "va": value_aggregator.MyValueAggregator(),
+})
+lineup_flags_summary.append({
+    "name": "4 home player",
+    "calc": lineup_ranking.LineupCheckNumberPlayerInTeam("home",4),
+    "va": value_aggregator.MyValueAggregator(),
+})
+lineup_flags_summary.append({
+    "name": "3 home player",
+    "calc": lineup_ranking.LineupCheckNumberPlayerInTeam("home",3),
+    "va": value_aggregator.MyValueAggregator(),
+})
+lineup_flags_summary.append({
+    "name": "2 home player",
+    "calc": lineup_ranking.LineupCheckNumberPlayerInTeam("home",2),
+    "va": value_aggregator.MyValueAggregator(),
+})
+lineup_flags_summary.append({
+    "name": "1 home player",
+    "calc": lineup_ranking.LineupCheckNumberPlayerInTeam("home",1),
+    "va": value_aggregator.MyValueAggregator(),
+})
+lineup_flags_summary.append({
+    "name": "0 home player",
+    "calc": lineup_ranking.LineupCheckNumberPlayerInTeam("home",0),
+    "va": value_aggregator.MyValueAggregator(),
+})
+lineup_flags_summary.append({
+    "name": "Goalkeeper and Defender from same team",
+    "calc": lineup_ranking.LineupCheckGKAndDefSameTeam(),
+    "va": value_aggregator.MyValueAggregator(),
+})
+
+
+
+past_games = func_sorare_rivals.get_last_rivals_results(client)#[:6]
 for game in past_games:
     #if game["withMatch"] == False:
     #    continue
@@ -76,15 +120,18 @@ for game in past_games:
     for player in game_data["homeFormation"]["bench"]:
         player_score = func_sorare_rivals.request_game_player_score(client,game_id,player["slug"])
         player["playerScore"] = player_score
+        player["homeAway"] = "home"
         players_det_score.append(player)
     for player in game_data["awayFormation"]["bench"]:
         player_score = func_sorare_rivals.request_game_player_score(client,game_id,player["slug"])
         player["playerScore"] = player_score
+        player["homeAway"] = "away"
         players_det_score.append(player)
     for area in game_data["awayFormation"]["startingLineup"]:
         for player in area:
             player_score = func_sorare_rivals.request_game_player_score(client,game_id,player["slug"])
             player["playerScore"] = player_score
+            player["homeAway"] = "away"
             players.append(player)
             players_det_score.append(player)
     
@@ -92,6 +139,7 @@ for game in past_games:
         for player in area:
             player_score = func_sorare_rivals.request_game_player_score(client,game_id,player["slug"])
             player["playerScore"] = player_score
+            player["homeAway"] = "home"
             players.append(player)
             players_det_score.append(player)
     
@@ -106,6 +154,33 @@ for game in past_games:
         det_score = rivals_tactic.build_player_detailed_score_from_api_response(result[player["slug"]]["detailedScore"])
         player_det_scores[player["slug"]] = rivals_tactic.conv_player_detailed_scores_to_object(det_score)
     game["playerDetailScores"] = player_det_scores
+
+    # Check flags
+    my_team = []
+    for my_player in game["myLineup"]:
+        for player in players:
+            if my_player["playerSlug"] == player["slug"]:
+                my_team.append(lineup_ranking.Player(
+                    cap_score=float(player["averageScore"]),
+                    entity_data=player,
+                    position=player["position"][:1],
+                    score=float(player["playerScore"]["score"]),
+                    detailed_score_list=rivals_tactic.conv_object_to_player_detailed_scores(player_det_scores[player["slug"]]),
+                    home_away=player["homeAway"]
+                ))
+    if len(my_team) != 5:
+        logging.error("Could not determine the full team")
+    else:
+        for lineup_flag in lineup_flags_summary:
+            lineup_flag_result = lineup_flag["calc"].lineupMatches(my_team)
+            if lineup_flag_result == True or lineup_flag_result == False:
+                if lineup_flag_result == game["won"]:
+                    lineup_flag["va"].add_value(100)
+                else:
+                    lineup_flag["va"].add_value(0)
+            else: # Lineup calculation did not match
+                pass
+                #logging.error("No result for lineup calculator")
     # Determining best possible lineup
     ranking_players = []
     for player in players:
@@ -171,14 +246,15 @@ for game in past_games:
             logging.exception(e)
     
         
-environment = myjinja2.get_environment()
-template = environment.get_template("rivals_recap.jinja2")
+    environment = myjinja2.get_environment()
+    template = environment.get_template("rivals_recap.jinja2")
 
-content = template.render(
+    content = template.render(
     data = {
         "past_games": past_games,
-        "competition_summary": competition_summary
+        "competition_summary": competition_summary,
+        "lineup_flags_summary": lineup_flags_summary,
     }
-)
-with open("temp/sorare-rivals-recap-report.html", mode="w", encoding="utf-8") as file:
-    file.write(content)
+    )
+    with open("temp/sorare-rivals-recap-report.html", mode="w", encoding="utf-8") as file:
+        file.write(content)

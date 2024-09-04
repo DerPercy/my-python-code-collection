@@ -22,11 +22,57 @@ class Player:
     cap_score: float
     score: float
     detailed_score_list: list[rivals_tactic.PlayerDetailedScore] = []
+    home_away: str = None # "home" or "away" or None
 
 
 """ 
 ========== FUNCTIONS ==========
 """
+
+class LineupCheck:
+    def lineupMatches(self,players:list[Player]):
+        pass
+
+class LineupCheckGoalkeeperHome(LineupCheck):
+    def lineupMatches(self, players: list[Player]):
+        for player in players:
+            if player.position == 'G':
+                if player.home_away == None:
+                    return None
+                return player.home_away == "home"
+        return None
+
+class LineupCheckNumberPlayerInTeam(LineupCheck):
+    home_away = None
+    num_player = None
+    def __init__(self, home_away:str, num_player:int) -> None:
+        super().__init__()
+        self.home_away = home_away
+        self.num_player = num_player
+
+    def lineupMatches(self, players: list[Player]):
+        calc_num_player = 0
+        for player in players:
+            if player.home_away == self.home_away:
+                calc_num_player = calc_num_player + 1
+        if calc_num_player == self.num_player:
+            return True
+        return None
+
+
+class LineupCheckGKAndDefSameTeam(LineupCheck):
+    def lineupMatches(self, players: list[Player]):
+        gk_team = None
+        def_team = None
+        for player in players:
+            if player.position == 'G':
+                gk_team = player.home_away
+            if player.position == 'D':
+                def_team = player.home_away
+            if gk_team != None and def_team != None:
+                return gk_team == def_team
+            
+        return None
 
 def calculate_best_lineup(players:list[Player],cap_limit:float, tactic_def_list: list[rivals_tactic.TacticDefinition] = None) -> tuple[list[str],str]:
     """

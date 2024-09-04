@@ -19,6 +19,19 @@
 
 {% block content %}
 
+<h2>Lineup Checks</h2>
+<table>
+{% for lu_sum in data.lineup_flags_summary %}
+    <tr>
+        <td>{{ lu_sum.name }}</td>
+        <td>{{ lu_sum.va.count() }}</td>
+        <td>{% if lu_sum.va.count() > 0 %}{{ lu_sum.va.get_average( ) | round(0)}} %{% endif %}</td>
+    </tr>
+{% endfor %}
+</table>
+
+<h2>Competitions</h2>
+
 <table>
 {% for com_sum in data.competition_summary %}
     <tr>
@@ -29,6 +42,10 @@
     </tr>
 {% endfor %}
 </table>
+
+<h2>Details</h2>
+
+
 <table>
 {% for game in data.past_games %}
     {% set color = "green" %}
