@@ -13,6 +13,9 @@ from datetime import datetime
 import func_sorare_rivals
 import func_sorare_rivals
 import argparse, sys
+import api_schema
+from api_schema import Query
+
 
 '''
 Initializing
@@ -91,6 +94,48 @@ lineup_flags_summary.append({
     "va": value_aggregator.MyValueAggregator(),
 })
 
+
+rivals_seasons:list[api_schema.FootballRivalsSeason] = []
+
+query = Query()
+currentSeason = query.football().rivals().currentSeason()
+currentSeason.slug()
+print(query._create_query_code())
+client.query_request(query)
+rivals_seasons.append(query.value_football.value_rivals.value_currentSeason)
+print(query.value_football.value_rivals.value_currentSeason.value_slug)
+
+query = Query()
+seasons = query.football().rivals().pastSeasons(first=2,after=None,before=None,last=None)
+seasons.nodes().slug()
+print(query._create_query_code())
+client.query_request(query)
+rivals_seasons.extend(query.value_football.value_rivals.value_pastSeasons.value_nodes)
+#for season in query.value_football.value_rivals.value_pastSeasons.value_nodes:
+#    print(season.value_slug)
+
+rivals_games:list[api_schema.FootballRivalsGame] = []
+for rivals_season in rivals_seasons:
+    # Get Games of the season
+    query = Query()
+    req_games = query.football().rivals().season(slug=rivals_season.value_slug).myPastAndUpcomingGames(after=None,before=None,first=100,last=None).nodes()
+    req_games.slug()
+    req_games.cap()
+    game = req_games.game()
+    #game.
+    competition = game.competition()
+    competition.slug()
+    competition.name()
+
+    req_games.lineupTactics().slug()
+    req_games.myPointsDelta()
+    req_games.myArenaChallenge().awayContestant().lineup().id()
+    req_games.myLineup().id()
+    client.query_request(query)
+    rivals_games.extend(query.value_football.value_rivals.value_season.value_myPastAndUpcomingGames.value_nodes)
+
+for rivals_game in rivals_games:
+    print(rivals_game.value_slug)    
 
 
 past_games = func_sorare_rivals.get_last_rivals_results(client)#[:6]

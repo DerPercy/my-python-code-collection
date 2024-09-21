@@ -6,6 +6,8 @@ import logging
 from socket import error as SocketError
 import errno
 
+from api_schema import GraphQLObject
+
 class Client:
 
     
@@ -15,7 +17,7 @@ class Client:
         password = options.get("password")
         r_salt = requests.get("https://api.sorare.com/api/v1/users/"+email)
         salt = json.loads(r_salt.text).get("salt")
-        #print(salt)
+        print(salt)
 
         hashpw = bcrypt.hashpw(password.encode(), salt.encode())
     
@@ -45,13 +47,19 @@ class Client:
             }
 		}
 
-        
         r = requests.post("https://api.sorare.com/graphql", json=payloadJSON, headers=headers)
         print(r.text)
         jwtData = json.loads(r.text)
         self.jwt = jwtData["data"]["signIn"]["jwtToken"]["token"]
         #print(self.jwt)
         pass
+
+    def query_request(self,query_obj:GraphQLObject) -> None:
+        body = query_obj._create_query_code()
+        body = "query MyQuery { "+str(body)+" }"
+        print(body)
+        result = self.__request(body)
+        query_obj._fill_response(result["result"]["data"])
 
     def request(self,body:str, variables = {},options = {}):
         int_result = self.__request(body,variables,options)
@@ -101,6 +109,7 @@ class Client:
 		}
         try:
             r = requests.post("https://api.sorare.com/graphql", json=payloadJSON, headers=headers)
+            logging.info(r.text)
         except SocketError as e:
             logging.error("SocketError occured "+str(e.errno))
             logging.info(e)

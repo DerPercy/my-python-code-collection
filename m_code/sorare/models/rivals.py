@@ -7,6 +7,7 @@ from context import file_func
 
 from .f_rivals.upcoming import RivalsGamePreGameInfo,TacticDefinition,create_lineups
 
+log = logging.getLogger(__name__)
 
 # ==> see (and use) common.py
 @define
@@ -165,6 +166,7 @@ class RivalsGame:
             json_data=c.unstructure(self)
         )
     def add_pre_game_info(game_info:dict,game_details:dict,draftable_player_map:dict) -> RivalsGamePreGameInfo:
+        #logging.error("Add Pre Game Info")
         lineups = create_lineups(game_details=game_details, draftable_player_map=draftable_player_map)
         pre_game_info = RivalsGamePreGameInfo(
             cap=game_info["cap"],
