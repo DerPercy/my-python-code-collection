@@ -16,6 +16,7 @@ import argparse, sys
 import api_schema
 from api_schema import Query
 
+from ui_sorare_recap import UISorareRecap
 
 '''
 Initializing
@@ -94,6 +95,9 @@ lineup_flags_summary.append({
     "va": value_aggregator.MyValueAggregator(),
 })
 
+def fill_lineup_request(lineup:api_schema.FootballRivalsLineup) -> None:
+    lineup.id()
+    lineup.appearances().pictureUrl(derivative="tinified")
 
 rivals_seasons:list[api_schema.FootballRivalsSeason] = []
 
@@ -118,24 +122,43 @@ rivals_games:list[api_schema.FootballRivalsGame] = []
 for rivals_season in rivals_seasons:
     # Get Games of the season
     query = Query()
-    req_games = query.football().rivals().season(slug=rivals_season.value_slug).myPastAndUpcomingGames(after=None,before=None,first=100,last=None).nodes()
+    req_games = query.football().rivals().season(slug=rivals_season.value_slug).myPastAndUpcomingGames(
+        after=None,before=None,first=50,last=None).nodes()
     req_games.slug()
     req_games.cap()
     game = req_games.game()
-    #game.
+    #game.homeFormation().startingLineup().slug() # Player slug
+    
     competition = game.competition()
     competition.slug()
     competition.name()
+    competition.displayName()
 
     req_games.lineupTactics().slug()
     req_games.myPointsDelta()
-    req_games.myArenaChallenge().awayContestant().lineup().id()
-    req_games.myLineup().id()
+    fill_lineup_request(req_games.myArenaChallenge().awayContestant().lineup())
+    fill_lineup_request(req_games.myLineup())
     client.query_request(query)
     rivals_games.extend(query.value_football.value_rivals.value_season.value_myPastAndUpcomingGames.value_nodes)
 
 for rivals_game in rivals_games:
-    print(rivals_game.value_slug)    
+    print(rivals_game.value_myPointsDelta)    
+
+ui = UISorareRecap(rivals_games)
+
+environment = myjinja2.get_environment()
+template = environment.get_template("rivals_recap.jinja2")
+
+content = template.render(
+    ui = ui,
+    data = {
+        "past_games": [],
+        "competition_summary": competition_summary,
+        "lineup_flags_summary": lineup_flags_summary,
+    }
+)
+with open("temp/sorare-rivals-recap-report.html", mode="w", encoding="utf-8") as file:
+    file.write(content)
 
 
 past_games = func_sorare_rivals.get_last_rivals_results(client)#[:6]

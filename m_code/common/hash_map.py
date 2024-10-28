@@ -35,6 +35,11 @@ class MyHashMap(Generic[T]):
     #    return T
     def get_keys(self) -> list[str]:
         return self.map.keys()
+    def item__list(self) -> list[T]:
+        result: list[T] = []
+        for key in self.map.keys():
+            result.append(self.get_item(key))
+        return result
 
 my_conv = None
 

@@ -31,7 +31,15 @@
 </table>
 
 <h2>Competitions</h2>
-
+<table>
+{% for comp in ui.get_competitions() %}
+<tr>
+    <td>{{ comp.name() }}</td>
+    <td style="text-align:right;">{{ comp.num_games() }}</td>
+    <td style="text-align:right;">{{ comp.win_percentage() }} %</td>
+</tr>
+{% endfor %}
+</table>
 <table>
 {% for com_sum in data.competition_summary %}
     <tr>
@@ -45,6 +53,18 @@
 
 <h2>Details</h2>
 
+<table>
+{% for game in ui.games() %}
+    <tr>
+        <td>{{ game.name() }}</td>
+        <td>{{ game.won() }}</td>
+    </tr>
+    <tr></tr>
+        <td colspan="2">{{ game.competition() }}</td>
+        
+    </tr>
+{% endfor %}
+</table>
 
 <table>
 {% for game in data.past_games %}

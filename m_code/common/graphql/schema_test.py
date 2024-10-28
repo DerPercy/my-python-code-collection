@@ -39,7 +39,7 @@ print(json.loads(r.text))
 mutation._fill_response(json.loads(r.text)["data"])
 
 #print(mutation.value_signIn.value_errors[0].value_message)
-print(mutation.value_signIn.value_my_errors[0].value_message)
+print(getattr(mutation.value_signIn,"value_my_errors")[0].value_message)
 print(mutation.value_signIn.value_errors[0].value_message)
 #
 #print(signIn)

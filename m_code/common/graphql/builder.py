@@ -11,7 +11,7 @@ class SchemaType():
     def parse_payload(self,payload:dict):
         if payload.get("kind",None) in ["LIST"]:
             self.is_list =True
-        if payload.get("kind",None) in ["OBJECT","INPUT_OBJECT"]:
+        if payload.get("kind",None) in ["OBJECT","INPUT_OBJECT","INTERFACE"]:
             self.type_def = payload["name"]
             return
         if payload.get("ofType",None) != None:
@@ -248,13 +248,17 @@ class GraphQLObject():
         self._children.append((name,sub_obj,param_name))
     def _create_parameter_code(self) -> str:
         result = ""
+        found = False
         if len(self._parameter_list) > 0:
             result = result + "("
             for param in self._parameter_list:
                 val = GraphQLInputObject.to_string(param[1])
                 if val != None:
                     result = result + param[0] +": "+ val
-            result = result + ")"     
+                    found = True
+            result = result + ")"
+        if found == False:
+            return ""     
         return result
 
     def _create_query_code(self, check_parent:bool = True) -> str:
@@ -313,7 +317,7 @@ with open('schema.json', 'r') as f:
 
     for type_entity in data["data"]["__schema"]["types"]:
         if type_entity["kind"] in ["OBJECT","INTERFACE","INPUT_OBJECT"]:
-            if type_entity["kind"] in ["OBJECT"]:
+            if type_entity["kind"] in ["OBJECT","INTERFACE"]:
                 obj = SchemaObjectObject(class_name=type_entity["name"])
             elif type_entity["kind"] in ["INPUT_OBJECT"]:
                 obj = SchemaObjectInputObject(class_name=type_entity["name"])

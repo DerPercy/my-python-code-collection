@@ -57,7 +57,7 @@ class Client:
     def query_request(self,query_obj:GraphQLObject) -> None:
         body = query_obj._create_query_code()
         body = "query MyQuery { "+str(body)+" }"
-        print(body)
+        #print(body)
         result = self.__request(body)
         query_obj._fill_response(result["result"]["data"])
 
@@ -109,7 +109,7 @@ class Client:
 		}
         try:
             r = requests.post("https://api.sorare.com/graphql", json=payloadJSON, headers=headers)
-            logging.info(r.text)
+            #logging.info(r.text)
         except SocketError as e:
             logging.error("SocketError occured "+str(e.errno))
             logging.info(e)

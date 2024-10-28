@@ -11,19 +11,31 @@ qif.add_account(acc)
 
 
 with open('transactions.csv', newline='') as csvfile:
-    spamreader = csv.reader(csvfile, delimiter=';', quotechar='"')
+    spamreader = csv.reader(csvfile, delimiter=',', quotechar='"')
     for idx, row in enumerate(spamreader):
-        if idx > 6 and row[1] != "":
-            amount = float(row[7].replace('.','').replace(',','.'))
-            date = datetime.strptime(row[1], '%d.%m.%Y')
+        if idx > 4 and row[1] != "":
+            if row[2] == "Vorgemerkt":
+                continue
+            print(row[2])
+            amount = float(row[8].replace('.','').replace(',','.'))
+            date = datetime.strptime(row[1], '%d.%m.%y')
             print( str(idx))
             print(', '.join(row))
+            memo = row[5]
+            payee = ""
+            # Zahlungsempfänger
+            if row[6] == "Eingang":
+                payee = row[3]
+            elif row[6] == "Ausgang":
+                payee = row[4]
+            else:
+                print("Unbekannter Transaktionstyp:"+row[6])
             tr = quiffen.Transaction(
                 date=date, 
                 amount=amount,
                 #to_account=
-                payee= row[3],
-                memo=row[4]
+                payee= payee,
+                memo=memo,
             )
             acc.add_transaction(tr, header='Bank')
 
