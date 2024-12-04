@@ -18,8 +18,13 @@ get_tasks_async()
 def get_tasks_sync():
     api = TodoistAPI(os.getenv('TODOIST_API_KEY'))
     try:
-        tasks = api.get_tasks()
+        #tasks = api.get_tasks( filter="@PROJEKT" )
+        tasks = api.get_tasks(  )
         print(tasks)
+        for task in tasks:
+            print(task.content)
+            print(task.id)
+        print(api.get_task("8431372168"))
     except Exception as error:
         print(error)
 get_tasks_sync()

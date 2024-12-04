@@ -84,8 +84,8 @@ headers = {
     'X-Api-Key': api_key
 }
 payloadJSON = {
-	"dateRangeStart":   "2024-05-01T00:00:00.000",
-	"dateRangeEnd":     "2024-05-31T23:59:59.000",
+	"dateRangeStart":   "2024-10-01T00:00:00.000",
+	"dateRangeEnd":     "2024-10-31T23:59:59.000",
 	"sortOrder":        "ASCENDING",
 	"detailedFilter":   {
 		"page": 1,
@@ -101,6 +101,7 @@ retValue = {
 	"entries": []
 }
 
+calendarweek_start = 2
 for timeentry in value["timeentries"]:
 		entry = {}
 
@@ -131,6 +132,12 @@ for timeentry in value["timeentries"]:
 
 		entry["psp"] = psp
 		entry["ticket"] = parse_description(timeentry["description"]).get("ticket")
+		if entry["ticket"] == "" and entry["clientName"] == "CLAAS":
+			calendarweek = calendarweek_start
+			while start.isocalendar().week > ( calendarweek + 3 ):
+				calendarweek = calendarweek + 4
+			entry["ticket"] = "CW"+str(calendarweek)+"-"+str(calendarweek+3)
+			
 		entry["task"] = timeentry.get("taskName","")
 		setTotalTime(entry)
 		retValue["entries"].append(entry)
@@ -155,3 +162,37 @@ with open('temp/demo.csv', 'w', newline='') as csvfile:
 			entry.get("task"),			
 		])
 
+with open('temp/demo_claas_extern.csv', 'w', newline='') as csvfile:
+    csv_writer = csv.writer(csvfile)
+    for entry in retValue["entries"]:
+        if entry["clientName"] == "CLAAS":
+        	csv_writer.writerow([
+				entry.get("date"),
+				entry.get("location"),
+				entry.get("psp"),
+				entry.get("ticket"),
+				entry.get("description"),
+				entry.get("from"),
+				entry.get("till"),
+				entry.get("pause"),
+				entry.get("total"),
+				entry.get("projectName"),		
+				entry.get("task"),			
+			])
+
+with open('temp/demo_claas_catsen.csv', 'w', newline='') as csvfile:
+    csv_writer = csv.writer(csvfile)
+    for entry in retValue["entries"]:
+        if entry["clientName"] == "CLAAS":
+        	csv_writer.writerow([
+				"",
+				entry.get("psp"),
+				entry.get("date"),
+				"YREMOTE",
+				entry.get("ticket"),
+				entry.get("projectName"),		
+				entry.get("description"),
+				"",
+				entry.get("total"),
+				entry.get("task"),			
+			])
