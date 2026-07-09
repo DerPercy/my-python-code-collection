@@ -12,5 +12,6 @@ class Transaction:
     description: str = ""
     income: float = 0 # staking income 
     budget_info: str = ""
+    report_gain_text: str = ""
     gain_details: dict = {} # details about gain
     

@@ -59,7 +59,9 @@
 {% for transaction in transactions %}
     <p>
         <h3>{{loop.index}}. {{ datetime_to_ddmmyyy(transaction.time) }} - {{ transaction.description }} 
-            {% if transaction.budget_info %}({{ transaction.budget_info }}){% endif %}</h3>
+            {% if transaction.budget_info %}({{ transaction.budget_info }}){% endif %}
+            <p>{{transaction.report_gain_text}} </p>
+        </h3>
         <div style="display: none;">{{ transaction }}</div>
     </p>
     <hr/>

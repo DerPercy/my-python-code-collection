@@ -11,13 +11,16 @@ from context import myjinja2
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Customizing part
-fiscalYear = 2024
+fiscalYear = 2025
 
 processor = CSVProcessorV1()
 transaction_history = processor.process_csv('example/transactions_2023.csv')
 
 processor = CSVProcessorV2()
 transaction_history = processor.process_csv('example/transactions_2024.csv',transaction_history)
+
+processor = CSVProcessorV2()
+transaction_history = processor.process_csv('example/transactions_2025.csv',transaction_history)
 
 
 #processor = CSVProcessorV1()

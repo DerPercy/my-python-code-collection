@@ -1,0 +1,60 @@
+{% extends "base.jinja2" %}
+{% macro mySorareScoreColored(score) %}
+    {% set background_color = "red" %}
+    
+    
+    {% if score >= 74 %}
+        {% set background_color = "rgb(1, 147, 85)" %}
+    {% elif score >= 61 %}
+        {% set background_color = "rgb(29, 194, 155)" %}
+    {% elif score >= 49 %}
+        {% set background_color = "rgb(171, 194, 29)" %}
+    {% elif score >= 30 %}
+        {% set background_color = "rgb(241, 206, 23)" %}
+    {% elif score >= 15 %}
+        {% set background_color = "rgb(225, 146, 27)" %}
+    {% endif %}
+    <span style="color:white;background-color:{{background_color}}">{{score}}</span>
+{% endmacro %}
+
+{% block content %}
+<style>
+.player-box {
+    margin: 28px;
+    margin-bottom: 5px;
+}
+</style>
+<h1>{{ui.uiMatch()}}</h1>
+<h2>{{ui.uiCompetition()}}</h2>
+<h2>Cap Value: {{ui.capValue()}}</h2>
+{% for position in ui.homePositions() %}
+<div style="width:{{position.uiPositionWidth()}}px;margin:auto;">
+    {% for player in position.players() %}
+        <div class="player-box" style="width:150px; height: 150px; float:left;{{ player.uiBoxStyle() }}">
+            <img style="max-height:50px; display:block; margin: auto;" src="{{ player.pictureUrl() }}"/>
+            <div style="text-align:center;"><a href="{{ player.sorareUrl() }}" target="__blank">{{ player.name() }}</a> ({{ player.capValue() }})</div>
+            <div>Score {{ mySorareScoreColored(player.gameScore()) }}</div>
+            <div>Predicted {{ mySorareScoreColored(player.predictedScore()) }}</div>
+            
+        </div>
+    {% endfor %}
+</div>
+<div style="clear:left;"></div>
+{% endfor %}
+<hr/>
+{% for position in ui.awayPositions() %}
+<div style="width:{{position.uiPositionWidth()}}px;margin:auto;">
+    {% for player in position.players() %}
+        <div class="player-box" style="width:150px; height: 150px; float:left;{{ player.uiBoxStyle() }}">
+            <img style="max-height:50px; display:block; margin: auto;" src="{{ player.pictureUrl() }}"/>
+            <div style="text-align:center;"><a href="{{ player.sorareUrl() }}" target="__blank">{{ player.name() }}</a> ({{ player.capValue() }})</div>
+            <div>Score {{ mySorareScoreColored(player.gameScore()) }}</div>
+            <div>Predicted {{ mySorareScoreColored(player.predictedScore()) }}</div>
+            
+        </div>
+    {% endfor %}
+</div>
+<div style="clear:left;"></div>
+{% endfor %}
+
+{% endblock %}

@@ -59,6 +59,7 @@ class Client:
         body = "query MyQuery { "+str(body)+" }"
         #print(body)
         result = self.__request(body)
+        #print(result)
         query_obj._fill_response(result["result"]["data"])
 
     def request(self,body:str, variables = {},options = {}):

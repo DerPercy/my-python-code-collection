@@ -1,4 +1,5 @@
 from api_rivals_mutations import RivalsGameAppearance, set_rivals_game_lineup
+from context import file_func
 
 from client import Client as SorareClient
 import logging, logging.handlers
@@ -49,10 +50,11 @@ client = SorareClient({
 
 ######### Classes ##########
 class LineupCalculationPlayer():
-    def __init__(self, score_list:list[api_schema.So5Score], draftable_player:api_schema.FootballRivalsDraftableObjectInterface, home_away:str) -> None:
+    def __init__(self, score_list:list[api_schema.So5Score], draftable_player:api_schema.FootballRivalsDraftableObjectInterface, player:api_schema.Player, home_away:str) -> None:
         self.draftable_player = draftable_player
         self.score_list = score_list
         self.home_away = home_away
+        self.sorare_player =player
     def get_position(self) -> str:
         return str(self.draftable_player.value_position)
     def get_cap_value(self) -> float:
@@ -78,12 +80,31 @@ class LineupCalculationPlayer():
         total_score:float = 0
         for score in self.score_list:
             total_score = total_score + score.value_score
-        return total_score / len(self.score_list)
+        pred_score = total_score / len(self.score_list)
+        boost = 1
+        if self.sorare_player.value_lastFiveSo5Appearances >=3:
+            # If the player made at least 3 of the last 5 games: Compare L5 and L15 score to give top form players a boost 
+            #print("More than 2 games")
+            boost = self.sorare_player.value_avg5 / self.sorare_player.value_avg15
+            #if boost < 1:
+            #    boost = 1
+        else:
+            #print("Not more than 2 games")
+            pass
+        if self.home_away == "home": # Slightly additional bonus for home teams
+            #print("Home boost")
+            boost = boost * 1.05 
+        return pred_score * boost
     def get_name(self):
         return self.draftable_player.value_player.value_slug 
     def get_id(self) -> str:
         return self.draftable_player.value_id
-
+    def log_scores(self) -> None:
+        for score in self.score_list:
+            try:
+                logging.info( score.value_game.value_homeTeam.value_slug +" vs. "+ score.value_game.value_awayTeam.value_slug + ": " + str(score.value_score))
+            except Exception as e:
+                logging.exception(e)
 class Lineup():
     captain: LineupCalculationPlayer | None = None
     tactic_slug = None
@@ -118,8 +139,27 @@ class Lineup():
             if mission.get("homeTeamMin",None) != None:
                 if team_list.count("home") < mission.get("homeTeamMin",None):
                     return False
+            if mission.get("awayTeamMin",None) != None:
                 if team_list.count("away") < mission.get("awayTeamMin",None):
                     return False
+            if mission.get("positionFormwardNum",None) != None:
+                if pos_list.count("F") != mission.get("positionFormwardNum",None):
+                    return False
+            if mission.get("positionMidfielderNum",None) != None:
+                if pos_list.count("M") != mission.get("positionMidfielderNum",None):
+                    return False
+            if mission.get("playerCap",None) != None:
+                if self.player1.get_cap_value() > mission.get("playerCap",None):
+                    return False
+                if self.player2.get_cap_value() > mission.get("playerCap",None):
+                    return False
+                if self.player3.get_cap_value() > mission.get("playerCap",None):
+                    return False
+                if self.player4.get_cap_value() > mission.get("playerCap",None):
+                    return False
+                if self.player5.get_cap_value() > mission.get("playerCap",None):
+                    return False
+            
         if pos_list.count("G") != 1: # Only one Goalkeeper
             return False
         if pos_list.count("D") < 1 or pos_list.count("D") > 2: # One or two Defender
@@ -216,7 +256,11 @@ def filter_scores(all_scores: list[api_schema.So5Score], teams_slug: str, home_a
     return result_list
 
 def get_scores_from_player_slug_list(client:SorareClient, player_slug_list:list[str])-> list[api_schema.Player]:
-    max_items:int = 7
+    class QueryLastScores(api_schema.GraphQLObject):
+        def _create_query_code(self, check_parent = True):
+            #return """(type:LAST_FIVE_SO5_AVERAGE_SCORE)"""
+            return """averageScore(type:LAST_FIVE_SO5_AVERAGE_SCORE)"""
+    max_items:int = 6
 
     if len(player_slug_list) > max_items:
         ret_list:list[api_schema.Player] = []
@@ -235,6 +279,9 @@ def get_scores_from_player_slug_list(client:SorareClient, player_slug_list:list[
         query_player = query.football().player( slug= player_slug, _param_name = 'player_'+slug_to_query(player_slug))
         query_player.slug()
         query_player.displayName()
+        query_player.lastFiveSo5Appearances()
+        query_player._add_to_query("averageScore(type:LAST_FIVE_SO5_AVERAGE_SCORE)","avg5")
+        query_player._add_to_query("averageScore(type:LAST_FIFTEEN_SO5_AVERAGE_SCORE)","avg15")
         query_scores = query_player.allSo5Scores(first=20, last=None, before=None, after=None, position=None).nodes()
         query_scores.playerGameStats().gameStarted()
         query_scores.score()
@@ -326,7 +373,7 @@ def get_lineup_from_game(client:SorareClient, game : api_schema.FootballRivalsGa
         )
         for d_player in query.value_football.value_rivals.value_game.value_draftablePlayers:
             if d_player.value_player.value_slug == home_player.value_slug:
-                lcp = LineupCalculationPlayer( score_list=player_games, draftable_player=d_player, home_away="home")
+                lcp = LineupCalculationPlayer( score_list=player_games, draftable_player=d_player, home_away="home", player=home_player)
                 lineup_player.append(lcp)
                 break
     ## Away team
@@ -339,11 +386,23 @@ def get_lineup_from_game(client:SorareClient, game : api_schema.FootballRivalsGa
         )
         for d_player in query.value_football.value_rivals.value_game.value_draftablePlayers:
             if d_player.value_player.value_slug == away_player.value_slug:
-                lcp = LineupCalculationPlayer( score_list=player_games, draftable_player=d_player, home_away="away")
+                lcp = LineupCalculationPlayer( score_list=player_games, draftable_player=d_player, home_away="away",player=away_player)
                 lineup_player.append(lcp)
                 break
     
-     
+    export_data = {
+        "player": {}
+    }
+    for lcp in lineup_player:
+        export_data["player"][lcp.sorare_player.value_slug] = {
+            "pred_score": lcp.get_predicted_score(),
+            "cap_value": lcp.get_cap_value(),
+            "l5": lcp.sorare_player.value_avg5,
+            "l15": lcp.sorare_player.value_avg15,
+        }
+    
+    file_func.write_json_to_file(export_data,"./temp/rivals/games/"+game.value_slug+".json")
+
     lineupTactics:list[api_schema.FootballRivalsLineupTactic] = []
     # Filter tactics by missions
     for tactic in query.value_football.value_rivals.value_game.value_lineupTactics:
@@ -353,7 +412,7 @@ def get_lineup_from_game(client:SorareClient, game : api_schema.FootballRivalsGa
                     lineupTactics.append(tactic)            
         #    pass
         #lineupTactics.append(tactic)
-    #print(len(lineupTactics))
+    print(len(lineupTactics))
     if len(lineupTactics) == 0:
         lineupTactics = query.value_football.value_rivals.value_game.value_lineupTactics
 
@@ -363,19 +422,43 @@ def get_lineup_from_game(client:SorareClient, game : api_schema.FootballRivalsGa
         tactics=lineupTactics,
         missions=missions
     )
+    if lineup == None:
+        logging.warning("No lineup found")
+        logging.info("Checking optional missions")
+        red_missions = []
+        for m in missions:
+            if not m.get("optional",None) == True:
+                red_missions.append(m)
+            else:
+                logging.info("Optional Mission found. Ignore.")
+        lineup = calculate_best_lineup(
+            cap_value= float(game.value_cap),
+            player=lineup_player,
+            tactics=lineupTactics,
+            missions=red_missions
+        )
+        if lineup == None:
+            logging.warning("Still no lineup found")
+        
+
     if lineup != None:
-        print(lineup.player1.get_name()+" > "+ lineup.player1.get_position()+" > "+str(lineup.player1.get_predicted_score()))
-        print(lineup.player2.get_name()+" > "+ lineup.player2.get_position()+" > "+str(lineup.player2.get_predicted_score()))
-        print(lineup.player3.get_name()+" > "+ lineup.player3.get_position()+" > "+str(lineup.player3.get_predicted_score()))
-        print(lineup.player4.get_name()+" > "+ lineup.player4.get_position()+" > "+str(lineup.player4.get_predicted_score()))
-        print(lineup.player5.get_name()+" > "+ lineup.player5.get_position()+" > "+str(lineup.player5.get_predicted_score()))
-        print("Captain:"+lineup.get_captain().get_name())
-        print("Taktik:"+lineup.get_tactic_slug()+ ""+str(lineup.get_tactic_score()))
-        print(lineup.player1.home_away)
-        print(lineup.player2.home_away)
-        print(lineup.player3.home_away)
-        print(lineup.player4.home_away)
-        print(lineup.player5.home_away)
+        logging.info(lineup.player1.get_name()+" > "+ lineup.player1.get_position()+" > "+str(lineup.player1.get_predicted_score()))
+        logging.info(lineup.player1.home_away)
+        lineup.player1.log_scores()
+        logging.info(lineup.player2.get_name()+" > "+ lineup.player2.get_position()+" > "+str(lineup.player2.get_predicted_score()))
+        logging.info(lineup.player2.home_away)
+        lineup.player2.log_scores()
+        logging.info(lineup.player3.get_name()+" > "+ lineup.player3.get_position()+" > "+str(lineup.player3.get_predicted_score()))
+        logging.info(lineup.player3.home_away)
+        lineup.player3.log_scores()
+        logging.info(lineup.player4.get_name()+" > "+ lineup.player4.get_position()+" > "+str(lineup.player4.get_predicted_score()))
+        logging.info(lineup.player4.home_away)
+        lineup.player4.log_scores()
+        logging.info(lineup.player5.get_name()+" > "+ lineup.player5.get_position()+" > "+str(lineup.player5.get_predicted_score()))
+        logging.info(lineup.player5.home_away)
+        lineup.player5.log_scores()
+        logging.info("Captain:"+lineup.get_captain().get_name())
+        logging.info("Taktik:"+lineup.get_tactic_slug()+ ""+str(lineup.get_tactic_score()))
         
         # Set lineup
         if create_game:
@@ -446,25 +529,67 @@ mission_config = {
     "WIN_ARENA_DIFFERENCE_LESS_20": { # Win a match with less than 20 points difference
         "irrelevant": True,        
     },
+    "WIN_ARENA_WITH_NO_YELLOW_RED_CARDS": { # Win a match with no yellow/red cards
+        "irrelevant": True,        
+    },
+    "WIN_ARENA_SCORE_CAPTAIN_HARD": { # 100 points with captain
+        "irrelevant": True,        
+    },
+    "WIN_ARENA_SCORE_CAPTAIN_EASY": { # 80 points with captain
+        "irrelevant": True,        
+    },
+    "WIN_ARENA_DIFFERENCE_MORE_80": { # Win with more than 80 points
+        "irrelevant": True,        
+    },
+    "WIN_ARENA_WITH_YELLOW_RED_CARDS": { # Win with red or yellow card
+        "irrelevant": True,        
+    },
+
+    
+
+
+    
     "WIN_ARENA_JOGA_BONITO": {
         "tacticSlug": "joga_bonito"
+    },
+    "WIN_ARENA_WIN_ARENA_GEGEN_PRESSING": {
+        "tacticSlug": "gegenpressing"
+    },
+    "WIN_ARENA_ALL_OUT_ATTACK": {
+        "tacticSlug": "all_out_attack"
+    },
+    "WIN_ARENA_TIKI_TAKA": {
+        "tacticSlug": "tiki_taka"
+    },
+    "WIN_ARENA_PARK_THE_BUS": {
+        "tacticSlug": "park_the_bus"
     },
     "WIN_ARENA_DIFFERENT_TEAMS_HARD": {
         "homeTeamMin": 2,
         "awayTeamMin": 2,
-    }
+    },
+    "WIN_ARENA_FORWARDS": {
+        "positionFormwardNum": 2,
+    },
+    "WIN_ARENA_MIDFIELDERS": {
+        "positionMidfielderNum": 2,
+    },
+    "WIN_ARENA_COST_SAVING_HARD": {
+        "playerCap": 50,
+        "optional": True
+    },
 }
 missions = []
-#invalid_missions = ["RIVALS_BUY_CARD"]
-for mission in getattr(query.value_football.value_rivals,"value_contentTiles"):
-    if hasattr(mission,"value_mission"):
-        if mission_config.get(mission.value_mission.value_name,None) == None:
-            logging.warning("No info for mission "+mission.value_mission.value_name+". Skipping!")
-            logging.warning(mission.value_mission.value_description)
-        elif mission_config.get(mission.value_mission.value_name).get("irrelevant",False) == False and mission.value_mission.value_progress == 0:
-            missions.append(mission_config.get(mission.value_mission.value_name,None))
+# Stop using missions for now
+#for mission in getattr(query.value_football.value_rivals,"value_contentTiles"):
+#    if hasattr(mission,"value_mission"):
+#        if mission_config.get(mission.value_mission.value_name,None) == None:
+#            logging.warning("No info for mission "+mission.value_mission.value_name+". Skipping!")
+#            logging.warning(mission.value_mission.value_description)
+#        elif mission_config.get(mission.value_mission.value_name).get("irrelevant",False) == False and mission.value_mission.value_progress == 0:
+#            missions.append(mission_config.get(mission.value_mission.value_name,None))
         
-#get_lineup_from_game(client,query.value_football.value_rivals.value_upcomingGames[0],missions)
+#get_lineup_from_game(client,query.value_football.value_rivals.value_upcomingGames[1],missions)
 #exit()
 for game in query.value_football.value_rivals.value_upcomingGames:
     #print(game.value_slug)
@@ -474,11 +599,18 @@ for game in query.value_football.value_rivals.value_upcomingGames:
                 
     
     if game.value_formationKnown:
+        logging.info("Formation known for:"+game.value_slug)
         for post_lu in post_lineups:
             if game.value_slug == post_lu.strip():
-                get_lineup_from_game(client,game,missions, True)
-                print(game.value_slug)
+                logging.info("Get lineup for game:"+game.value_slug)
+                try:
+                    get_lineup_from_game(client,game,missions, True)
+                except Exception as e:
+                    logging.exception(e)
+                #print(game.value_slug)
 
+logging.info("Upcoming games:")
 with open("temp/notify_lineups.txt", mode="w", encoding="utf-8") as file:
     for line in lineup_games:
         file.write(f"{line}\n")
+        logging.info(line)

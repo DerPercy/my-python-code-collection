@@ -54,7 +54,7 @@ class CSVProcessorV2(CSVProcessor):
         transactionDescription = row[10]
 
         try:
-            if action == 'Buy' or action == 'Receive' or action == 'Advance Trade Buy': # Buy/Receive coins in coinbase
+            if action == 'Buy' or action == 'Receive' or action == 'Advance Trade Buy' or action == 'Advanced Trade Buy': # Buy/Receive coins in coinbase
                 transaction_history.action_buy(
                     dt          =   self.getDatetime(timestamp),
                     symbol      =   symbol,
@@ -71,7 +71,7 @@ class CSVProcessorV2(CSVProcessor):
                     fees_in_fiat=   fees,
                     is_staking  =(action == 'Staking Income')
                 )
-            elif action == "Send" or action == 'Sell' or action == 'Advance Trade Sell': # Send/Sell coins in coinbase
+            elif action == "Send" or action == 'Sell' or action == 'Advance Trade Sell' or action == 'Advanced Trade Sell': # Send/Sell coins in coinbase
                 transaction_history.action_sell(
                     dt          =   self.getDatetime(timestamp),
                     symbol      =   symbol,

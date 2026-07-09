@@ -108,6 +108,8 @@ class TransactionHistory:
                 received_total = received_total + transaction.gain_details.get("sellAmount",0)
                 paid_total = paid_total + transaction.gain_details.get("buyAmount",0)
                 transaction.budget_info = "Gesamt: Ausgaben: {:10.2f}".format(paid_total)+" EUR / Einnahmen: {:10.2f}".format(received_total)+ " EUR"
+                win = transaction.gain_details.get("sellAmount",0) - transaction.gain_details.get("buyAmount",0)
+                transaction.report_gain_text = "Gewinn:{:10.2f}".format(win)+" EUR"
         return {
             "transactions": report_transactions,
             "coinstackStart": coinstack_start,

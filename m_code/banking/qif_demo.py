@@ -1,7 +1,12 @@
 import quiffen
 import csv
+import sys
 
 from datetime import datetime
+
+print("Hello")
+print(sys.argv[1])
+print(sys.argv[2])
 
 qif = quiffen.Qif()
 
@@ -10,8 +15,8 @@ acc = quiffen.Account(name='Girokonto',account_type='Bank')
 qif.add_account(acc)
 
 
-with open('transactions.csv', newline='') as csvfile:
-    spamreader = csv.reader(csvfile, delimiter=',', quotechar='"')
+with open(sys.argv[1], newline='') as csvfile:
+    spamreader = csv.reader(csvfile, delimiter=';', quotechar='"')
     for idx, row in enumerate(spamreader):
         if idx > 4 and row[1] != "":
             if row[2] == "Vorgemerkt":
@@ -49,4 +54,4 @@ with open('transactions.csv', newline='') as csvfile:
 #qif.add_category(groceries)
 
 
-qif.to_qif(path="output.qif")
+qif.to_qif(path=sys.argv[2])
