@@ -10,7 +10,7 @@ const yargs = require('yargs');
 
 const { authorizationRequestFragment, buildApprovals } = require('./authorizations.js');
 
-const { auctionId, token, privateKey, jwtAud } = yargs
+const { auctionId, token, privateKey, euramount, jwtAud } = yargs
   .command(
     'bidAuctionWithEth',
     'Make the minimum next bid on an english auction.'
@@ -30,6 +30,11 @@ const { auctionId, token, privateKey, jwtAud } = yargs
     type: 'string',
     required: true,
   })
+  .option('euramount', {
+    description: 'Amount in EURcents',
+    type: 'string',
+    required: true,
+  })
   .option('jwt-aud', {
     description: 'The JWT audience (required if using a JWT token).',
     type: 'string',
@@ -37,6 +42,9 @@ const { auctionId, token, privateKey, jwtAud } = yargs
   .help()
   .alias('help', 'h').argv;
 
+eurcentsbid = euramount
+console.log('bid:', eurcentsbid ,'weis');
+  
 const Config = gql`
   query ConfigQuery {
     config {
@@ -86,7 +94,7 @@ const Bid = gql`
 
 async function main() {
   const graphQLClient = new GraphQLClient(
-    'https://api.sorare.dev/graphql',
+    'https://api.sorare.com/graphql',
     {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -100,24 +108,29 @@ async function main() {
   const exchangeRateId = configData['config']['exchangeRate']['id'];
   console.log('Using exchange rate id', exchangeRateId);
 
-  const englishAuctionData = await graphQLClient.request(EnglishAuction, {
-    auctionId: auctionId,
-  });
-  const bidAmountInWei = englishAuctionData['tokens']['auction']['minNextBid'];
-  console.log('Minimum next bid is', bidAmountInWei, 'wei');
-
+  //const englishAuctionData = await graphQLClient.request(EnglishAuction, {
+  //  auctionId: 'EnglishAuction:'+auctionId,
+  //});
+  //const bidAmountInWei = englishAuctionData['tokens']['auction']['minNextBid'];
+  //console.log('Minimum next bid is', bidAmountInWei, 'wei');
+  //console.log('bid:', eurcentsbid , 'wei');
+  
   const prepareBidInput = {
-    englishAuctionId: auctionId,
-    amount: bidAmountInWei,
+    auctionId: auctionId,
+    amount: eurcentsbid,
     settlementInfo: {
-      currency: 'WEI',
+      currency: 'EUR',
       paymentMethod: 'WALLET',
       exchangeRateId: exchangeRateId,
     },
   };
+  //console.log(prepareBidInput);
+
   const prepareBidData = await graphQLClient.request(PrepareBid, {
     input: prepareBidInput,
   });
+  console.log(prepareBidData);
+
   const prepareBid = prepareBidData['prepareBid'];
   if (prepareBid['errors'].length > 0) {
     prepareBid['errors'].forEach(error => {
@@ -127,14 +140,17 @@ async function main() {
   }
 
   const authorizations = prepareBid['authorizations'];
+  console.log(authorizations);
+  console.log(privateKey);
   const approvals = buildApprovals(privateKey, authorizations);
 
   const bidInput = {
     approvals,
-    auctionId: `EnglishAuction:${auctionId}`,
-    amount: bidAmountInWei,
+    //auctionId: `EnglishAuction:${auctionId}`,
+    auctionId: `${auctionId}`,
+    amount: eurcentsbid,
     settlementInfo: {
-      currency: 'WEI',
+      currency: 'EUR',
       paymentMethod: 'WALLET',
       exchangeRateId: exchangeRateId,
     },

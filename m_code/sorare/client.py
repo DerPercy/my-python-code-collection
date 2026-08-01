@@ -92,7 +92,9 @@ class Client:
                     break
         #print(json.dumps(r.json(),indent=2))
         return result
-
+    def get_jwt(self):
+        return self.jwt
+     
     def __request(self,body:str, variables = {},options = {}, num_retries:int = 3):
         """ Returns an object with the following keys
         - result: the result
@@ -149,7 +151,6 @@ class Client:
             "result": result,
             "full_result": r.json()
         }
-            
 
 def json_selector(json_obj, selector_array):
     for selector in selector_array:
