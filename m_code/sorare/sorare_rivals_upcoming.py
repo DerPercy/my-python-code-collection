@@ -9,7 +9,7 @@ import os
 from dotenv import load_dotenv
 from icecream import ic
 from datetime import datetime
-import func_sorare_rivals, api_rivals_mutations
+import func_sorare_rivals, _attic.api_rivals_mutations as api_rivals_mutations
 import argparse, sys
 import cattrs
 from models.rivals import RivalsGame, read_rivals_game_from_fileSystem

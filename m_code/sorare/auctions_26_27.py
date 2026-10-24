@@ -34,7 +34,7 @@ player_slugs = [
 	"marton-dardai", #Def
 	"julian-eitschberger", #Def
 
-	# Tomble94Follows
+	# Tomble94Follows => 2.BL
 	"tobias-muller",
 	"ivan-nekic",
 	"moritz-broni-kwarteng",
@@ -46,6 +46,32 @@ player_slugs = [
 	"tim-schreiber",
 	"moritz-broschinski",
 	"tim-siersleben",
+	"michael-steinwender",
+	"josip-brekalo",
+	"robert-wagner",
+	"samuele-di-benedetto",
+	"jan-urbich",
+	"jan-schoppner",
+	"anselmo-garcia-mcnulty",
+	"aleksandar-vukotic",
+	"torben-musel",
+	"ron-torben-hoffmann",
+	"mathias-rasmussen",
+	"kevin-ehlers",
+	"daniel-mesenholer",
+	"mergim-berisha",
+	"herbert-bockhorn",
+	"thomas-leon-keller",
+	"mathias-honsak",
+	"paul-seguin",
+	"elias-bethke",
+	"david-nemeth",
+	"timo-horn",
+	"marcel-hartel",
+	"luka-mikael-hyrylainen",
+	"mats-henry-pannewig",
+
+	
 				
 ]
 
@@ -78,6 +104,7 @@ def get_running_auctions(client:Client):
         				currentPrice
         				anyCards {
           					slug
+							anyPositions
 							rarityTyped
           					anyPlayer {
             					slug
@@ -223,6 +250,20 @@ def bid_on_auction(client:Client,bid:str,auction_id:str):
 	out = p.stdout.read()
 	print(out)
 
+def get_position_price_modificator(positions:list[str]):
+	print("Get modificator for:")
+	[print(a) for a in positions]
+	mod = 1
+	if "Forward" in positions:
+		mod = 1.000
+	elif "Defender" in positions:
+		mod = 1.000
+	elif "Midfielder" in positions:
+		mod = 1.040
+	elif "Goalkeeper" in positions:
+		mod = 1.040
+	return mod
+
 if len(sys.argv) == 3:
 	bid_on_auction(client,sys.argv[1],sys.argv[2])
 	exit()
@@ -264,18 +305,8 @@ if len(player_bids) > 0:
 			player_slug = cards[0].get("anyPlayer",{}).get("slug","")
 			if player_bids.get(player_slug,None) != None:
 				#bid = int(( player_bids.get(player_slug).get('minBid',0) * 0.73 / 100 ) / exch_rate)
-				bid = int(( player_bids.get(player_slug).get('minBid',0) * 0.8 ) )
+				bid = int(( player_bids.get(player_slug).get('minBid',0) * 0.7727 * get_position_price_modificator(cards[0].get("anyPositions",[]))) )
 				auction_id = auction.get("id","???")
 				print("Bid "+str(bid)+" on auction "+ auction_id + " for player " + player_slug )
 				bid_on_auction(client=client, bid=str(bid), auction_id=auction_id)
-				#p = subprocess.Popen(['node', 'nodejs/bidAuction.js', 
-				#		'--auctionId' , auction_id, #.split(":",1)[1], # remove 'EnglishAuction:' before id
-				#	'--euramount' , str(bid),
-				#	'--private-key', os.getenv('SORARE_STARKWARE_PRIVATE'),
-				#	'--token', client.get_jwt(),
-				#	'--jwt-aud', 'myPrivateApp'
-				#], stdout=subprocess.PIPE)
-				#out = p.stdout.read()
-				#print(out)
-
 

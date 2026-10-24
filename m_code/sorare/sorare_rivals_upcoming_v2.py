@@ -1,4 +1,4 @@
-from api_rivals_mutations import RivalsGameAppearance, set_rivals_game_lineup
+from _attic.api_rivals_mutations import RivalsGameAppearance, set_rivals_game_lineup
 from context import file_func
 
 from client import Client as SorareClient

@@ -60,6 +60,11 @@ const EnglishAuction = gql`
     tokens {
       auction(id: $auctionId) {
         minNextBid
+        bestBid {
+          amounts {
+            eurCents
+          }
+        }
       }
     }
   }
@@ -108,13 +113,31 @@ async function main() {
   const exchangeRateId = configData['config']['exchangeRate']['id'];
   console.log('Using exchange rate id', exchangeRateId);
 
-  //const englishAuctionData = await graphQLClient.request(EnglishAuction, {
-  //  auctionId: 'EnglishAuction:'+auctionId,
-  //});
-  //const bidAmountInWei = englishAuctionData['tokens']['auction']['minNextBid'];
-  //console.log('Minimum next bid is', bidAmountInWei, 'wei');
-  //console.log('bid:', eurcentsbid , 'wei');
+
+  const index = auctionId.indexOf(":");
+  const splitedAuctionId = index === -1 ? "" : auctionId.slice(index + 1);
+
+  try {
+    const englishAuctionData = await graphQLClient.request(EnglishAuction, {
+    //  auctionId: 'EnglishAuction:'+auctionId,
+        auctionId: splitedAuctionId,
+    });
   
+    const bidAmountInWei = englishAuctionData['tokens']['auction']['minNextBid'];
+    const bidAmountInEurcents = englishAuctionData['tokens']['auction']['bestBid']['amounts']['eurCents'];
+    console.log('Minimum next bid is', bidAmountInWei, 'wei');
+    console.log('bid:', eurcentsbid , 'wei');
+  
+    if (!Number.isNaN(parseInt(bidAmountInEurcents,10)) && !Number.isNaN(parseInt(eurcentsbid,10))){
+      if( parseInt(bidAmountInEurcents,10) > parseInt(eurcentsbid,10) ) {
+        console.warn("Amount is to low ("+eurcentsbid+" < "+bidAmountInEurcents+")");
+        process.exit(0);
+      }
+    }
+  } catch(err){
+    console.warn("Error at determining current bid:")
+    console.warn(err);
+  }
   const prepareBidInput = {
     auctionId: auctionId,
     amount: eurcentsbid,
@@ -122,6 +145,7 @@ async function main() {
       currency: 'EUR',
       paymentMethod: 'WALLET',
       exchangeRateId: exchangeRateId,
+      useAvailableCredits: true,
     },
   };
   //console.log(prepareBidInput);
@@ -153,6 +177,7 @@ async function main() {
       currency: 'EUR',
       paymentMethod: 'WALLET',
       exchangeRateId: exchangeRateId,
+      useAvailableCredits: true,
     },
     clientMutationId: crypto.randomBytes(8).join(''),
   };
